@@ -1,16 +1,16 @@
 {
-  "name": "gh-review",
+  "name": "gh-feedback",
   "author": "Łukasz Jerciński",
   "license": "MIT",
   "version": "1.0.0",
   "description": "Unified CLI for GitHub pull request feedback operations",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Jercik/gh-review.git"
+    "url": "git+https://github.com/Jercik/gh-feedback.git"
   },
   "type": "module",
   "bin": {
-    "gh-review": "bin/gh-review"
+    "gh-feedback": "bin/gh-feedback"
   },
   "files": [
     "bin/",
@@ -19,7 +19,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "start": "pnpm -s run rebuild && node --env-file=.env bin/gh-review",
+    "start": "pnpm -s run rebuild && node --env-file=.env bin/gh-feedback",
     "build": "tsc -p tsconfig.app.json",
     "clean": "rm -rf dist *.tsbuildinfo",
     "rebuild": "pnpm run clean && pnpm run build",

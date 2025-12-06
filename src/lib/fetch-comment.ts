@@ -141,7 +141,7 @@ export function postReply(
           `  1. The comment doesn't exist\n` +
           `  2. It's already a reply to another comment (can't reply to replies)\n` +
           `  3. Insufficient permissions\n` +
-          `Use 'gh-review status ${prNumber}' to see available threads.`,
+          `Use 'gh-feedback status ${prNumber}' to see available threads.`,
       );
     }
     exitWithMessage(`Error posting reply: ${errorMessage}`);

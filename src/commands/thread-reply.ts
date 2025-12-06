@@ -18,7 +18,7 @@ export function registerReplyCommand(threadCmd: Command): void {
     .description(
       "Reply to an existing thread\n\n" +
         "IMPORTANT: Always wrap Markdown replies in SINGLE quotes to preserve backticks:\n" +
-        "  gh-review thread reply 123 -m 'Fixed in `abc123`'",
+        "  gh-feedback thread reply 123 -m 'Fixed in `abc123`'",
     )
     .argument("<comment-id>", "The comment ID to reply to", (value) => {
       const id = Number.parseInt(value);

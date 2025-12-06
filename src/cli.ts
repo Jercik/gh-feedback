@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * gh-review.ts
+ * gh-feedback.ts
  *
  * Unified CLI for GitHub pull request feedback operations.
  * Optimized for performance and reduced API usage.
@@ -24,7 +24,7 @@ import { registerThreadCommands } from "./commands/thread.js";
 // =============================================================================
 
 const program = createProgram(
-  "gh-review",
+  "gh-feedback",
   "Interact with PR feedback on the current branch's pull request.",
 );
 
@@ -32,13 +32,13 @@ program.addHelpText(
   "after",
   `
 Example workflow:
-  $ gh-review status                    # List all feedback (reviews, threads, comments)
-  $ gh-review read 123456               # Read full details for item #123456
-  $ gh-review thread react 123456 eyes  # Mark as "looking into it"
-  $ gh-review thread reply 123456 -m 'Fixed in abc123'
-  $ gh-review thread unreact 123456 eyes
-  $ gh-review thread react 123456 +1    # Mark as done
-  $ gh-review thread resolve 123456     # Close the thread
+  $ gh-feedback status                    # List all feedback (reviews, threads, comments)
+  $ gh-feedback read 123456               # Read full details for item #123456
+  $ gh-feedback thread react 123456 eyes  # Mark as "looking into it"
+  $ gh-feedback thread reply 123456 -m 'Fixed in abc123'
+  $ gh-feedback thread unreact 123456 eyes
+  $ gh-feedback thread react 123456 +1    # Mark as done
+  $ gh-feedback thread resolve 123456     # Close the thread
 `,
 );
 

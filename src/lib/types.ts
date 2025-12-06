@@ -110,10 +110,10 @@ export type ReviewState =
   | "PENDING";
 
 // =============================================================================
-// Unified Feedback Types (for gh-review status command)
+// Unified Feedback Types (for gh-feedback status command)
 // =============================================================================
 
-// Metadata-only types for concise gh-review status output
+// Metadata-only types for concise gh-feedback status output
 export type ReviewMeta = {
   readonly id: number;
   readonly author: string;
