@@ -2,7 +2,7 @@
  * Thread resolve/unresolve commands
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import {

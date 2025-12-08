@@ -2,7 +2,7 @@
  * Thread commands (PullRequestReviewComment operations - Files Changed tab)
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { registerReplyCommand } from "./thread-reply.js";
 import { registerResolveCommands } from "./thread-resolve.js";
 import { registerReactionCommands } from "./thread-reactions.js";

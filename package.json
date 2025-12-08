@@ -41,6 +41,7 @@
     "node": ">=22.14.0"
   },
   "dependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
     "commander": "^14.0.2"
   },
   "devDependencies": {

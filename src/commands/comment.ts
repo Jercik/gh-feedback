@@ -2,7 +2,7 @@
  * Comment commands (IssueComment operations - Conversation tab)
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { registerCommentReactionCommands } from "./comment-reactions.js";
 import { registerCommentVisibilityCommands } from "./comment-visibility.js";
 
