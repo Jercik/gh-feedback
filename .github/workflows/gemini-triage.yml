@@ -19,7 +19,7 @@ defaults:
 jobs:
   triage:
     runs-on: "ubuntu-latest"
-    timeout-minutes: 7
+    timeout-minutes: 15
     outputs:
       available_labels: "${{ steps.get_labels.outputs.available_labels }}"
       selected_labels: "${{ env.SELECTED_LABELS }}"
@@ -62,6 +62,7 @@ jobs:
         if: |-
           ${{ steps.get_labels.outputs.available_labels != '' }}
         run: |
+          umask 077
           echo '${{ secrets.GEMINI_OAUTH_CREDS }}' > ${{ runner.temp }}/oauth-creds.json
 
       - name: "Run Gemini issue analysis"
@@ -119,6 +120,11 @@ jobs:
               }
             }
           prompt: "/gemini-triage"
+
+      - name: "Cleanup OAuth credentials"
+        if: always()
+        run: |
+          rm -f ${{ runner.temp }}/oauth-creds.json
 
   label:
     runs-on: "ubuntu-latest"

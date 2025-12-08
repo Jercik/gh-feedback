@@ -6,6 +6,8 @@ on:
 
 jobs:
   review-with-claude-code:
+    # Skip forked PRs - secrets are not available and the workflow would fail
+    if: github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     permissions:
       contents: read

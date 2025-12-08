@@ -19,7 +19,7 @@ defaults:
 jobs:
   review:
     runs-on: "ubuntu-latest"
-    timeout-minutes: 7
+    timeout-minutes: 15
     permissions:
       contents: "read"
       id-token: "write"
@@ -46,6 +46,7 @@ jobs:
       # plaintext in workflow output.
       - name: "Setup OAuth credentials"
         run: |
+          umask 077
           echo '${{ secrets.GEMINI_OAUTH_CREDS }}' > ${{ runner.temp }}/oauth-creds.json
 
       - name: "Run Gemini pull request review"
@@ -129,3 +130,8 @@ jobs:
               }
             }
           prompt: "/gemini-review"
+
+      - name: "Cleanup OAuth credentials"
+        if: always()
+        run: |
+          rm -f ${{ runner.temp }}/oauth-creds.json

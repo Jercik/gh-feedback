@@ -42,6 +42,7 @@ jobs:
       # plaintext in workflow output.
       - name: "Setup OAuth credentials"
         run: |
+          umask 077
           echo '${{ secrets.GEMINI_OAUTH_CREDS }}' > ${{ runner.temp }}/oauth-creds.json
 
       - name: "Run Gemini CLI"
@@ -141,3 +142,8 @@ jobs:
               }
             }
           prompt: "/gemini-invoke"
+
+      - name: "Cleanup OAuth credentials"
+        if: always()
+        run: |
+          rm -f ${{ runner.temp }}/oauth-creds.json
