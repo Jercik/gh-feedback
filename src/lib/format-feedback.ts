@@ -4,26 +4,26 @@
 
 import type { PullRequestFeedback } from "./types.js";
 
-/** Convert reaction content names to emoji */
-function reactionToEmoji(reaction: string): string {
+/** Convert reaction content names to ASCII labels */
+function reactionToLabel(reaction: string): string {
   const map: Record<string, string> = {
-    THUMBS_UP: "\u{1F44D}",
-    THUMBS_DOWN: "\u{1F44E}",
-    LAUGH: "\u{1F604}",
-    HOORAY: "\u{1F389}",
-    CONFUSED: "\u{1F615}",
-    HEART: "\u2764\uFE0F",
-    ROCKET: "\u{1F680}",
-    EYES: "\u{1F440}",
+    THUMBS_UP: "+1",
+    THUMBS_DOWN: "-1",
+    LAUGH: "laugh",
+    HOORAY: "hooray",
+    CONFUSED: "confused",
+    HEART: "heart",
+    ROCKET: "rocket",
+    EYES: "eyes",
   };
-  return map[reaction] ?? reaction;
+  return map[reaction] ?? reaction.toLowerCase();
 }
 
-/** Format viewer reactions as emoji string */
+/** Format viewer reactions as ASCII string */
 function formatViewerReactions(reactions: readonly string[]): string {
   if (reactions.length === 0) return "";
-  const emojis = reactions.map((r) => reactionToEmoji(r)).join(" ");
-  return `  reacted: ${emojis}`;
+  const labels = reactions.map((r) => reactionToLabel(r)).join(" ");
+  return `  reacted: ${labels}`;
 }
 
 export function formatAllFeedback(feedback: PullRequestFeedback): string {
