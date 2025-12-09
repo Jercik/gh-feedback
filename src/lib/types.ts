@@ -187,3 +187,53 @@ export type PageInfo = {
   readonly endCursor: string | null;
   readonly hasNextPage: boolean;
 };
+
+// =============================================================================
+// Summary Types (for LLM context - includes full body content)
+// =============================================================================
+
+/** Review with full body content for summary output */
+export type ReviewSummary = {
+  readonly id: number;
+  readonly author: string;
+  readonly state: ReviewState;
+  readonly body: string;
+  readonly submittedAt: string;
+  readonly isResolved: boolean;
+};
+
+/** Thread comment with full body for summary output */
+type ThreadCommentSummary = {
+  readonly id: number;
+  readonly author: string;
+  readonly body: string;
+  readonly createdAt: string;
+};
+
+/** Thread with full conversation for summary output */
+export type ThreadSummary = {
+  readonly id: number;
+  readonly path: string | null;
+  readonly line: number | null;
+  readonly isResolved: boolean;
+  readonly isOutdated: boolean;
+  readonly comments: readonly ThreadCommentSummary[];
+};
+
+/** Issue comment with full body for summary output */
+export type CommentSummary = {
+  readonly id: number;
+  readonly author: string;
+  readonly body: string;
+  readonly createdAt: string;
+};
+
+/** Complete PR feedback summary for LLM context */
+export type PullRequestSummary = {
+  readonly number: number;
+  readonly url: string;
+  readonly title: string;
+  readonly reviews: readonly ReviewSummary[];
+  readonly threads: readonly ThreadSummary[];
+  readonly comments: readonly CommentSummary[];
+};

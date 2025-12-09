@@ -12,3 +12,4 @@ export {
   summarizeReactions,
   formatReactPreview,
 } from "./format-comment.js";
+export { formatSummary } from "./format-summary.js";

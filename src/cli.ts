@@ -14,7 +14,12 @@ import {
 import { exitWithMessage } from "./lib/git-helpers.js";
 import { fetchAllFeedback } from "./lib/fetch-feedback.js";
 import { fetchItemDetail } from "./lib/fetch-item-detail.js";
-import { formatAllFeedback, formatItemDetail } from "./lib/formatters.js";
+import { fetchSummary } from "./lib/fetch-summary.js";
+import {
+  formatAllFeedback,
+  formatItemDetail,
+  formatSummary,
+} from "./lib/formatters.js";
 import { registerReviewCommands } from "./commands/review.js";
 import { registerCommentCommands } from "./commands/comment.js";
 import { registerThreadCommands } from "./commands/thread.js";
@@ -82,6 +87,45 @@ program
           console.log(JSON.stringify(feedback, undefined, 2));
         } else {
           console.log(formatAllFeedback(feedback));
+        }
+      } catch (error: unknown) {
+        exitWithMessage(error instanceof Error ? error.message : String(error));
+      }
+    },
+  );
+
+// -----------------------------------------------------------------------------
+// Summary Command - Full Feedback with Bodies for LLM Context
+// -----------------------------------------------------------------------------
+
+program
+  .command("summary")
+  .description(
+    "Fetch all feedback with full content for LLM context gathering.",
+  )
+  .option("--hide-hidden", "Exclude minimized items")
+  .option("--hide-resolved", "Exclude resolved threads")
+  .option("-j, --json", "Output results as JSON")
+  .action(
+    (options: {
+      hideHidden?: boolean;
+      hideResolved?: boolean;
+      json?: boolean;
+    }) => {
+      try {
+        const { owner, repo } = getRepositoryInfo();
+        const prNumber = getPullRequestNumber();
+
+        console.error(`Fetching full feedback summary for PR #${prNumber}...`);
+        const summary = fetchSummary(owner, repo, prNumber, {
+          hideHidden: options.hideHidden,
+          hideResolved: options.hideResolved,
+        });
+
+        if (options.json) {
+          console.log(JSON.stringify(summary, undefined, 2));
+        } else {
+          console.log(formatSummary(summary));
         }
       } catch (error: unknown) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
