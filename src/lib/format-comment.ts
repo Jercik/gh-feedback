@@ -21,7 +21,7 @@ export function formatCommentInfo(comment: CommentInfo): string {
 
   if (comment.inReplyToId) {
     lines.push(
-      `${WARNING()} Warning: This is already a reply to comment #${comment.inReplyToId}`,
+      `${WARNING} Warning: This is already a reply to comment #${comment.inReplyToId}`,
       `   (You cannot reply to replies, only to top-level review comments)`,
     );
   }

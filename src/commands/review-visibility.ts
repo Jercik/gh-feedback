@@ -65,10 +65,10 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
           const minimizeResult = minimizeComment(review.nodeId, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `${SUCCESS()} Review #${reviewId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS} Review #${reviewId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(`${WARNING()} Review #${reviewId} was not minimized.`);
+            console.log(`${WARNING} Review #${reviewId} was not minimized.`);
           }
         } catch (error) {
           exitWithMessage(
@@ -118,9 +118,9 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
         console.error("Unminimizing review...");
         const unminimizeResult = unminimizeComment(review.nodeId);
         if (unminimizeResult.isMinimized) {
-          console.log(`${WARNING()} Review #${reviewId} state unchanged.`);
+          console.log(`${WARNING} Review #${reviewId} state unchanged.`);
         } else {
-          console.log(`${SUCCESS()} Review #${reviewId} is now visible.`);
+          console.log(`${SUCCESS} Review #${reviewId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

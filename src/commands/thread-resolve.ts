@@ -52,9 +52,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = resolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`${SUCCESS()} Thread resolved.`);
+          console.log(`${SUCCESS} Thread resolved.`);
         } else {
-          console.log(`${WARNING()} Thread state unchanged.`);
+          console.log(`${WARNING} Thread state unchanged.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
@@ -99,9 +99,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = unresolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`${WARNING()} Thread state unchanged.`);
+          console.log(`${WARNING} Thread state unchanged.`);
         } else {
-          console.log(`${SUCCESS()} Thread unresolved.`);
+          console.log(`${SUCCESS} Thread unresolved.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

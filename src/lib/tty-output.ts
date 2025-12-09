@@ -1,17 +1,12 @@
 /**
  * TTY-aware output helpers for consistent CLI output.
+ *
+ * These are constants evaluated at module load time since `process.stdout.isTTY`
+ * is fixed for the process lifetime.
  */
 
-/**
- * Returns emoji for TTY, text fallback otherwise.
- * Useful for success/warning indicators that should be plain text when piped.
- */
-function indicator(emoji: string, fallback: string): string {
-  return process.stdout.isTTY ? emoji : fallback;
-}
+/** Success indicator: ✅ (TTY) or [OK] (piped) */
+export const SUCCESS = process.stdout.isTTY ? "\u2705" : "[OK]";
 
-/** Success indicator: ✅ or [OK] */
-export const SUCCESS = (): string => indicator("\u2705", "[OK]");
-
-/** Warning indicator: ⚠️ or [!] */
-export const WARNING = (): string => indicator("\u26A0\uFE0F", "[!]");
+/** Warning indicator: ⚠️ (TTY) or [!] (piped) */
+export const WARNING = process.stdout.isTTY ? "\u26A0\uFE0F" : "[!]";

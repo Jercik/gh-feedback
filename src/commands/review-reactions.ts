@@ -58,7 +58,7 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           addReaction(review.nodeId, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" added to review #${reviewId}.`,
+            `${SUCCESS} Reaction "${reaction}" added to review #${reviewId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -114,7 +114,7 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           removeReaction(review.nodeId, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" removed from review #${reviewId}.`,
+            `${SUCCESS} Reaction "${reaction}" removed from review #${reviewId}.`,
           );
         } catch (error) {
           exitWithMessage(

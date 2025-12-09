@@ -58,7 +58,7 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           addReaction(comment.node_id, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" added to comment #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" added to comment #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -113,7 +113,7 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           removeReaction(comment.node_id, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" removed from comment #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" removed from comment #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(

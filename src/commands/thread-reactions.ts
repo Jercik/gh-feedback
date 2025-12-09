@@ -64,7 +64,7 @@ export function registerReactionCommands(threadCmd: Command): void {
           addReaction(comment.node_id, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" added to thread #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" added to thread #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -126,7 +126,7 @@ export function registerReactionCommands(threadCmd: Command): void {
           removeReaction(comment.node_id, reaction);
 
           console.log(
-            `${SUCCESS()} Reaction "${reaction}" removed from thread #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" removed from thread #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(

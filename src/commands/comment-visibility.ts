@@ -49,12 +49,10 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `${SUCCESS()} Comment #${comment.id} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS} Comment #${comment.id} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(
-              `${WARNING()} Comment #${comment.id} was not minimized.`,
-            );
+            console.log(`${WARNING} Comment #${comment.id} was not minimized.`);
           }
         } catch (error) {
           exitWithMessage(
@@ -98,9 +96,9 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
         console.error("Unminimizing comment...");
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
-          console.log(`${WARNING()} Comment #${commentId} state unchanged.`);
+          console.log(`${WARNING} Comment #${commentId} state unchanged.`);
         } else {
-          console.log(`${SUCCESS()} Comment #${commentId} is now visible.`);
+          console.log(`${SUCCESS} Comment #${commentId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

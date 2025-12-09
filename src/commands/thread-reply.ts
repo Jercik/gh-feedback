@@ -80,7 +80,7 @@ export function registerReplyCommand(threadCmd: Command): void {
             replyText,
           );
 
-          console.log(`${SUCCESS()} Reply posted successfully!`);
+          console.log(`${SUCCESS} Reply posted successfully!`);
           console.log(`   Comment ID: ${result.id}`);
           console.log(`   URL: ${result.url}`);
         } catch (error: unknown) {

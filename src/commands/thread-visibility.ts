@@ -59,11 +59,11 @@ export function registerVisibilityCommands(threadCmd: Command): void {
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `${SUCCESS()} Thread comment #${commentId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS} Thread comment #${commentId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
             console.log(
-              `${WARNING()} Thread comment #${commentId} was not minimized.`,
+              `${WARNING} Thread comment #${commentId} was not minimized.`,
             );
           }
         } catch (error) {
@@ -114,11 +114,11 @@ export function registerVisibilityCommands(threadCmd: Command): void {
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
           console.log(
-            `${WARNING()} Thread comment #${commentId} state unchanged.`,
+            `${WARNING} Thread comment #${commentId} state unchanged.`,
           );
         } else {
           console.log(
-            `${SUCCESS()} Thread comment #${commentId} is now visible.`,
+            `${SUCCESS} Thread comment #${commentId} is now visible.`,
           );
         }
       } catch (error) {
