@@ -2,7 +2,7 @@
  * Review commands (PullRequestReview operations)
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { registerReviewReactionCommands } from "./review-reactions.js";
 import { registerReviewVisibilityCommands } from "./review-visibility.js";
 

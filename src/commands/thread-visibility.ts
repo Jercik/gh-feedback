@@ -2,7 +2,7 @@
  * Thread visibility commands (hide/show)
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { normalizeClassifier } from "../lib/normalize-input.js";
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";

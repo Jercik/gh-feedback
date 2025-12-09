@@ -20,11 +20,13 @@ export async function readMessageFromFile(filePath: string): Promise<string> {
 export async function readMessageFromStdin(prompt: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout,
+    output: process.stderr,
   });
 
-  console.log(`Enter your ${prompt} (press Ctrl+D when done):`);
-  console.log("---");
+  if (process.stdin.isTTY) {
+    console.error(`Enter your ${prompt} (press Ctrl+D when done):`);
+    console.error("---");
+  }
 
   const lines: string[] = [];
 

@@ -121,4 +121,4 @@ registerReviewCommands(program);
 registerCommentCommands(program);
 registerThreadCommands(program);
 
-program.parse(process.argv);
+await program.parseAsync(process.argv);

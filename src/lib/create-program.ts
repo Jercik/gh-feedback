@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command } from "@commander-js/extra-typings";
 import packageJson from "../../package.json" with { type: "json" };
 import { verifyPrerequisites } from "./github-environment.js";
 
@@ -13,7 +13,9 @@ export function createProgram(name: string, description: string): Command {
   const program = new Command()
     .name(name)
     .description(description)
-    .version(packageJson.version);
+    .version(packageJson.version)
+    .showHelpAfterError("(add --help for additional information)")
+    .showSuggestionAfterError();
 
   // Run prerequisite checks before any action
   program.hook("preAction", () => {

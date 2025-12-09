@@ -2,7 +2,7 @@
  * Comment reaction commands
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import { ALLOWED_REACTIONS } from "../lib/constants.js";
 import { normalizeReactionInput } from "../lib/normalize-input.js";
 import { getRepositoryInfo } from "../lib/github-environment.js";

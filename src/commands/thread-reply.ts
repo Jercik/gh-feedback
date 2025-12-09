@@ -2,7 +2,7 @@
  * Thread reply command
  */
 
-import type { Command } from "commander";
+import type { Command } from "@commander-js/extra-typings";
 import {
   readMessageFromFile,
   readMessageFromStdin,
