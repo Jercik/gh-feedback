@@ -4,19 +4,21 @@
 
 import type { PullRequestFeedback } from "./types.js";
 
+/** Map GraphQL reaction enum values to ASCII labels */
+const REACTION_LABELS: Record<string, string> = {
+  THUMBS_UP: "+1",
+  THUMBS_DOWN: "-1",
+  LAUGH: "laugh",
+  HOORAY: "hooray",
+  CONFUSED: "confused",
+  HEART: "heart",
+  ROCKET: "rocket",
+  EYES: "eyes",
+};
+
 /** Convert reaction content names to ASCII labels */
 function reactionToLabel(reaction: string): string {
-  const map: Record<string, string> = {
-    THUMBS_UP: "+1",
-    THUMBS_DOWN: "-1",
-    LAUGH: "laugh",
-    HOORAY: "hooray",
-    CONFUSED: "confused",
-    HEART: "heart",
-    ROCKET: "rocket",
-    EYES: "eyes",
-  };
-  return map[reaction] ?? reaction.toLowerCase();
+  return REACTION_LABELS[reaction] ?? reaction.toLowerCase();
 }
 
 /** Format viewer reactions as ASCII string */
