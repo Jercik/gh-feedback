@@ -57,7 +57,7 @@ jobs:
         id: "gemini_pr_review"
         env:
           GITHUB_TOKEN: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
-          GOOGLE_APPLICATION_CREDENTIALS: "~/.gemini/oauth_creds.json"
+          GOOGLE_APPLICATION_CREDENTIALS: "${{ env.HOME }}/.gemini/oauth_creds.json"
           PERPLEXITY_API_KEY: "${{ secrets.PERPLEXITY_API_KEY }}"
           ISSUE_TITLE: "${{ github.event.pull_request.title || github.event.issue.title }}"
           ISSUE_BODY: "${{ github.event.pull_request.body || github.event.issue.body }}"

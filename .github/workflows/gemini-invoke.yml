@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v6"
+        with:
+          fetch-depth: 10
 
       - name: "Mint identity token"
         id: "mint_identity_token"
@@ -57,7 +59,7 @@ jobs:
           DESCRIPTION: "${{ github.event.pull_request.body || github.event.issue.body }}"
           EVENT_NAME: "${{ github.event_name }}"
           GITHUB_TOKEN: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
-          GOOGLE_APPLICATION_CREDENTIALS: "~/.gemini/oauth_creds.json"
+          GOOGLE_APPLICATION_CREDENTIALS: "${{ env.HOME }}/.gemini/oauth_creds.json"
           PERPLEXITY_API_KEY: "${{ secrets.PERPLEXITY_API_KEY }}"
           IS_PULL_REQUEST: "${{ !!github.event.pull_request }}"
           ISSUE_NUMBER: "${{ github.event.pull_request.number || github.event.issue.number }}"
