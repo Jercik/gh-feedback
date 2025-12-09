@@ -9,6 +9,7 @@ import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchIssueComment } from "../lib/fetch-item-detail.js";
 import { minimizeComment, unminimizeComment } from "../lib/github-mutations.js";
 import { formatHidePreview } from "../lib/formatters.js";
+import { SUCCESS, WARNING } from "../lib/tty-output.js";
 
 export function registerCommentVisibilityCommands(commentCmd: Command): void {
   // comment hide
@@ -48,12 +49,10 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `\u2705 Comment #${comment.id} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS} Comment #${comment.id} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(
-              `\u26A0\uFE0F  Comment #${comment.id} was not minimized.`,
-            );
+            console.log(`${WARNING} Comment #${comment.id} was not minimized.`);
           }
         } catch (error) {
           exitWithMessage(
@@ -97,9 +96,9 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
         console.error("Unminimizing comment...");
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
-          console.log(`\u26A0\uFE0F  Comment #${commentId} state unchanged.`);
+          console.log(`${WARNING} Comment #${commentId} state unchanged.`);
         } else {
-          console.log(`\u2705 Comment #${commentId} is now visible.`);
+          console.log(`${SUCCESS} Comment #${commentId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

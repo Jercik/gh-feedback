@@ -20,6 +20,15 @@ import { registerCommentCommands } from "./commands/comment.js";
 import { registerThreadCommands } from "./commands/thread.js";
 
 // =============================================================================
+// Signal Handlers
+// =============================================================================
+
+process.on("SIGINT", () => {
+  console.error("\nInterrupted");
+  process.exit(130); // 128 + 2 (SIGINT)
+});
+
+// =============================================================================
 // CLI Setup
 // =============================================================================
 
@@ -39,6 +48,10 @@ Example workflow:
   $ gh-feedback thread unreact 123456 eyes
   $ gh-feedback thread react 123456 +1    # Mark as done
   $ gh-feedback thread resolve 123456     # Close the thread
+
+Using stdin for replies:
+  $ echo "Fixed in commit abc123" | gh-feedback thread reply 123456
+  $ cat message.md | gh-feedback thread reply 123456
 `,
 );
 

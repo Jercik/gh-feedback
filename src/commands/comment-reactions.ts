@@ -10,6 +10,7 @@ import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchIssueComment } from "../lib/fetch-item-detail.js";
 import { addReaction, removeReaction } from "../lib/github-mutations.js";
 import { summarizeReactions, formatReactPreview } from "../lib/formatters.js";
+import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerCommentReactionCommands(commentCmd: Command): void {
   // comment react
@@ -57,7 +58,7 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           addReaction(comment.node_id, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" added to comment #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" added to comment #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -112,7 +113,7 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           removeReaction(comment.node_id, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" removed from comment #${commentId}.`,
+            `${SUCCESS} Reaction "${reaction}" removed from comment #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(

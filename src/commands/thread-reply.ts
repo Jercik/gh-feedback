@@ -11,6 +11,7 @@ import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { getCommentInfo, postReply } from "../lib/fetch-item-detail.js";
 import { formatCommentInfo } from "../lib/formatters.js";
+import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerReplyCommand(threadCmd: Command): void {
   threadCmd
@@ -79,7 +80,7 @@ export function registerReplyCommand(threadCmd: Command): void {
             replyText,
           );
 
-          console.log(`\u2705 Reply posted successfully!`);
+          console.log(`${SUCCESS} Reply posted successfully!`);
           console.log(`   Comment ID: ${result.id}`);
           console.log(`   URL: ${result.url}`);
         } catch (error: unknown) {

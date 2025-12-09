@@ -8,6 +8,7 @@ import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchReviewComment } from "../lib/fetch-item-detail.js";
 import { minimizeComment, unminimizeComment } from "../lib/github-mutations.js";
+import { SUCCESS, WARNING } from "../lib/tty-output.js";
 
 export function registerVisibilityCommands(threadCmd: Command): void {
   // thread hide
@@ -58,11 +59,11 @@ export function registerVisibilityCommands(threadCmd: Command): void {
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `\u2705 Thread comment #${commentId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS} Thread comment #${commentId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
             console.log(
-              `\u26A0\uFE0F  Thread comment #${commentId} was not minimized.`,
+              `${WARNING} Thread comment #${commentId} was not minimized.`,
             );
           }
         } catch (error) {
@@ -113,10 +114,12 @@ export function registerVisibilityCommands(threadCmd: Command): void {
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
           console.log(
-            `\u26A0\uFE0F  Thread comment #${commentId} state unchanged.`,
+            `${WARNING} Thread comment #${commentId} state unchanged.`,
           );
         } else {
-          console.log(`\u2705 Thread comment #${commentId} is now visible.`);
+          console.log(
+            `${SUCCESS} Thread comment #${commentId} is now visible.`,
+          );
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
