@@ -11,6 +11,7 @@ import {
 } from "../lib/fetch-item-detail.js";
 import { resolveThread, unresolveThread } from "../lib/github-mutations.js";
 import { formatThreadPreview } from "../lib/formatters.js";
+import { SUCCESS, WARNING } from "../lib/tty-output.js";
 
 export function registerResolveCommands(threadCmd: Command): void {
   // thread resolve
@@ -51,9 +52,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = resolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`\u2705 Thread resolved.`);
+          console.log(`${SUCCESS()} Thread resolved.`);
         } else {
-          console.log(`\u26A0\uFE0F  Thread state unchanged.`);
+          console.log(`${WARNING()} Thread state unchanged.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
@@ -98,9 +99,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = unresolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`\u26A0\uFE0F  Thread state unchanged.`);
+          console.log(`${WARNING()} Thread state unchanged.`);
         } else {
-          console.log(`\u2705 Thread unresolved.`);
+          console.log(`${SUCCESS()} Thread unresolved.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

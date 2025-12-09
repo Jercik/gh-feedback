@@ -8,6 +8,7 @@ import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchReviewInfo } from "../lib/fetch-item-detail.js";
 import { minimizeComment, unminimizeComment } from "../lib/github-mutations.js";
+import { SUCCESS, WARNING } from "../lib/tty-output.js";
 
 export function registerReviewVisibilityCommands(reviewCmd: Command): void {
   // review hide
@@ -64,10 +65,10 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
           const minimizeResult = minimizeComment(review.nodeId, reason);
           if (minimizeResult.isMinimized) {
             console.log(
-              `\u2705 Review #${reviewId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
+              `${SUCCESS()} Review #${reviewId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(`\u26A0\uFE0F  Review #${reviewId} was not minimized.`);
+            console.log(`${WARNING()} Review #${reviewId} was not minimized.`);
           }
         } catch (error) {
           exitWithMessage(
@@ -117,9 +118,9 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
         console.error("Unminimizing review...");
         const unminimizeResult = unminimizeComment(review.nodeId);
         if (unminimizeResult.isMinimized) {
-          console.log(`\u26A0\uFE0F  Review #${reviewId} state unchanged.`);
+          console.log(`${WARNING()} Review #${reviewId} state unchanged.`);
         } else {
-          console.log(`\u2705 Review #${reviewId} is now visible.`);
+          console.log(`${SUCCESS()} Review #${reviewId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

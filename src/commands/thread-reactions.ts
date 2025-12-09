@@ -9,6 +9,7 @@ import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchReviewComment } from "../lib/fetch-item-detail.js";
 import { addReaction, removeReaction } from "../lib/github-mutations.js";
+import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerReactionCommands(threadCmd: Command): void {
   // thread react
@@ -63,7 +64,7 @@ export function registerReactionCommands(threadCmd: Command): void {
           addReaction(comment.node_id, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" added to thread #${commentId}.`,
+            `${SUCCESS()} Reaction "${reaction}" added to thread #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -125,7 +126,7 @@ export function registerReactionCommands(threadCmd: Command): void {
           removeReaction(comment.node_id, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" removed from thread #${commentId}.`,
+            `${SUCCESS()} Reaction "${reaction}" removed from thread #${commentId}.`,
           );
         } catch (error) {
           exitWithMessage(

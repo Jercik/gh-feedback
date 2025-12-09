@@ -9,6 +9,7 @@ import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { fetchReviewInfo } from "../lib/fetch-item-detail.js";
 import { addReaction, removeReaction } from "../lib/github-mutations.js";
+import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerReviewReactionCommands(reviewCmd: Command): void {
   // review react
@@ -57,7 +58,7 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           addReaction(review.nodeId, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" added to review #${reviewId}.`,
+            `${SUCCESS()} Reaction "${reaction}" added to review #${reviewId}.`,
           );
         } catch (error) {
           exitWithMessage(
@@ -113,7 +114,7 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           removeReaction(review.nodeId, reaction);
 
           console.log(
-            `\u2705 Reaction "${reaction}" removed from review #${reviewId}.`,
+            `${SUCCESS()} Reaction "${reaction}" removed from review #${reviewId}.`,
           );
         } catch (error) {
           exitWithMessage(

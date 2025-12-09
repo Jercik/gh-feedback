@@ -10,6 +10,7 @@ import type {
   Classifier,
 } from "./types.js";
 import { ALLOWED_REACTIONS } from "./constants.js";
+import { WARNING } from "./tty-output.js";
 
 export function formatCommentInfo(comment: CommentInfo): string {
   const lines: string[] = [`Comment #${comment.id} by @${comment.author}`];
@@ -20,7 +21,7 @@ export function formatCommentInfo(comment: CommentInfo): string {
 
   if (comment.inReplyToId) {
     lines.push(
-      `\u26A0\uFE0F  Warning: This is already a reply to comment #${comment.inReplyToId}`,
+      `${WARNING()} Warning: This is already a reply to comment #${comment.inReplyToId}`,
       `   (You cannot reply to replies, only to top-level review comments)`,
     );
   }
