@@ -23,8 +23,10 @@ export async function readMessageFromStdin(prompt: string): Promise<string> {
     output: process.stderr,
   });
 
-  console.error(`Enter your ${prompt} (press Ctrl+D when done):`);
-  console.error("---");
+  if (process.stdin.isTTY) {
+    console.error(`Enter your ${prompt} (press Ctrl+D when done):`);
+    console.error("---");
+  }
 
   const lines: string[] = [];
 
