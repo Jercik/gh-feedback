@@ -41,18 +41,20 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
           console.error(formatHidePreview(issue, comment, reason));
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Minimizing comment...");
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
-            console.log(
+            console.error(
               `${SUCCESS} Comment #${comment.id} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(`${WARNING} Comment #${comment.id} was not minimized.`);
+            console.error(
+              `${WARNING} Comment #${comment.id} was not minimized.`,
+            );
           }
         } catch (error) {
           exitWithMessage(
@@ -89,16 +91,16 @@ export function registerCommentVisibilityCommands(commentCmd: Command): void {
         console.error("Action: unminimize (show)");
 
         if (options.dryRun) {
-          console.log("Dry run: no changes made.");
+          console.error("Dry run: no changes made.");
           return;
         }
 
         console.error("Unminimizing comment...");
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
-          console.log(`${WARNING} Comment #${commentId} state unchanged.`);
+          console.error(`${WARNING} Comment #${commentId} state unchanged.`);
         } else {
-          console.log(`${SUCCESS} Comment #${commentId} is now visible.`);
+          console.error(`${SUCCESS} Comment #${commentId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

@@ -32,10 +32,7 @@ process.on("SIGINT", () => {
 // CLI Setup
 // =============================================================================
 
-const program = createProgram(
-  "gh-feedback",
-  "Interact with PR feedback on the current branch's pull request.",
-);
+const program = createProgram();
 
 program.addHelpText(
   "after",

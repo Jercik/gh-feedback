@@ -39,7 +39,7 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
           const review = fetchReviewInfo(ownerRepo, reviewId);
 
           if (review.isMinimized) {
-            console.log(`Review #${reviewId} is already minimized.`);
+            console.error(`Review #${reviewId} is already minimized.`);
             return;
           }
 
@@ -57,18 +57,18 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
           console.error(`Action: minimize with reason ${reason}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Minimizing review...");
           const minimizeResult = minimizeComment(review.nodeId, reason);
           if (minimizeResult.isMinimized) {
-            console.log(
+            console.error(
               `${SUCCESS} Review #${reviewId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(`${WARNING} Review #${reviewId} was not minimized.`);
+            console.error(`${WARNING} Review #${reviewId} was not minimized.`);
           }
         } catch (error) {
           exitWithMessage(
@@ -100,7 +100,7 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
         const review = fetchReviewInfo(ownerRepo, reviewId);
 
         if (!review.isMinimized) {
-          console.log(`Review #${reviewId} is not minimized.`);
+          console.error(`Review #${reviewId} is not minimized.`);
           return;
         }
 
@@ -111,16 +111,16 @@ export function registerReviewVisibilityCommands(reviewCmd: Command): void {
         console.error("Action: unminimize (show)");
 
         if (options.dryRun) {
-          console.log("Dry run: no changes made.");
+          console.error("Dry run: no changes made.");
           return;
         }
 
         console.error("Unminimizing review...");
         const unminimizeResult = unminimizeComment(review.nodeId);
         if (unminimizeResult.isMinimized) {
-          console.log(`${WARNING} Review #${reviewId} state unchanged.`);
+          console.error(`${WARNING} Review #${reviewId} state unchanged.`);
         } else {
-          console.log(`${SUCCESS} Review #${reviewId} is now visible.`);
+          console.error(`${SUCCESS} Review #${reviewId} is now visible.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
