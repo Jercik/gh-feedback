@@ -51,18 +51,18 @@ export function registerVisibilityCommands(threadCmd: Command): void {
           console.error(`Action: minimize with reason ${reason}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Minimizing comment...");
           const minimizeResult = minimizeComment(comment.node_id, reason);
           if (minimizeResult.isMinimized) {
-            console.log(
+            console.error(
               `${SUCCESS} Thread comment #${commentId} minimized (${minimizeResult.minimizedReason ?? reason}).`,
             );
           } else {
-            console.log(
+            console.error(
               `${WARNING} Thread comment #${commentId} was not minimized.`,
             );
           }
@@ -106,18 +106,18 @@ export function registerVisibilityCommands(threadCmd: Command): void {
         console.error("Action: unminimize (show)");
 
         if (options.dryRun) {
-          console.log("Dry run: no changes made.");
+          console.error("Dry run: no changes made.");
           return;
         }
 
         console.error("Unminimizing comment...");
         const unminimizeResult = unminimizeComment(comment.node_id);
         if (unminimizeResult.isMinimized) {
-          console.log(
+          console.error(
             `${WARNING} Thread comment #${commentId} state unchanged.`,
           );
         } else {
-          console.log(
+          console.error(
             `${SUCCESS} Thread comment #${commentId} is now visible.`,
           );
         }

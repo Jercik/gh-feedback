@@ -50,14 +50,14 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           console.error(`Reaction to add: ${reaction}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Posting reaction...");
           addReaction(review.nodeId, reaction);
 
-          console.log(
+          console.error(
             `${SUCCESS} Reaction "${reaction}" added to review #${reviewId}.`,
           );
         } catch (error) {
@@ -106,14 +106,14 @@ export function registerReviewReactionCommands(reviewCmd: Command): void {
           console.error(`Reaction to remove: ${reaction}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Removing reaction...");
           removeReaction(review.nodeId, reaction);
 
-          console.log(
+          console.error(
             `${SUCCESS} Reaction "${reaction}" removed from review #${reviewId}.`,
           );
         } catch (error) {

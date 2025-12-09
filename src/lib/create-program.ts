@@ -4,15 +4,12 @@ import { verifyPrerequisites } from "./github-environment.js";
 
 /**
  * Create a Commander program with common configuration and preAction hooks.
- *
- * @param name - CLI name
- * @param description - CLI description
- * @returns Configured Command instance
+ * Imports name, version, and description from package.json.
  */
-export function createProgram(name: string, description: string): Command {
+export function createProgram(): Command {
   const program = new Command()
-    .name(name)
-    .description(description)
+    .name(packageJson.name)
+    .description(packageJson.description)
     .version(packageJson.version)
     .showHelpAfterError("(add --help for additional information)")
     .showSuggestionAfterError();

@@ -68,7 +68,7 @@ export function registerReplyCommand(threadCmd: Command): void {
           console.error("---");
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
@@ -80,9 +80,9 @@ export function registerReplyCommand(threadCmd: Command): void {
             replyText,
           );
 
-          console.log(`${SUCCESS} Reply posted successfully!`);
-          console.log(`   Comment ID: ${result.id}`);
-          console.log(`   URL: ${result.url}`);
+          console.error(`${SUCCESS} Reply posted successfully!`);
+          console.log(result.id);
+          console.log(result.url);
         } catch (error: unknown) {
           exitWithMessage(
             error instanceof Error ? error.message : String(error),

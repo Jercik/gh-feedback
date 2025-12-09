@@ -50,14 +50,14 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           console.error(`Reaction to add: ${reaction}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Posting reaction...");
           addReaction(comment.node_id, reaction);
 
-          console.log(
+          console.error(
             `${SUCCESS} Reaction "${reaction}" added to comment #${commentId}.`,
           );
         } catch (error) {
@@ -105,14 +105,14 @@ export function registerCommentReactionCommands(commentCmd: Command): void {
           console.error(`Reaction to remove: ${reaction}`);
 
           if (options.dryRun) {
-            console.log("Dry run: no changes made.");
+            console.error("Dry run: no changes made.");
             return;
           }
 
           console.error("Removing reaction...");
           removeReaction(comment.node_id, reaction);
 
-          console.log(
+          console.error(
             `${SUCCESS} Reaction "${reaction}" removed from comment #${commentId}.`,
           );
         } catch (error) {

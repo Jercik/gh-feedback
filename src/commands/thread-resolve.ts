@@ -37,14 +37,14 @@ export function registerResolveCommands(threadCmd: Command): void {
         const { prNumber, thread } = findThreadByCommentId(comment, commentId);
 
         if (thread.isResolved) {
-          console.log(`Thread is already resolved.`);
+          console.error(`Thread is already resolved.`);
           return;
         }
 
         console.error(formatThreadPreview(prNumber, thread, "resolve"));
 
         if (options.dryRun) {
-          console.log("Dry run: no changes made.");
+          console.error("Dry run: no changes made.");
           return;
         }
 
@@ -52,9 +52,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = resolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`${SUCCESS} Thread resolved.`);
+          console.error(`${SUCCESS} Thread resolved.`);
         } else {
-          console.log(`${WARNING} Thread state unchanged.`);
+          console.error(`${WARNING} Thread state unchanged.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
@@ -84,14 +84,14 @@ export function registerResolveCommands(threadCmd: Command): void {
         const { prNumber, thread } = findThreadByCommentId(comment, commentId);
 
         if (!thread.isResolved) {
-          console.log(`Thread is already unresolved.`);
+          console.error(`Thread is already unresolved.`);
           return;
         }
 
         console.error(formatThreadPreview(prNumber, thread, "unresolve"));
 
         if (options.dryRun) {
-          console.log("Dry run: no changes made.");
+          console.error("Dry run: no changes made.");
           return;
         }
 
@@ -99,9 +99,9 @@ export function registerResolveCommands(threadCmd: Command): void {
         const result = unresolveThread(thread.id);
 
         if (result.isResolved) {
-          console.log(`${WARNING} Thread state unchanged.`);
+          console.error(`${WARNING} Thread state unchanged.`);
         } else {
-          console.log(`${SUCCESS} Thread unresolved.`);
+          console.error(`${SUCCESS} Thread unresolved.`);
         }
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
