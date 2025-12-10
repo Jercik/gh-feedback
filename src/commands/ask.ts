@@ -51,7 +51,15 @@ export function registerAskCommand(program: Command): void {
 
           console.error(`Detecting item type for #${itemId}...`);
           const item = detectItemType(owner, repo, itemId);
-          const { viewerReactions } = getItemStatus(item);
+
+          // Check if already in a done status - must use 'start' first
+          const { doneStatus, viewerReactions } = getItemStatus(item);
+          if (doneStatus) {
+            exitWithMessage(
+              `Error: Item #${itemId} is already "${doneStatus}". ` +
+                `Use 'start' first to re-open it before changing status.`,
+            );
+          }
 
           console.error(`Found ${item.type} #${item.id} by @${item.author}`);
           if (item.path) {
