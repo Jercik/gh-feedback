@@ -118,7 +118,7 @@ export function isStatusDone(status: FeedbackStatus): boolean {
 export function truncateMiddle(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
 
-  const ellipsis = " [...] ";
+  const ellipsis = " [TRUNCATED] ";
   const availableLength = maxLength - ellipsis.length;
   const startLength = Math.ceil(availableLength / 2);
   const endLength = Math.floor(availableLength / 2);
