@@ -21,11 +21,8 @@ type ResolveResult = {
 };
 
 export function resolveItem(item: DetectedItem): ResolveResult {
-  if (item.type === "thread") {
-    if (!item.threadId) {
-      throw new Error("Thread ID missing for thread item");
-    }
-
+  // Threads (including reviews that target thread comments)
+  if (item.threadId) {
     if (item.isResolved) {
       return { resolved: true, method: "resolved" };
     }
@@ -48,21 +45,15 @@ type UnresolveResult = {
  * Unresolve/unhide a feedback item.
  *
  * - Threads: unresolved via GitHub's unresolve API
+ * - Reviews with thread comments: unresolve the underlying thread
  * - Comments/Reviews: unhidden (unminimized)
  */
 export function unresolveItem(
   item: DetectedItem,
   isMinimized: boolean,
 ): UnresolveResult {
-  if (item.type === "thread") {
-    if (!item.threadId) {
-      throw new Error("Thread ID missing for thread item");
-    }
-
-    if (!item.isResolved) {
-      return { unresolved: true, method: "unresolved" };
-    }
-
+  // Threads (including reviews that target thread comments)
+  if (item.threadId && item.isResolved) {
     const result = unresolveThread(item.threadId);
     return { unresolved: !result.isResolved, method: "unresolved" };
   }
