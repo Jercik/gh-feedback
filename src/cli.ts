@@ -72,7 +72,10 @@ program
   .description("Get all PR feedback with semantic status")
   .option("--hide-hidden", "Exclude minimized items")
   .option("--hide-resolved", "Exclude resolved items")
-  .option("-p, --porcelain", "Output as TSV (machine-readable)")
+  .option(
+    "-p, --porcelain",
+    "Output as TSV (auto-detected when stdout is not a TTY)",
+  )
   .option("-j, --json", "Output as JSON")
   .action(
     (options: {

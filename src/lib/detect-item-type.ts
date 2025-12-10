@@ -192,6 +192,7 @@ export function detectItemType(
   if (review) return review;
 
   exitWithMessage(
-    `Error: Could not find item #${itemId}. Ensure you're on the correct branch for this PR.`,
+    `Error: Could not find item #${itemId}. Ensure you're on the correct branch for this PR. ` +
+      `Note: For reviews, only the 20 most recent PRs are searched.`,
   );
 }
