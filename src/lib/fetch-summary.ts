@@ -145,12 +145,11 @@ export function fetchSummary(
   allItems.sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
-  const items = allItems;
 
   return {
     prNumber,
     prUrl: pr.url,
     prTitle: pr.title,
-    items,
+    items: allItems,
   };
 }
