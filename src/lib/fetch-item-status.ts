@@ -12,18 +12,21 @@ const ITEM_REACTIONS_QUERY = `
   query($id: ID!) {
     node(id: $id) {
       ... on PullRequestReviewComment {
+        isMinimized
         reactionGroups {
           content
           viewerHasReacted
         }
       }
       ... on IssueComment {
+        isMinimized
         reactionGroups {
           content
           viewerHasReacted
         }
       }
       ... on PullRequestReview {
+        isMinimized
         reactionGroups {
           content
           viewerHasReacted
@@ -41,6 +44,7 @@ type ReactionGroup = {
 type QueryResult = {
   data: {
     node: {
+      isMinimized?: boolean;
       reactionGroups: ReactionGroup[];
     } | null;
   };
@@ -62,7 +66,8 @@ export function getItemDoneStatus(
   }
 
   const reactions = result.data.node.reactionGroups;
-  const isDone = item.isResolved ?? false;
+  // isDone: threads use isResolved, comments/reviews use isMinimized
+  const isDone = item.isResolved ?? result.data.node.isMinimized ?? false;
 
   const status = reactionToStatus(reactions, isDone);
 
