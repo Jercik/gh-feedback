@@ -78,7 +78,10 @@ function tryDetectComment(
     // Extract PR number from issue_url
     const issueUrl = new URL(comment.issue_url);
     const prMatch = issueUrl.pathname.match(/\/issues\/(\d+)$/u);
-    const prNumber = prMatch?.[1] ? Number.parseInt(prMatch[1]) : 0;
+    if (!prMatch?.[1]) {
+      return undefined;
+    }
+    const prNumber = Number.parseInt(prMatch[1]);
 
     return {
       type: "comment",

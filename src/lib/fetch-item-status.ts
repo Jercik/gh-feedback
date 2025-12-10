@@ -5,6 +5,8 @@
  */
 
 import type { DetectedItem } from "./detect-item-type.js";
+import type { ReactionContent } from "./types.js";
+import { GRAPHQL_TO_REACTION } from "./constants.js";
 import { graphqlQuery } from "./github-graphql.js";
 import { reactionToStatus, isStatusDone } from "./summary-types.js";
 
@@ -50,19 +52,25 @@ type QueryResult = {
   };
 };
 
+type ItemStatusResult = {
+  doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
+  viewerReactions: ReactionContent[];
+};
+
 /**
- * Check if an item is in a "done" workflow status (agreed/disagreed/acknowledged).
- * Returns the current status if done, undefined otherwise.
+ * Fetch item workflow status and viewer's current reactions.
+ *
+ * Returns:
+ * - doneStatus: The current done status if item is done, undefined otherwise
+ * - viewerReactions: List of reactions the viewer has added to this item
  */
-export function getItemDoneStatus(
-  item: DetectedItem,
-): "agreed" | "disagreed" | "acknowledged" | undefined {
+export function getItemStatus(item: DetectedItem): ItemStatusResult {
   const result = graphqlQuery<QueryResult>(ITEM_REACTIONS_QUERY, {
     id: item.nodeId,
   });
 
   if (!result.data.node) {
-    return undefined;
+    return { doneStatus: undefined, viewerReactions: [] };
   }
 
   const reactions = result.data.node.reactionGroups;
@@ -71,9 +79,14 @@ export function getItemDoneStatus(
 
   const status = reactionToStatus(reactions, isDone);
 
-  if (isStatusDone(status)) {
-    return status as "agreed" | "disagreed" | "acknowledged";
-  }
+  const viewerReactions = reactions
+    .filter((r) => r.viewerHasReacted)
+    .map((r) => GRAPHQL_TO_REACTION[r.content])
+    .filter((r): r is ReactionContent => r !== undefined);
 
-  return undefined;
+  const doneStatus = isStatusDone(status)
+    ? (status as "agreed" | "disagreed" | "acknowledged")
+    : undefined;
+
+  return { doneStatus, viewerReactions };
 }

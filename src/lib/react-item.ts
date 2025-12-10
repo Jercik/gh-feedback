@@ -28,23 +28,18 @@ function removeReactionFromItem(
 }
 
 /**
- * Try to remove a reaction, ignoring "not found" errors.
- * Logs warnings for unexpected errors to aid debugging.
+ * Remove only the reactions that the viewer has actually added.
+ *
+ * More efficient than blindly trying to remove all possible conflicting
+ * reactions - only makes API calls for reactions that exist.
  */
-export function tryRemoveReactionFromItem(
+export function removeViewerReactions(
   item: DetectedItem,
-  reaction: ReactionContent,
+  viewerReactions: ReactionContent[],
+  toRemove: ReactionContent[],
 ): void {
-  try {
+  const reactionsToRemove = toRemove.filter((r) => viewerReactions.includes(r));
+  for (const reaction of reactionsToRemove) {
     removeReactionFromItem(item, reaction);
-  } catch (error) {
-    // Expected when reaction doesn't exist - silently ignore
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes("not found") && !message.includes("does not exist")) {
-      // Unexpected error - log for debugging but don't fail the workflow
-      console.error(
-        `Warning: Failed to remove ${reaction} reaction: ${message}`,
-      );
-    }
   }
 }
