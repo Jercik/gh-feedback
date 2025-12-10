@@ -1,6 +1,6 @@
 # gh-feedback
 
-Unified CLI for GitHub pull request feedback operations. Interact with reviews, threads, and comments on the current branch's PR.
+Semantic CLI for GitHub pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on the current branch's PR.
 
 ## Installation
 
@@ -17,69 +17,106 @@ npm install -g gh-feedback
 ## Usage
 
 ```bash
-# List all feedback (reviews, threads, comments)
-gh-feedback status
+# Get all PR feedback with status
+gh-feedback summary
 
-# Read full details for a specific item
-gh-feedback read 123456
+# Get TSV output for scripting
+gh-feedback summary --porcelain
 
-# React to a thread comment
-gh-feedback thread react 123456 eyes
+# Get full content of a specific item
+gh-feedback detail 123456
 
-# Reply to a thread (with message flag)
-gh-feedback thread reply 123456 -m 'Fixed in commit abc123'
+# Mark item as work-in-progress
+gh-feedback start 123456
 
-# Reply to a thread (from stdin)
-echo "Fixed in commit abc123" | gh-feedback thread reply 123456
+# Mark as agreed/fixed (reply + resolve)
+gh-feedback agree 123456 -m 'Fixed in commit abc123'
 
-# Resolve a thread
-gh-feedback thread resolve 123456
+# Mark as disagreed/won't fix
+gh-feedback disagree 123456 -m 'Intentional, see docs'
+
+# Request clarification
+gh-feedback ask 123456 -m 'Could you clarify the expected behavior?'
+
+# Acknowledge noise (hide)
+gh-feedback ack 123456
 
 # Preview any action without executing
-gh-feedback thread resolve 123456 --dry-run
+gh-feedback agree 123456 -m 'Fixed' --dry-run
 ```
 
 ## Commands
 
-| Command     | Description                                         |
-| ----------- | --------------------------------------------------- |
-| `status`    | Show PR feedback (reviews, threads, comments)       |
-| `read <id>` | Fetch full details for a specific item              |
-| `review`    | Operations on PR reviews                            |
-| `comment`   | Operations on PR comments (Conversation tab)        |
-| `thread`    | Operations on PR review threads (Files Changed tab) |
+| Command                  | Description                                   |
+| ------------------------ | --------------------------------------------- |
+| `summary`                | Get all PR feedback with semantic status      |
+| `detail <id>`            | Fetch full untruncated content                |
+| `start <id>`             | Mark as work-in-progress (adds eyes reaction) |
+| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)           |
+| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down + resolve)     |
+| `ask <id> -m "..."`      | Need clarification (reply + confused)         |
+| `ack <id>`               | Acknowledge noise (rocket + hide)             |
 
-### Thread Subcommands
+### Summary Output
 
-| Command                          | Description          |
-| -------------------------------- | -------------------- |
-| `thread reply <id>`              | Reply to a thread    |
-| `thread resolve <id>`            | Resolve a thread     |
-| `thread unresolve <id>`          | Unresolve a thread   |
-| `thread react <id> <reaction>`   | Add a reaction       |
-| `thread unreact <id> <reaction>` | Remove a reaction    |
-| `thread hide <id>`               | Minimize a comment   |
-| `thread show <id>`               | Unminimize a comment |
+The `summary` command outputs all PR feedback with semantic status. Status combines your reactions with resolution state:
 
-### Reactions
-
-Supported reactions: `+1`, `-1`, `laugh`, `confused`, `heart`, `hooray`, `rocket`, `eyes`
+| Status           | Meaning                                 |
+| ---------------- | --------------------------------------- |
+| `pending`        | Needs attention (no reaction, not done) |
+| `in-progress`    | Being worked on (not yet resolved)      |
+| `awaiting-reply` | Asked question, waiting for answer      |
+| `agreed`         | Fixed (👍 + resolved)                   |
+| `disagreed`      | Won't fix (👎 + resolved)               |
+| `acknowledged`   | Noted, no action (🚀 + hidden)          |
 
 ### Output Formats
 
-- Default: Human-readable text
+- **TTY (default)**: Human-readable multi-line format
+- **Non-TTY / `--porcelain`**: Tab-separated values (TSV) for scripting
 - `--json`: Machine-readable JSON output
+
+### TSV Columns
+
+```
+ID  TIMESTAMP  STATUS  AUTHOR  LOCATION  BODY  RESPONSES
+```
+
+## Unix Pipeline Examples
+
+```bash
+# Filter to only pending items
+gh-feedback summary | awk -F'\t' '$3 == "pending"'
+
+# Filter to items awaiting reply
+gh-feedback summary | awk -F'\t' '$3 == "awaiting-reply"'
+
+# Sort by timestamp (oldest first)
+gh-feedback summary | tail -n +2 | sort -t$'\t' -k2
+
+# Count items by status
+gh-feedback summary | tail -n +2 | cut -f3 | sort | uniq -c
+
+# Get just IDs of pending items
+gh-feedback summary | awk -F'\t' '$3 == "pending" {print $1}'
+
+# Filter items in a specific file
+gh-feedback summary | awk -F'\t' '$5 ~ /src\/auth/'
+
+# JSON output with jq (redirect stderr to suppress progress message)
+gh-feedback summary --json 2>/dev/null | jq '.items[0]'
+```
 
 ## Agent Rule
 
 Add to your `CLAUDE.md` or `AGENTS.md`:
 
 ```markdown
-# Rule: `gh-feedback` CLI Usage
+# Rule: gh-feedback CLI Usage
 
 `gh-feedback` is a globally available CLI. Prefer it over `gh` for PR feedback operations. Use it to list reviews/threads/comments, read details, reply, react, resolve, hide/show. Always operates on the current branch's PR.
 
-Before first use in a session, run `gh-feedback --help` and subcommand help (e.g., `gh-feedback thread --help`) to learn available commands and options.
+Before first use in a session, run `gh-feedback --help` and subcommand help (e.g., `gh-feedback agree --help`) to learn available commands and options.
 ```
 
 ## License

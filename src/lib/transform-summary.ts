@@ -1,44 +1,49 @@
 /**
- * Transform functions for summary feedback data.
+ * Transform GraphQL feedback data into unified FeedbackItem format.
  */
 
-import type {
-  ReviewSummary,
-  ThreadSummary,
-  CommentSummary,
-  ReviewState,
-} from "./types.js";
+import type { ReviewState } from "./types.js";
+import type { FeedbackItem, FeedbackResponse } from "./summary-types.js";
+import { reactionToStatus, formatLocation } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
 
 // =============================================================================
 // GraphQL Node Types
 // =============================================================================
 
+type ReactionGroup = {
+  content: string;
+  viewerHasReacted: boolean;
+};
+
 export type SummaryReviewNode = {
   databaseId: number;
-  author: { login: string };
+  author: { login: string } | null; // null for deleted users (ghost)
   state: ReviewState;
   body: string;
   submittedAt: string;
   isMinimized: boolean;
+  reactionGroups: ReactionGroup[];
 };
 
 export type SummaryCommentNode = {
   databaseId: number;
-  author: { login: string };
+  author: { login: string } | null; // null for deleted users (ghost)
   body: string;
   createdAt: string;
   isMinimized: boolean;
+  reactionGroups: ReactionGroup[];
 };
 
 type SummaryThreadCommentNode = {
   databaseId: number;
-  author: { login: string };
+  author: { login: string } | null; // null for deleted users (ghost)
   body: string;
   path: string | null;
   line: number | null;
   createdAt: string;
   isMinimized: boolean;
+  reactionGroups: ReactionGroup[];
 };
 
 export type SummaryThreadNode = {
@@ -51,70 +56,81 @@ export type SummaryThreadNode = {
 // Transform Functions
 // =============================================================================
 
-export function transformSummaryReviews(
+export function transformReviews(
   nodes: SummaryReviewNode[],
   hideHidden: boolean,
-): ReviewSummary[] {
+): FeedbackItem[] {
   return nodes
     .filter((r) => !hideHidden || !r.isMinimized)
     .filter((r) => r.body && r.body.trim().length > 0)
-    .filter((r) => !isIgnoredAuthor(r.author.login))
+    .filter((r) => !r.author || !isIgnoredAuthor(r.author.login))
     .map((r) => ({
       id: r.databaseId,
-      author: r.author.login,
-      state: r.state,
+      timestamp: r.submittedAt,
+      status: reactionToStatus(r.reactionGroups, r.isMinimized),
+      author: r.author?.login ?? "ghost",
+      location: "",
       body: r.body,
-      submittedAt: r.submittedAt,
-      isResolved: r.isMinimized,
+      responses: [], // Reviews don't have inline responses
     }));
 }
 
-export function transformSummaryThreads(
+export function transformComments(
+  nodes: SummaryCommentNode[],
+  hideHidden: boolean,
+): FeedbackItem[] {
+  return nodes
+    .filter((c) => !hideHidden || !c.isMinimized)
+    .filter((c) => !c.author || !isIgnoredAuthor(c.author.login))
+    .map((c) => ({
+      id: c.databaseId,
+      timestamp: c.createdAt,
+      status: reactionToStatus(c.reactionGroups, c.isMinimized),
+      author: c.author?.login ?? "ghost",
+      location: "",
+      body: c.body,
+      responses: [], // Issue comments don't have threaded responses
+    }));
+}
+
+export function transformThreads(
   nodes: SummaryThreadNode[],
   hideHidden: boolean,
   hideResolved: boolean,
-): ThreadSummary[] {
-  const results: ThreadSummary[] = [];
+): FeedbackItem[] {
+  const results: FeedbackItem[] = [];
 
   for (const t of nodes) {
     if (hideResolved && t.isResolved) continue;
 
     const visibleComments = t.comments.nodes
       .filter((c) => !hideHidden || !c.isMinimized)
-      .filter((c) => !isIgnoredAuthor(c.author.login));
+      .filter((c) => !c.author || !isIgnoredAuthor(c.author.login));
 
     const first = visibleComments[0];
     if (!first) continue;
 
+    // First comment is the original feedback
+    // Subsequent comments are responses
+    const responses: FeedbackResponse[] = visibleComments.slice(1).map((c) => ({
+      author: c.author?.login ?? "ghost",
+      timestamp: c.createdAt,
+      body: c.body,
+    }));
+
+    // Combine reactions from all comments in thread for status
+    const allReactions = visibleComments.flatMap((c) => c.reactionGroups);
+
     results.push({
       id: first.databaseId,
-      path: first.path,
-      line: first.line,
-      isResolved: t.isResolved,
-      isOutdated: t.isOutdated,
-      comments: visibleComments.map((c) => ({
-        id: c.databaseId,
-        author: c.author.login,
-        body: c.body,
-        createdAt: c.createdAt,
-      })),
+      timestamp: first.createdAt,
+      status: reactionToStatus(allReactions, t.isResolved),
+      author: first.author?.login ?? "ghost",
+      location: formatLocation(first.path, first.line),
+      body: first.body,
+      responses,
     });
   }
 
   return results;
-}
-
-export function transformSummaryComments(
-  nodes: SummaryCommentNode[],
-  hideHidden: boolean,
-): CommentSummary[] {
-  return nodes
-    .filter((c) => !hideHidden || !c.isMinimized)
-    .filter((c) => !isIgnoredAuthor(c.author.login))
-    .map((c) => ({
-      id: c.databaseId,
-      author: c.author.login,
-      body: c.body,
-      createdAt: c.createdAt,
-    }));
 }

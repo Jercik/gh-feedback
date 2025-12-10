@@ -10,18 +10,6 @@ import { getThreadForComment } from "./fetch-thread.js";
 import { tryFetchReview, type ReviewDetail } from "./fetch-review.js";
 import { tryFetchIssueComment, type CommentDetail } from "./fetch-comment.js";
 
-// Re-export for backward compatibility
-export {
-  fetchIssueComment,
-  getCommentInfo,
-  fetchReviewComment,
-  postReply,
-} from "./fetch-comment.js";
-
-export { fetchReviewInfo } from "./fetch-review.js";
-
-export { findThreadByCommentId } from "./fetch-thread.js";
-
 type ThreadDetail = {
   type: "thread";
   id: number;

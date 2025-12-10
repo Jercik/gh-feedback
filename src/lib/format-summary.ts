@@ -1,117 +1,173 @@
 /**
- * Format PR feedback summary for LLM context.
+ * Format feedback summary for output.
  *
- * Output is optimized for:
- * - Quick understanding of all feedback points
- * - Identifying duplicate issues
- * - Understanding what responses were already given
+ * Two modes:
+ * - TSV: Tab-separated values for scripting/piping
+ * - Pretty: Human-readable for interactive use
  */
 
-import type { PullRequestSummary, ThreadSummary } from "./types.js";
+import type {
+  FeedbackSummary,
+  FeedbackItem,
+  FeedbackResponse,
+} from "./summary-types.js";
+import { truncateMiddle, isStatusDone } from "./summary-types.js";
 
-function formatThreadComments(thread: ThreadSummary): string[] {
+const MAX_BODY_LENGTH = 500;
+const RESPONSE_SEPARATOR = "|";
+
+/**
+ * Escape special characters for TSV output.
+ * Newlines → \n, tabs → \t
+ */
+function escapeTsv(text: string): string {
+  return text
+    .replaceAll("\\", "\\\\")
+    .replaceAll("\t", String.raw`\t`)
+    .replaceAll("\n", String.raw`\n`)
+    .replaceAll("\r", String.raw`\r`);
+}
+
+/**
+ * Format responses for TSV output.
+ * Each response: @author timestamp: body
+ * Separated by |
+ */
+function formatResponsesTsv(responses: readonly FeedbackResponse[]): string {
+  if (responses.length === 0) return "";
+
+  return responses
+    .map((r) => {
+      const body = truncateMiddle(r.body, MAX_BODY_LENGTH);
+      return `@${r.author} ${r.timestamp}: ${body}`;
+    })
+    .join(RESPONSE_SEPARATOR);
+}
+
+/**
+ * Format summary as TSV (tab-separated values).
+ * One line per item, header row included.
+ */
+function formatSummaryTsv(summary: FeedbackSummary): string {
+  // Header row
+  const header = [
+    "ID",
+    "TIMESTAMP",
+    "STATUS",
+    "AUTHOR",
+    "LOCATION",
+    "BODY",
+    "RESPONSES",
+  ].join("\t");
+
+  // Data rows
+  const rows = summary.items.map((item) => {
+    const body = truncateMiddle(item.body, MAX_BODY_LENGTH);
+    const responses = formatResponsesTsv(item.responses);
+
+    return [
+      String(item.id),
+      item.timestamp,
+      item.status,
+      item.author,
+      item.location,
+      escapeTsv(body),
+      escapeTsv(responses),
+    ].join("\t");
+  });
+
+  return [header, ...rows].join("\n");
+}
+
+/**
+ * Format responses for pretty output.
+ */
+function formatResponsesPretty(
+  responses: readonly FeedbackResponse[],
+): string[] {
   const lines: string[] = [];
-  for (const comment of thread.comments) {
-    lines.push(`  @${comment.author} (${comment.createdAt}):`);
-    for (const bodyLine of comment.body.split("\n")) {
+  for (const r of responses) {
+    lines.push(`  > @${r.author} ${r.timestamp}:`);
+    for (const bodyLine of r.body.split("\n")) {
       lines.push(`    ${bodyLine}`);
     }
-    lines.push("");
   }
   return lines;
 }
 
-function formatThread(thread: ThreadSummary): string[] {
-  const status = thread.isResolved ? "[RESOLVED]" : "[OPEN]";
-  const outdated = thread.isOutdated ? " (outdated)" : "";
-  const location = thread.path
-    ? `${thread.path}${thread.line ? `:${thread.line}` : ""}`
-    : "general";
+/**
+ * Format a single item for pretty output.
+ */
+function formatItemPretty(item: FeedbackItem): string[] {
+  const lines: string[] = [];
 
-  return [
-    `Thread #${thread.id} ${status}${outdated}`,
-    `Location: ${location}`,
-    "",
-    ...formatThreadComments(thread),
-  ];
+  // Item header
+  const location = item.location ? `  ${item.location}` : "";
+  lines.push(
+    `#${item.id}  ${item.timestamp}  ${item.status}  @${item.author}${location}`,
+  );
+
+  // Body (indented)
+  const body = truncateMiddle(item.body, MAX_BODY_LENGTH);
+  for (const bodyLine of body.split("\n")) {
+    lines.push(`  ${bodyLine}`);
+  }
+
+  // Responses
+  if (item.responses.length > 0) {
+    lines.push(...formatResponsesPretty(item.responses));
+  }
+
+  return lines;
 }
 
-export function formatSummary(summary: PullRequestSummary): string {
-  const openThreads = summary.threads.filter((t) => !t.isResolved);
-  const resolvedThreads = summary.threads.filter((t) => t.isResolved);
+/**
+ * Format summary as pretty human-readable output.
+ */
+function formatSummaryPretty(summary: FeedbackSummary): string {
+  // Split into pending and done based on status
+  const pending = summary.items.filter((item) => !isStatusDone(item.status));
+  const done = summary.items.filter((item) => isStatusDone(item.status));
 
+  // Build output
   const lines: string[] = [
-    `Pull Request #${summary.number}: ${summary.title}`,
-    `URL: ${summary.url}`,
+    `PR #${summary.prNumber}: ${summary.prTitle}`,
+    summary.prUrl,
     "",
-    "Statistics:",
-    `  Reviews: ${summary.reviews.length}`,
-    `  Threads: ${openThreads.length} open, ${resolvedThreads.length} resolved`,
-    `  Comments: ${summary.comments.length}`,
+    `PENDING (${pending.length})`,
     "",
   ];
 
-  // Reviews
-  if (summary.reviews.length > 0) {
-    lines.push("=".repeat(60), "REVIEWS", "=".repeat(60), "");
-
-    for (const review of summary.reviews) {
-      lines.push(
-        `Review #${review.id} [${review.state}]`,
-        `By: @${review.author} (${review.submittedAt})`,
-        "",
-      );
-      for (const bodyLine of review.body.split("\n")) {
-        lines.push(`  ${bodyLine}`);
-      }
-      lines.push("", "-".repeat(40), "");
+  if (pending.length === 0) {
+    lines.push("  (none)", "");
+  } else {
+    for (const item of pending) {
+      lines.push(...formatItemPretty(item), "");
     }
   }
 
-  // Threads (code review comments)
-  if (summary.threads.length > 0) {
-    lines.push("=".repeat(60), "CODE REVIEW THREADS", "=".repeat(60), "");
+  lines.push(`DONE (${done.length})`, "");
 
-    if (openThreads.length > 0) {
-      lines.push("--- Open Threads ---", "");
-      for (const thread of openThreads) {
-        lines.push(...formatThread(thread), "-".repeat(40), "");
-      }
+  if (done.length === 0) {
+    lines.push("  (none)");
+  } else {
+    for (const item of done) {
+      lines.push(...formatItemPretty(item), "");
     }
-
-    if (resolvedThreads.length > 0) {
-      lines.push("--- Resolved Threads ---", "");
-      for (const thread of resolvedThreads) {
-        lines.push(...formatThread(thread), "-".repeat(40), "");
-      }
-    }
-  }
-
-  // General comments (conversation tab)
-  if (summary.comments.length > 0) {
-    lines.push("=".repeat(60), "GENERAL COMMENTS", "=".repeat(60), "");
-
-    for (const comment of summary.comments) {
-      lines.push(
-        `Comment #${comment.id}`,
-        `By: @${comment.author} (${comment.createdAt})`,
-        "",
-      );
-      for (const bodyLine of comment.body.split("\n")) {
-        lines.push(`  ${bodyLine}`);
-      }
-      lines.push("", "-".repeat(40), "");
-    }
-  }
-
-  // Summary footer with context for LLM
-  if (
-    summary.reviews.length === 0 &&
-    summary.threads.length === 0 &&
-    summary.comments.length === 0
-  ) {
-    lines.push("No feedback found on this pull request.");
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Format summary - auto-select format based on options.
+ */
+export function formatSummary(
+  summary: FeedbackSummary,
+  options: { porcelain?: boolean } = {},
+): string {
+  if (options.porcelain) {
+    return formatSummaryTsv(summary);
+  }
+  return formatSummaryPretty(summary);
 }

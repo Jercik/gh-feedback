@@ -2,15 +2,9 @@
  * Thread fetching operations.
  */
 
-import type {
-  ReactionGroupNode,
-  PullRequestReviewComment,
-  ThreadInfo,
-} from "./types.js";
+import type { ReactionGroupNode, PullRequestReviewComment } from "./types.js";
 import { ghJson } from "./github-cli.js";
-import { getRepositoryInfo } from "./github-environment.js";
 import { graphqlPaginate } from "./github-graphql.js";
-import { exitWithMessage } from "./git-helpers.js";
 import { THREAD_BY_COMMENT_QUERY } from "./graphql-queries.js";
 
 type ThreadNode = {
@@ -87,41 +81,4 @@ export function getThreadForComment(
   }
 
   return { prNumber, thread };
-}
-
-export function findThreadByCommentId(
-  comment: PullRequestReviewComment,
-  commentDatabaseId: number,
-): {
-  prNumber: number;
-  thread: ThreadInfo;
-} {
-  try {
-    const { owner, repo } = getRepositoryInfo();
-    const { prNumber, thread } = getThreadForComment(
-      owner,
-      repo,
-      commentDatabaseId,
-      comment,
-    );
-
-    return {
-      prNumber,
-      thread: {
-        id: thread.id,
-        isResolved: thread.isResolved,
-        path: thread.path ?? "(unknown)",
-        line: thread.line,
-        comments: thread.comments.nodes.map((c) => ({
-          databaseId: c.databaseId,
-          author: c.author,
-          body: c.body,
-        })),
-      },
-    };
-  } catch (error) {
-    exitWithMessage(
-      `Error finding thread: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
 }

@@ -1,8 +1,9 @@
 /**
- * Fetch complete PR feedback with body content for LLM context.
+ * Fetch complete PR feedback for summary output.
  */
 
-import type { PageInfo, PullRequestSummary } from "./types.js";
+import type { PageInfo } from "./types.js";
+import type { FeedbackSummary, FeedbackItem } from "./summary-types.js";
 import { graphqlQuery, graphqlPaginate } from "./github-graphql.js";
 import {
   SUMMARY_FEEDBACK_QUERY,
@@ -11,9 +12,9 @@ import {
   SUMMARY_THREADS_PAGINATION_QUERY,
 } from "./graphql-queries.js";
 import {
-  transformSummaryReviews,
-  transformSummaryThreads,
-  transformSummaryComments,
+  transformReviews,
+  transformComments,
+  transformThreads,
   type SummaryReviewNode,
   type SummaryCommentNode,
   type SummaryThreadNode,
@@ -29,7 +30,7 @@ export function fetchSummary(
   repo: string,
   prNumber: number,
   options: FetchOptions = {},
-): PullRequestSummary {
+): FeedbackSummary {
   const { hideHidden = false, hideResolved = false } = options;
 
   const result = graphqlQuery<{
@@ -129,30 +130,27 @@ export function fetchSummary(
     allThreads = [...allThreads, ...rest];
   }
 
-  const reviews = transformSummaryReviews(allReviews, hideHidden);
-  const threads = transformSummaryThreads(allThreads, hideHidden, hideResolved);
-  const comments = transformSummaryComments(allComments, hideHidden);
+  // Transform to unified FeedbackItem format
+  const reviewItems = transformReviews(allReviews, hideHidden);
+  const threadItems = transformThreads(allThreads, hideHidden, hideResolved);
+  const commentItems = transformComments(allComments, hideHidden);
 
-  // Sort by date
-  reviews.sort(
-    (a, b) =>
-      new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
+  // Combine all items and sort by timestamp
+  const allItems: FeedbackItem[] = [
+    ...reviewItems,
+    ...threadItems,
+    ...commentItems,
+  ];
+  // Sort in place (allItems is already a new array from spread)
+  allItems.sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
-  threads.sort(
-    (a, b) =>
-      new Date(a.comments[0]?.createdAt ?? 0).getTime() -
-      new Date(b.comments[0]?.createdAt ?? 0).getTime(),
-  );
-  comments.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-  );
+  const items = allItems;
 
   return {
-    number: prNumber,
-    url: pr.url,
-    title: pr.title,
-    reviews,
-    threads,
-    comments,
+    prNumber,
+    prUrl: pr.url,
+    prTitle: pr.title,
+    items,
   };
 }
