@@ -2,6 +2,44 @@
  * GraphQL query strings for GitHub API.
  */
 
+/**
+ * Lightweight query for finding a thread by comment ID.
+ *
+ * Optimized for thread lookup - fetches minimal data:
+ * - 100 threads per page (more than default since less data per thread)
+ * - Only databaseId for comments (just enough to match)
+ * - Only first comment per thread (thread starter has the ID we're looking for)
+ *
+ * Used by findThreadByCommentId() with early exit when found.
+ */
+export const THREAD_LOOKUP_QUERY = `
+  query($owner: String!, $repo: String!, $pr: Int!, $cursor: String) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $pr) {
+        reviewThreads(first: 100, after: $cursor) {
+          pageInfo { endCursor hasNextPage }
+          nodes {
+            id
+            isResolved
+            isOutdated
+            path
+            line
+            comments(first: 100) {
+              nodes { databaseId }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Full thread query with complete comment data.
+ *
+ * Used when we need full thread details (author, body, reactions).
+ * More expensive than THREAD_LOOKUP_QUERY - use sparingly.
+ */
 export const THREAD_BY_COMMENT_QUERY = `
   query($owner: String!, $repo: String!, $pr: Int!, $cursor: String) {
     repository(owner: $owner, name: $repo) {

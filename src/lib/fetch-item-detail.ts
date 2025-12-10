@@ -3,13 +3,39 @@
  * Re-exports from specialized modules for backward compatibility.
  */
 
-import type { Reaction } from "./types.js";
-import { isNotFoundError } from "./github-cli.js";
-import { mapReactions } from "./github-graphql.js";
+import type {
+  Reaction,
+  ReactionGroupNode,
+  PullRequestReviewComment,
+} from "./types.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
+import { mapReactions, graphqlPaginate } from "./github-graphql.js";
 import { exitWithMessage } from "./git-helpers.js";
-import { getThreadForComment } from "./fetch-thread.js";
+import { THREAD_BY_COMMENT_QUERY } from "./graphql-queries.js";
 import { tryFetchReview, type ReviewDetail } from "./fetch-review.js";
 import { tryFetchIssueComment, type CommentDetail } from "./fetch-comment.js";
+
+/**
+ * Full thread node with complete comment data for display.
+ */
+type FullThreadNode = {
+  id: string;
+  isResolved: boolean;
+  isOutdated: boolean;
+  path: string | null;
+  line: number | null;
+  comments: {
+    nodes: Array<{
+      databaseId: number;
+      author: { login: string };
+      body: string;
+      path: string | null;
+      line: number | null;
+      createdAt: string;
+      reactionGroups: ReactionGroupNode[];
+    }>;
+  };
+};
 
 type ThreadDetail = {
   type: "thread";
@@ -29,13 +55,53 @@ type ThreadDetail = {
 
 export type ItemDetail = ReviewDetail | ThreadDetail | CommentDetail;
 
+/**
+ * Fetch full thread data for display in the detail command.
+ * Returns undefined if thread not found.
+ */
 function tryFetchThread(
   owner: string,
   repo: string,
   itemId: number,
 ): ThreadDetail | undefined {
   try {
-    const { thread } = getThreadForComment(owner, repo, itemId);
+    // Get comment to determine PR number
+    const comment = ghJson<PullRequestReviewComment>(
+      "api",
+      `repos/${owner}/${repo}/pulls/comments/${itemId}`,
+    );
+
+    const prMatch = comment.pull_request_url.match(/\/pulls\/(\d+)$/u);
+    if (!prMatch?.[1]) return undefined;
+    const prNumber = Number.parseInt(prMatch[1]);
+
+    // Fetch all threads with full data for display
+    const threads = graphqlPaginate<FullThreadNode>(
+      THREAD_BY_COMMENT_QUERY,
+      { owner, repo, pr: prNumber },
+      (response) => {
+        const data = response as {
+          data: {
+            repository: {
+              pullRequest: {
+                reviewThreads: {
+                  pageInfo: { endCursor: string | null; hasNextPage: boolean };
+                  nodes: FullThreadNode[];
+                };
+              };
+            };
+          };
+        };
+        return data.data.repository.pullRequest.reviewThreads;
+      },
+    );
+
+    const thread = threads.find((t) =>
+      t.comments.nodes.some((c) => c.databaseId === itemId),
+    );
+
+    if (!thread) return undefined;
+
     return {
       type: "thread",
       id: itemId,
