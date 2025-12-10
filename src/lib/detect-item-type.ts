@@ -30,6 +30,15 @@ export type DetectedItem = {
   line?: number | null;
 };
 
+/**
+ * Check if an error indicates the item was not found (404).
+ * Only these errors should be swallowed during item type detection.
+ */
+function isNotFoundError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("404") || message.includes("Not Found");
+}
+
 function tryDetectThread(
   owner: string,
   repo: string,
@@ -59,8 +68,9 @@ function tryDetectThread(
       path: thread.path,
       line: thread.line,
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }
 
@@ -90,8 +100,9 @@ function tryDetectComment(
       author: comment.user?.login ?? "ghost",
       prNumber,
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }
 
@@ -112,6 +123,7 @@ function tryDetectReview(
   try {
     currentPrNumber = getPullRequestNumber();
   } catch {
+    // No PR for current branch, will search recent PRs
     currentPrNumber = undefined;
   }
 
@@ -128,8 +140,9 @@ function tryDetectReview(
         author: review.user?.login ?? "ghost",
         prNumber: currentPrNumber,
       };
-    } catch {
-      // Not in current PR, fall through to search
+    } catch (error) {
+      // Only continue if review not found in this PR (404)
+      if (!isNotFoundError(error)) throw error;
     }
   }
 
@@ -158,13 +171,15 @@ function tryDetectReview(
           author: review.user?.login ?? "ghost",
           prNumber: pr.number,
         };
-      } catch {
-        // Not found in this PR, continue
+      } catch (error) {
+        // Only continue if review not found in this PR (404)
+        if (!isNotFoundError(error)) throw error;
       }
     }
     return undefined;
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }
 
