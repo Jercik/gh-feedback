@@ -4,10 +4,10 @@
  * Uses lightweight queries with early exit to minimize API rate limit usage.
  */
 
-import type { PullRequestReviewComment } from "./types.js";
+import type { PullRequestReviewComment, ReactionGroupNode } from "./types.js";
 import { ghJson } from "./github-cli.js";
 import { graphqlQuery } from "./github-graphql.js";
-import { THREAD_LOOKUP_QUERY } from "./graphql-queries.js";
+import { THREAD_LOOKUP_QUERY, THREAD_DETAIL_QUERY } from "./graphql-queries.js";
 
 /**
  * Minimal thread info returned by the lookup query.
@@ -164,4 +164,50 @@ export function getThreadForComment(
   }
 
   return { prNumber, thread };
+}
+
+/**
+ * Full thread data returned by the detail query.
+ */
+type ThreadDetailData = {
+  id: string;
+  isResolved: boolean;
+  isOutdated: boolean;
+  path: string | null;
+  line: number | null;
+  comments: {
+    nodes: Array<{
+      databaseId: number;
+      author: { login: string };
+      body: string;
+      path: string | null;
+      line: number | null;
+      createdAt: string;
+      reactionGroups: ReactionGroupNode[];
+    }>;
+  };
+};
+
+/**
+ * Response shape for the thread detail query.
+ */
+type ThreadDetailResponse = {
+  data: {
+    node: ThreadDetailData | null;
+  };
+};
+
+/**
+ * Fetch full thread data by node_id.
+ *
+ * Used after lightweight lookup identifies which thread to display.
+ * Much cheaper than paginating all threads to find the target.
+ */
+export function fetchThreadDetail(
+  threadNodeId: string,
+): ThreadDetailData | undefined {
+  const response = graphqlQuery<ThreadDetailResponse>(THREAD_DETAIL_QUERY, {
+    id: threadNodeId,
+  });
+  return response.data.node ?? undefined;
 }

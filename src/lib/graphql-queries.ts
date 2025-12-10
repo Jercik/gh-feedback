@@ -35,40 +35,35 @@ export const THREAD_LOOKUP_QUERY = `
 `;
 
 /**
- * Full thread query with complete comment data.
+ * Fetch a single thread by node_id with full comment data.
  *
- * Used when we need full thread details (author, body, reactions).
- * More expensive than THREAD_LOOKUP_QUERY - use sparingly.
+ * Used after lightweight lookup identifies which thread to display.
+ * Much cheaper than paginating all threads.
  */
-export const THREAD_BY_COMMENT_QUERY = `
-  query($owner: String!, $repo: String!, $pr: Int!, $cursor: String) {
-    repository(owner: $owner, name: $repo) {
-      pullRequest(number: $pr) {
-        reviewThreads(first: 50, after: $cursor) {
-          pageInfo { endCursor hasNextPage }
+export const THREAD_DETAIL_QUERY = `
+  query($id: ID!) {
+    node(id: $id) {
+      ... on PullRequestReviewThread {
+        id
+        isResolved
+        isOutdated
+        path
+        line
+        comments(first: 100) {
           nodes {
-            id
-            isResolved
-            isOutdated
+            databaseId
+            author { login }
+            body
             path
             line
-            comments(first: 100) {
-              nodes {
-                databaseId
-                author { login }
-                body
-                path
-                line
-                createdAt
-                reactionGroups {
-                  content
-                  users(first: 50) {
-                    totalCount
-                    nodes { login }
-                  }
-                  viewerHasReacted
-                }
+            createdAt
+            reactionGroups {
+              content
+              users(first: 50) {
+                totalCount
+                nodes { login }
               }
+              viewerHasReacted
             }
           }
         }
