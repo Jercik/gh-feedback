@@ -84,17 +84,26 @@ export function registerAskCommand(program: Command): void {
           console.error("Posting question...");
           const reply = replyToItem(item, message);
 
-          // 2. Remove conflicting status reactions (only those we've added)
-          removeViewerReactions(item, viewerReactions, [
-            "eyes", // in-progress
-            "+1", // agreed
-            "-1", // disagreed
-            "rocket", // acknowledged
-          ]);
+          // 2-3: Status updates (best-effort after reply succeeds)
+          try {
+            // 2. Remove conflicting status reactions (only those we've added)
+            removeViewerReactions(item, viewerReactions, [
+              "eyes", // in-progress
+              "+1", // agreed
+              "-1", // disagreed
+              "rocket", // acknowledged
+            ]);
 
-          // 3. Add confused (item stays open for response)
-          console.error("Adding reaction...");
-          addReactionToItem(item, "confused");
+            // 3. Add confused (item stays open for response)
+            console.error("Adding reaction...");
+            addReactionToItem(item, "confused");
+          } catch (statusError) {
+            console.error(
+              `Warning: Question posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+            );
+            console.error(`Reply URL: ${reply.url}`);
+            // Continue - question was posted successfully
+          }
 
           // Note: Do NOT resolve - item stays open awaiting reply
 

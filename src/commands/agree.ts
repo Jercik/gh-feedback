@@ -85,21 +85,30 @@ export function registerAgreeCommand(program: Command): void {
           console.error("Posting reply...");
           const reply = replyToItem(item, message);
 
-          // 2. Remove conflicting status reactions (only those we've added)
-          removeViewerReactions(item, viewerReactions, [
-            "eyes", // in-progress
-            "-1", // disagreed
-            "rocket", // acknowledged
-            "confused", // awaiting-reply
-          ]);
+          // 2-4: Status updates (best-effort after reply succeeds)
+          try {
+            // 2. Remove conflicting status reactions (only those we've added)
+            removeViewerReactions(item, viewerReactions, [
+              "eyes", // in-progress
+              "-1", // disagreed
+              "rocket", // acknowledged
+              "confused", // awaiting-reply
+            ]);
 
-          // 3. Add thumbs_up
-          console.error("Adding reaction...");
-          addReactionToItem(item, "+1");
+            // 3. Add thumbs_up
+            console.error("Adding reaction...");
+            addReactionToItem(item, "+1");
 
-          // 4. Resolve
-          console.error("Resolving...");
-          resolveItem(item);
+            // 4. Resolve
+            console.error("Resolving...");
+            resolveItem(item);
+          } catch (statusError) {
+            console.error(
+              `Warning: Reply posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+            );
+            console.error(`Reply URL: ${reply.url}`);
+            // Continue - reply was posted successfully
+          }
 
           console.error(`${SUCCESS} Marked #${itemId} as agreed.`);
           console.log(reply.url);
