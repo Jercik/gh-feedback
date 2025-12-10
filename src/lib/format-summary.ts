@@ -18,14 +18,16 @@ const RESPONSE_SEPARATOR = "|";
 
 /**
  * Escape special characters for TSV output.
- * Newlines → \n, tabs → \t
+ * Newlines → \n, tabs → \t, pipe → \|
+ * Pipe escaping prevents confusion with RESPONSE_SEPARATOR.
  */
 function escapeTsv(text: string): string {
   return text
     .replaceAll("\\", "\\\\")
     .replaceAll("\t", String.raw`\t`)
     .replaceAll("\n", String.raw`\n`)
-    .replaceAll("\r", String.raw`\r`);
+    .replaceAll("\r", String.raw`\r`)
+    .replaceAll("|", String.raw`\|`);
 }
 
 /**
