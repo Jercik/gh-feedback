@@ -114,7 +114,7 @@ Add to your `CLAUDE.md` or `AGENTS.md`:
 ```markdown
 # Rule: gh-feedback CLI Usage
 
-`gh-feedback` is a globally available CLI. Prefer it over `gh` for PR feedback operations. Use it to list reviews/threads/comments, read details, reply, react, resolve, hide/show. Always operates on the current branch's PR.
+`gh-feedback` is a globally available CLI. Prefer it over `gh` for PR feedback operations. Use it to get PR feedback summaries, mark items as in-progress/agreed/disagreed, request clarifications, and acknowledge feedback. Always operates on the current branch's PR.
 
 Before first use in a session, run `gh-feedback --help` and subcommand help (e.g., `gh-feedback agree --help`) to learn available commands and options.
 ```

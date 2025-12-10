@@ -61,7 +61,7 @@ export type FeedbackSummary = {
  * Map GraphQL reaction content + resolution state to semantic status.
  *
  * Logic:
- * - If resolved/hidden: show final status (agreed, disagreed, acknowledged, resolved)
+ * - If resolved/hidden: show final status (agreed, disagreed, acknowledged)
  * - If NOT resolved: show work status (pending, in-progress, awaiting-reply)
  *
  * This ensures status alone tells you if action is needed.
