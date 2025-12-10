@@ -76,16 +76,15 @@ function postPRComment(
 }
 
 export function replyToItem(item: DetectedItem, message: string): ReplyResult {
-  if (message.length > MAX_COMMENT_LENGTH) {
-    exitWithMessage(
-      `Error: Message too long (${message.length} chars). ` +
-        `GitHub allows a maximum of ${MAX_COMMENT_LENGTH} characters.`,
-    );
-  }
-
   const { ownerRepo } = getRepositoryInfo();
 
   if (item.type === "thread") {
+    if (message.length > MAX_COMMENT_LENGTH) {
+      exitWithMessage(
+        `Error: Message too long (${message.length} chars). ` +
+          `GitHub allows a maximum of ${MAX_COMMENT_LENGTH} characters.`,
+      );
+    }
     return replyToThread(ownerRepo, item.prNumber, item.id, message);
   }
 
@@ -96,5 +95,14 @@ export function replyToItem(item: DetectedItem, message: string): ReplyResult {
       ? `> Replying to comment #${item.id}\n\n`
       : `> Replying to review #${item.id}\n\n`;
 
-  return postPRComment(ownerRepo, item.prNumber, prefix + message);
+  const fullMessage = prefix + message;
+
+  if (fullMessage.length > MAX_COMMENT_LENGTH) {
+    exitWithMessage(
+      `Error: Message too long (${fullMessage.length} chars including prefix). ` +
+        `GitHub allows a maximum of ${MAX_COMMENT_LENGTH} characters.`,
+    );
+  }
+
+  return postPRComment(ownerRepo, item.prNumber, fullMessage);
 }
