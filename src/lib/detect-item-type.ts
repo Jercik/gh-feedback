@@ -131,6 +131,9 @@ function tryDetectReview(
   }
 
   // Fallback: search recent PRs (limited to 20 - older reviews may not be found)
+  console.error(
+    `Note: Review #${itemId} not in current PR, searching recent PRs (this may be slow)...`,
+  );
   try {
     const prs = ghJson<Array<{ number: number }>>(
       "api",

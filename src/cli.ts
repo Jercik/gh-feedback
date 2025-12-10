@@ -56,7 +56,8 @@ Example workflow:
   $ gh-feedback detail 456           # Get full untruncated content
 
 Unix pipeline examples:
-  $ gh-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter pending
+  $ gh-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
+  $ gh-feedback summary | awk -F'\t' '$1 ~ /^123456$/'  # Filter by ID (use ~ not ==)
   $ gh-feedback summary | tail -n +2 | sort -t$'\t' -k3  # Sort by status
   $ gh-feedback summary --json 2>/dev/null | jq '.items[0]'  # JSON with jq
 `,
