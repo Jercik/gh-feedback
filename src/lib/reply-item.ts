@@ -33,7 +33,7 @@ function replyToThread(
       "-H",
       "Accept: application/vnd.github+json",
       `repos/${ownerRepo}/pulls/${prNumber}/comments/${commentId}/replies`,
-      "-f",
+      "--raw-field",
       `body=${message}`,
     );
 
@@ -63,7 +63,7 @@ function postPRComment(
       "-H",
       "Accept: application/vnd.github+json",
       `repos/${ownerRepo}/issues/${prNumber}/comments`,
-      "-f",
+      "--raw-field",
       `body=${message}`,
     );
 
