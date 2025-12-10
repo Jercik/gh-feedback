@@ -1,35 +1,36 @@
 /**
- * Unified feedback fetching for PR status command.
+ * Fetch complete PR feedback for summary output.
  */
 
-import type { PageInfo, PullRequestFeedback } from "./types.js";
+import type { PageInfo } from "./types.js";
+import type { FeedbackSummary, FeedbackItem } from "./summary-types.js";
 import { graphqlQuery, graphqlPaginate } from "./github-graphql.js";
 import {
-  UNIFIED_FEEDBACK_QUERY,
-  REVIEWS_PAGINATION_QUERY,
-  COMMENTS_PAGINATION_QUERY,
-  THREADS_PAGINATION_QUERY,
+  SUMMARY_FEEDBACK_QUERY,
+  SUMMARY_REVIEWS_PAGINATION_QUERY,
+  SUMMARY_COMMENTS_PAGINATION_QUERY,
+  SUMMARY_THREADS_PAGINATION_QUERY,
 } from "./graphql-queries.js";
 import {
   transformReviews,
-  transformThreads,
   transformComments,
-  type ReviewNode,
-  type ReviewThreadNode,
-  type TopLevelCommentNode,
-} from "./transform-feedback.js";
+  transformThreads,
+  type SummaryReviewNode,
+  type SummaryCommentNode,
+  type SummaryThreadNode,
+} from "./transform-summary.js";
 
 type FetchOptions = {
   hideHidden?: boolean;
   hideResolved?: boolean;
 };
 
-export function fetchAllFeedback(
+export function fetchSummary(
   owner: string,
   repo: string,
   prNumber: number,
   options: FetchOptions = {},
-): PullRequestFeedback {
+): FeedbackSummary {
   const { hideHidden = false, hideResolved = false } = options;
 
   const result = graphqlQuery<{
@@ -38,13 +39,13 @@ export function fetchAllFeedback(
         pullRequest: {
           title: string;
           url: string;
-          reviews: { pageInfo: PageInfo; nodes: ReviewNode[] };
-          comments: { pageInfo: PageInfo; nodes: TopLevelCommentNode[] };
-          reviewThreads: { pageInfo: PageInfo; nodes: ReviewThreadNode[] };
+          reviews: { pageInfo: PageInfo; nodes: SummaryReviewNode[] };
+          comments: { pageInfo: PageInfo; nodes: SummaryCommentNode[] };
+          reviewThreads: { pageInfo: PageInfo; nodes: SummaryThreadNode[] };
         };
       };
     };
-  }>(UNIFIED_FEEDBACK_QUERY, { owner, repo, pr: prNumber });
+  }>(SUMMARY_FEEDBACK_QUERY, { owner, repo, pr: prNumber });
 
   const pr = result.data.repository.pullRequest;
 
@@ -54,8 +55,8 @@ export function fetchAllFeedback(
 
   // Paginate reviews
   if (pr.reviews.pageInfo.hasNextPage && pr.reviews.pageInfo.endCursor) {
-    const rest = graphqlPaginate<ReviewNode>(
-      REVIEWS_PAGINATION_QUERY,
+    const rest = graphqlPaginate<SummaryReviewNode>(
+      SUMMARY_REVIEWS_PAGINATION_QUERY,
       { owner, repo, pr: prNumber, cursor: pr.reviews.pageInfo.endCursor },
       (r) =>
         (
@@ -63,7 +64,7 @@ export function fetchAllFeedback(
             data: {
               repository: {
                 pullRequest: {
-                  reviews: { pageInfo: PageInfo; nodes: ReviewNode[] };
+                  reviews: { pageInfo: PageInfo; nodes: SummaryReviewNode[] };
                 };
               };
             };
@@ -75,8 +76,8 @@ export function fetchAllFeedback(
 
   // Paginate comments
   if (pr.comments.pageInfo.hasNextPage && pr.comments.pageInfo.endCursor) {
-    const rest = graphqlPaginate<TopLevelCommentNode>(
-      COMMENTS_PAGINATION_QUERY,
+    const rest = graphqlPaginate<SummaryCommentNode>(
+      SUMMARY_COMMENTS_PAGINATION_QUERY,
       { owner, repo, pr: prNumber, cursor: pr.comments.pageInfo.endCursor },
       (r) =>
         (
@@ -86,7 +87,7 @@ export function fetchAllFeedback(
                 pullRequest: {
                   comments: {
                     pageInfo: PageInfo;
-                    nodes: TopLevelCommentNode[];
+                    nodes: SummaryCommentNode[];
                   };
                 };
               };
@@ -102,8 +103,8 @@ export function fetchAllFeedback(
     pr.reviewThreads.pageInfo.hasNextPage &&
     pr.reviewThreads.pageInfo.endCursor
   ) {
-    const rest = graphqlPaginate<ReviewThreadNode>(
-      THREADS_PAGINATION_QUERY,
+    const rest = graphqlPaginate<SummaryThreadNode>(
+      SUMMARY_THREADS_PAGINATION_QUERY,
       {
         owner,
         repo,
@@ -118,7 +119,7 @@ export function fetchAllFeedback(
                 pullRequest: {
                   reviewThreads: {
                     pageInfo: PageInfo;
-                    nodes: ReviewThreadNode[];
+                    nodes: SummaryThreadNode[];
                   };
                 };
               };
@@ -129,24 +130,26 @@ export function fetchAllFeedback(
     allThreads = [...allThreads, ...rest];
   }
 
-  const reviews = transformReviews(allReviews, hideHidden);
-  const threads = transformThreads(allThreads, hideHidden, hideResolved);
-  const comments = transformComments(allComments, hideHidden);
+  // Transform to unified FeedbackItem format
+  const reviewItems = transformReviews(allReviews, hideHidden);
+  const threadItems = transformThreads(allThreads, hideHidden, hideResolved);
+  const commentItems = transformComments(allComments, hideHidden);
 
-  reviews.sort(
-    (a, b) =>
-      new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
-  );
-  threads.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  // Combine all items and sort by timestamp
+  const allItems: FeedbackItem[] = [
+    ...reviewItems,
+    ...threadItems,
+    ...commentItems,
+  ];
+  // Sort in place (allItems is already a new array from spread)
+  allItems.sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 
   return {
-    number: prNumber,
-    url: pr.url,
-    title: pr.title,
-    reviews,
-    threads,
-    comments,
+    prNumber,
+    prUrl: pr.url,
+    prTitle: pr.title,
+    items: allItems,
   };
 }

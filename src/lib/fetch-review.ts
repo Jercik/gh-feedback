@@ -3,24 +3,10 @@
  */
 
 import type { ReactionGroupNode, Reaction, ReviewState } from "./types.js";
-import { ghJson } from "./github-cli.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
 import { getPullRequestNumber } from "./github-environment.js";
 import { graphqlQuery, mapReactions } from "./github-graphql.js";
-import { exitWithMessage } from "./git-helpers.js";
-import {
-  REVIEW_REACTIONS_QUERY,
-  REVIEW_MINIMIZED_QUERY,
-} from "./graphql-queries.js";
-
-type ReviewInfo = {
-  id: number;
-  nodeId: string;
-  prNumber: number;
-  author: string;
-  state: string;
-  body: string;
-  isMinimized: boolean;
-};
+import { REVIEW_REACTIONS_QUERY } from "./graphql-queries.js";
 
 export type ReviewDetail = {
   type: "review";
@@ -32,41 +18,6 @@ export type ReviewDetail = {
   body: string;
   reactions: Reaction[];
 };
-
-export function fetchReviewInfo(
-  ownerRepo: string,
-  reviewId: number,
-): ReviewInfo {
-  const prNumber = getPullRequestNumber();
-
-  try {
-    const review = ghJson<{
-      id: number;
-      node_id: string;
-      user: { login: string };
-      state: string;
-      body: string;
-    }>("api", `repos/${ownerRepo}/pulls/${prNumber}/reviews/${reviewId}`);
-
-    const gqlResult = graphqlQuery<{
-      data: { node: { isMinimized: boolean } | null };
-    }>(REVIEW_MINIMIZED_QUERY, { id: review.node_id });
-
-    return {
-      id: review.id,
-      nodeId: review.node_id,
-      prNumber,
-      author: review.user.login,
-      state: review.state,
-      body: review.body,
-      isMinimized: gqlResult.data.node?.isMinimized ?? false,
-    };
-  } catch {
-    // Fall through to error message
-  }
-
-  exitWithMessage(`Error: Review #${reviewId} not found in PR #${prNumber}.`);
-}
 
 export function tryFetchReview(
   owner: string,
@@ -86,7 +37,7 @@ export function tryFetchReview(
     const reviewRest = ghJson<{
       id: number;
       node_id: string;
-      user: { login: string };
+      user: { login: string } | null; // null for deleted users (ghost)
       state: string;
       html_url: string;
       submitted_at: string;
@@ -103,14 +54,15 @@ export function tryFetchReview(
     return {
       type: "review",
       id: reviewRest.id,
-      author: reviewRest.user.login,
+      author: reviewRest.user?.login ?? "ghost",
       state: reviewRest.state as ReviewState,
       url: reviewRest.html_url,
       submittedAt: reviewRest.submitted_at,
       body: reviewRest.body,
       reactions: mapReactions(r.reactionGroups),
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }

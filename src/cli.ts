@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 /**
- * gh-feedback.ts
+ * gh-feedback - Semantic CLI for GitHub PR feedback workflow.
  *
- * Unified CLI for GitHub pull request feedback operations.
- * Optimized for performance and reduced API usage.
+ * Commands:
+ *   summary    - Get all feedback context (TSV or pretty)
+ *   detail     - Get full content of a single item
+ *   start      - Mark item as work-in-progress
+ *   agree      - Mark as agreed/fixed (reply + resolve)
+ *   disagree   - Mark as disagreed/won't fix (reply + resolve)
+ *   ask        - Request clarification (reply, stays open)
+ *   ack        - Acknowledge noise (hide)
  */
 
 import { createProgram } from "./lib/create-program.js";
@@ -12,12 +18,14 @@ import {
   getPullRequestNumber,
 } from "./lib/github-environment.js";
 import { exitWithMessage } from "./lib/git-helpers.js";
-import { fetchAllFeedback } from "./lib/fetch-feedback.js";
-import { fetchItemDetail } from "./lib/fetch-item-detail.js";
-import { formatAllFeedback, formatItemDetail } from "./lib/formatters.js";
-import { registerReviewCommands } from "./commands/review.js";
-import { registerCommentCommands } from "./commands/comment.js";
-import { registerThreadCommands } from "./commands/thread.js";
+import { fetchSummary } from "./lib/fetch-summary.js";
+import { formatSummary } from "./lib/format-summary.js";
+import { registerStartCommand } from "./commands/start.js";
+import { registerAgreeCommand } from "./commands/agree.js";
+import { registerDisagreeCommand } from "./commands/disagree.js";
+import { registerAskCommand } from "./commands/ask.js";
+import { registerAckCommand } from "./commands/ack.js";
+import { registerDetailCommand } from "./commands/detail.js";
 
 // =============================================================================
 // Signal Handlers
@@ -36,52 +44,62 @@ const program = createProgram();
 
 program.addHelpText(
   "after",
-  `
+  String.raw`
 Example workflow:
-  $ gh-feedback status                    # List all feedback (reviews, threads, comments)
-  $ gh-feedback read 123456               # Read full details for item #123456
-  $ gh-feedback thread react 123456 eyes  # Mark as "looking into it"
-  $ gh-feedback thread reply 123456 -m 'Fixed in abc123'
-  $ gh-feedback thread unreact 123456 eyes
-  $ gh-feedback thread react 123456 +1    # Mark as done
-  $ gh-feedback thread resolve 123456     # Close the thread
+  $ gh-feedback summary              # Get all feedback (pretty format)
+  $ gh-feedback summary --porcelain  # Get all feedback (TSV for scripting)
+  $ gh-feedback start 456            # Mark #456 as in-progress
+  $ gh-feedback agree 456 -m 'Fixed in abc123'
+  $ gh-feedback disagree 456 -m 'Intentional, see docs'
+  $ gh-feedback ask 456 -m 'Could you clarify?'
+  $ gh-feedback ack 789              # Acknowledge bot noise
+  $ gh-feedback detail 456           # Get full untruncated content
 
-Using stdin for replies:
-  $ echo "Fixed in commit abc123" | gh-feedback thread reply 123456
-  $ cat message.md | gh-feedback thread reply 123456
+Unix pipeline examples:
+  $ gh-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
+  $ gh-feedback summary | awk -F'\t' '$1 ~ /^123456$/'  # Filter by ID (use ~ not ==)
+  $ gh-feedback summary | tail -n +2 | sort -t$'\t' -k3  # Sort by status
+  $ gh-feedback summary --json 2>/dev/null | jq '.items[0]'  # JSON with jq
 `,
 );
 
 // -----------------------------------------------------------------------------
-// Top-Level Status Command (unified feedback view)
+// Summary Command - Primary context gathering
 // -----------------------------------------------------------------------------
 
 program
-  .command("status")
-  .description("Show PR feedback (reviews, threads, comments).")
+  .command("summary")
+  .description("Get all PR feedback with semantic status")
   .option("--hide-hidden", "Exclude minimized items")
-  .option("--hide-resolved", "Exclude resolved threads")
-  .option("-j, --json", "Output results as JSON")
+  .option("--hide-resolved", "Exclude resolved items")
+  .option(
+    "-p, --porcelain",
+    "Output as TSV (auto-detected when stdout is not a TTY)",
+  )
+  .option("-j, --json", "Output as JSON")
   .action(
     (options: {
       hideHidden?: boolean;
       hideResolved?: boolean;
+      porcelain?: boolean;
       json?: boolean;
     }) => {
       try {
         const { owner, repo } = getRepositoryInfo();
         const prNumber = getPullRequestNumber();
 
-        console.error(`Fetching all feedback for PR #${prNumber}...`);
-        const feedback = fetchAllFeedback(owner, repo, prNumber, {
+        console.error(`Fetching feedback for PR #${prNumber}...`);
+        const summary = fetchSummary(owner, repo, prNumber, {
           hideHidden: options.hideHidden,
           hideResolved: options.hideResolved,
         });
 
         if (options.json) {
-          console.log(JSON.stringify(feedback, undefined, 2));
+          console.log(JSON.stringify(summary, undefined, 2));
         } else {
-          console.log(formatAllFeedback(feedback));
+          // Auto-detect: use TSV if not TTY or if --porcelain
+          const useTsv = options.porcelain ?? !process.stdout.isTTY;
+          console.log(formatSummary(summary, { porcelain: useTsv }));
         }
       } catch (error: unknown) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
@@ -90,45 +108,14 @@ program
   );
 
 // -----------------------------------------------------------------------------
-// Read Command - Fetch Full Details for Individual Items
+// Register Semantic Commands
 // -----------------------------------------------------------------------------
 
-program
-  .command("read")
-  .description(
-    "Fetch full details for a specific item (review, thread, or comment)",
-  )
-  .argument("<item-id>", "The item ID to fetch details for", (value) => {
-    const id = Number.parseInt(value);
-    if (Number.isNaN(id) || id <= 0) {
-      exitWithMessage(`Error: Invalid item ID "${value}".`);
-    }
-    return id;
-  })
-  .option("-j, --json", "Output results as JSON")
-  .action((itemId: number, options: { json?: boolean }) => {
-    try {
-      const { owner, repo } = getRepositoryInfo();
-
-      console.error(`Fetching details for item #${itemId}...`);
-      const item = fetchItemDetail(owner, repo, itemId);
-
-      if (options.json) {
-        console.log(JSON.stringify(item, undefined, 2));
-      } else {
-        console.log(formatItemDetail(item));
-      }
-    } catch (error: unknown) {
-      exitWithMessage(error instanceof Error ? error.message : String(error));
-    }
-  });
-
-// -----------------------------------------------------------------------------
-// Register Subcommands
-// -----------------------------------------------------------------------------
-
-registerReviewCommands(program);
-registerCommentCommands(program);
-registerThreadCommands(program);
+registerDetailCommand(program);
+registerStartCommand(program);
+registerAgreeCommand(program);
+registerDisagreeCommand(program);
+registerAskCommand(program);
+registerAckCommand(program);
 
 await program.parseAsync(process.argv);

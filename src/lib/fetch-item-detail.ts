@@ -3,24 +3,13 @@
  * Re-exports from specialized modules for backward compatibility.
  */
 
-import type { Reaction } from "./types.js";
+import type { Reaction, PullRequestReviewComment } from "./types.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
 import { mapReactions } from "./github-graphql.js";
 import { exitWithMessage } from "./git-helpers.js";
-import { getThreadForComment } from "./fetch-thread.js";
 import { tryFetchReview, type ReviewDetail } from "./fetch-review.js";
 import { tryFetchIssueComment, type CommentDetail } from "./fetch-comment.js";
-
-// Re-export for backward compatibility
-export {
-  fetchIssueComment,
-  getCommentInfo,
-  fetchReviewComment,
-  postReply,
-} from "./fetch-comment.js";
-
-export { fetchReviewInfo } from "./fetch-review.js";
-
-export { findThreadByCommentId } from "./fetch-thread.js";
+import { getThreadForComment, fetchThreadDetail } from "./fetch-thread.js";
 
 type ThreadDetail = {
   type: "thread";
@@ -40,13 +29,40 @@ type ThreadDetail = {
 
 export type ItemDetail = ReviewDetail | ThreadDetail | CommentDetail;
 
+/**
+ * Fetch full thread data for display in the detail command.
+ *
+ * Uses two-stage lookup to minimize API rate limit usage:
+ * 1. REST call to get comment (determines PR number)
+ * 2. Lightweight GraphQL lookup to find thread (with early exit)
+ * 3. Single GraphQL call to fetch that thread's full data
+ *
+ * This avoids paginating through all threads with full data.
+ */
 function tryFetchThread(
   owner: string,
   repo: string,
   itemId: number,
 ): ThreadDetail | undefined {
   try {
-    const { thread } = getThreadForComment(owner, repo, itemId);
+    // Get comment to determine PR number
+    const comment = ghJson<PullRequestReviewComment>(
+      "api",
+      `repos/${owner}/${repo}/pulls/comments/${itemId}`,
+    );
+
+    // Stage 1: Lightweight lookup to find the thread (with early exit)
+    const { thread: threadLookup } = getThreadForComment(
+      owner,
+      repo,
+      itemId,
+      comment,
+    );
+
+    // Stage 2: Fetch full thread data by node_id (single GraphQL call)
+    const thread = fetchThreadDetail(threadLookup.id);
+    if (!thread) return undefined;
+
     return {
       type: "thread",
       id: itemId,
@@ -62,8 +78,9 @@ function tryFetchThread(
         reactions: mapReactions(c.reactionGroups),
       })),
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }
 
