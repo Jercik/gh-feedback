@@ -2,6 +2,7 @@
  * Start command - mark item as "working on it"
  *
  * Adds 👀 (eyes) reaction to indicate work in progress.
+ * Also reopens the item if it was resolved/hidden.
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -10,6 +11,7 @@ import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
 import { getItemStatus } from "../lib/fetch-item-status.js";
 import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
+import { unresolveItem } from "../lib/resolve-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerStartCommand(program: Command): void {
@@ -32,7 +34,10 @@ export function registerStartCommand(program: Command): void {
 
         console.error(`Detecting item type for #${itemId}...`);
         const item = detectItemType(owner, repo, itemId);
-        const { viewerReactions } = getItemStatus(item);
+        const { viewerReactions, isMinimized } = getItemStatus(item);
+
+        // Check if item needs reopening
+        const needsReopen = item.isResolved || isMinimized;
 
         console.error(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
@@ -41,11 +46,21 @@ export function registerStartCommand(program: Command): void {
           );
         }
         console.error("");
-        console.error("Action: add eyes reaction (in-progress)");
+        if (needsReopen) {
+          console.error("Actions: reopen + eyes reaction (in-progress)");
+        } else {
+          console.error("Action: add eyes reaction (in-progress)");
+        }
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
           return;
+        }
+
+        // Reopen the item if it was resolved/hidden
+        if (needsReopen) {
+          console.error("Reopening...");
+          unresolveItem(item, isMinimized);
         }
 
         // Remove conflicting status reactions (only those we've added)

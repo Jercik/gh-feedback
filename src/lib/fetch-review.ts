@@ -3,7 +3,7 @@
  */
 
 import type { ReactionGroupNode, Reaction, ReviewState } from "./types.js";
-import { ghJson } from "./github-cli.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
 import { getPullRequestNumber } from "./github-environment.js";
 import { graphqlQuery, mapReactions } from "./github-graphql.js";
 import { REVIEW_REACTIONS_QUERY } from "./graphql-queries.js";
@@ -61,7 +61,8 @@ export function tryFetchReview(
       body: reviewRest.body,
       reactions: mapReactions(r.reactionGroups),
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }

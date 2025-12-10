@@ -140,3 +140,67 @@ export function resolveThread(threadId: string): { isResolved: boolean } {
     exitWithMessage(`Error resolving thread: ${message}`);
   }
 }
+
+export function unresolveThread(threadId: string): { isResolved: boolean } {
+  try {
+    const query = `mutation($threadId: ID!) {
+  unresolveReviewThread(input: { threadId: $threadId }) {
+    thread {
+      isResolved
+    }
+  }
+}`;
+
+    const result = graphqlQuery<{
+      data: {
+        unresolveReviewThread: {
+          thread: {
+            isResolved: boolean;
+          };
+        };
+      };
+    }>(query, { threadId });
+
+    return result.data.unresolveReviewThread.thread;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("must have write access")) {
+      exitWithMessage(
+        "Error: You do not have permission to unresolve this thread.",
+      );
+    }
+    exitWithMessage(`Error unresolving thread: ${message}`);
+  }
+}
+
+export function unminimizeComment(subjectId: string): { isMinimized: boolean } {
+  try {
+    const query = `mutation($subjectId: ID!) {
+  unminimizeComment(input: { subjectId: $subjectId }) {
+    unminimizedComment {
+      isMinimized
+    }
+  }
+}`;
+
+    const result = graphqlQuery<{
+      data: {
+        unminimizeComment: {
+          unminimizedComment: {
+            isMinimized: boolean;
+          };
+        };
+      };
+    }>(query, { subjectId });
+
+    return result.data.unminimizeComment.unminimizedComment;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("must have write access")) {
+      exitWithMessage(
+        "Error: You do not have permission to unminimize this comment.",
+      );
+    }
+    exitWithMessage(`Error unminimizing comment: ${message}`);
+  }
+}

@@ -3,7 +3,7 @@
  */
 
 import type { IssueComment, Reaction } from "./types.js";
-import { ghJson } from "./github-cli.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
 
 export type CommentDetail = {
   type: "comment";
@@ -48,7 +48,8 @@ export function tryFetchIssueComment(
             }))
         : [],
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }

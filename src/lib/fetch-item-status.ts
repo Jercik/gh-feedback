@@ -55,6 +55,7 @@ type QueryResult = {
 type ItemStatusResult = {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
+  isMinimized: boolean;
 };
 
 /**
@@ -63,6 +64,7 @@ type ItemStatusResult = {
  * Returns:
  * - doneStatus: The current done status if item is done, undefined otherwise
  * - viewerReactions: List of reactions the viewer has added to this item
+ * - isMinimized: Whether the comment/review is hidden (for unresolve logic)
  */
 export function getItemStatus(item: DetectedItem): ItemStatusResult {
   const result = graphqlQuery<QueryResult>(ITEM_REACTIONS_QUERY, {
@@ -70,12 +72,13 @@ export function getItemStatus(item: DetectedItem): ItemStatusResult {
   });
 
   if (!result.data.node) {
-    return { doneStatus: undefined, viewerReactions: [] };
+    return { doneStatus: undefined, viewerReactions: [], isMinimized: false };
   }
 
   const reactions = result.data.node.reactionGroups;
+  const isMinimized = result.data.node.isMinimized ?? false;
   // isDone: threads use isResolved, comments/reviews use isMinimized
-  const isDone = item.isResolved ?? result.data.node.isMinimized ?? false;
+  const isDone = item.isResolved ?? isMinimized;
 
   const status = reactionToStatus(reactions, isDone);
 
@@ -88,5 +91,5 @@ export function getItemStatus(item: DetectedItem): ItemStatusResult {
     ? (status as "agreed" | "disagreed" | "acknowledged")
     : undefined;
 
-  return { doneStatus, viewerReactions };
+  return { doneStatus, viewerReactions, isMinimized };
 }

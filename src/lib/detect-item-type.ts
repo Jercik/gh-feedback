@@ -6,7 +6,7 @@
  */
 
 import type { PullRequestReviewComment, IssueComment } from "./types.js";
-import { ghJson } from "./github-cli.js";
+import { ghJson, isNotFoundError } from "./github-cli.js";
 import { getThreadForComment } from "./fetch-thread.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getPullRequestNumber } from "./github-environment.js";
@@ -29,15 +29,6 @@ export type DetectedItem = {
   /** Line number (for threads) */
   line?: number | null;
 };
-
-/**
- * Check if an error indicates the item was not found (404).
- * Only these errors should be swallowed during item type detection.
- */
-function isNotFoundError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes("404") || message.includes("Not Found");
-}
 
 function tryDetectThread(
   owner: string,

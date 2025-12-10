@@ -4,6 +4,7 @@
  */
 
 import type { Reaction } from "./types.js";
+import { isNotFoundError } from "./github-cli.js";
 import { mapReactions } from "./github-graphql.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getThreadForComment } from "./fetch-thread.js";
@@ -50,8 +51,9 @@ function tryFetchThread(
         reactions: mapReactions(c.reactionGroups),
       })),
     };
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (isNotFoundError(error)) return undefined;
+    throw error;
   }
 }
 
