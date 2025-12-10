@@ -38,7 +38,8 @@ function formatResponsesTsv(responses: readonly FeedbackResponse[]): string {
 
   return responses
     .map((r) => {
-      const body = truncateMiddle(r.body, MAX_BODY_LENGTH);
+      // Escape individual response bodies before concatenating
+      const body = escapeTsv(truncateMiddle(r.body, MAX_BODY_LENGTH));
       return `@${r.author} ${r.timestamp}: ${body}`;
     })
     .join(RESPONSE_SEPARATOR);

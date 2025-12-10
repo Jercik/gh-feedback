@@ -37,7 +37,7 @@ export function tryFetchReview(
     const reviewRest = ghJson<{
       id: number;
       node_id: string;
-      user: { login: string };
+      user: { login: string } | null; // null for deleted users (ghost)
       state: string;
       html_url: string;
       submitted_at: string;
@@ -54,7 +54,7 @@ export function tryFetchReview(
     return {
       type: "review",
       id: reviewRest.id,
-      author: reviewRest.user.login,
+      author: reviewRest.user?.login ?? "ghost",
       state: reviewRest.state as ReviewState,
       url: reviewRest.html_url,
       submittedAt: reviewRest.submitted_at,

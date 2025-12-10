@@ -16,6 +16,9 @@ type ReplyResult = {
   url: string;
 };
 
+/** GitHub API limit for comment body length */
+const MAX_COMMENT_LENGTH = 65_536;
+
 function replyToThread(
   ownerRepo: string,
   prNumber: number,
@@ -73,6 +76,13 @@ function postPRComment(
 }
 
 export function replyToItem(item: DetectedItem, message: string): ReplyResult {
+  if (message.length > MAX_COMMENT_LENGTH) {
+    exitWithMessage(
+      `Error: Message too long (${message.length} chars). ` +
+        `GitHub allows a maximum of ${MAX_COMMENT_LENGTH} characters.`,
+    );
+  }
+
   const { ownerRepo } = getRepositoryInfo();
 
   if (item.type === "thread") {

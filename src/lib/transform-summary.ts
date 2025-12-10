@@ -81,6 +81,7 @@ export function transformComments(
 ): FeedbackItem[] {
   return nodes
     .filter((c) => !hideHidden || !c.isMinimized)
+    .filter((c) => c.body && c.body.trim().length > 0)
     .filter((c) => !c.author || !isIgnoredAuthor(c.author.login))
     .map((c) => ({
       id: c.databaseId,

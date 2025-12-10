@@ -58,7 +58,7 @@ export type IssueComment = {
   readonly id: number;
   readonly node_id: string;
   readonly body: string;
-  readonly user: { readonly login: string };
+  readonly user: { readonly login: string } | null; // null for deleted users (ghost)
   readonly issue_url: string;
   readonly html_url: string;
   readonly created_at: string;
@@ -84,7 +84,7 @@ export type PullRequestReviewComment = {
   readonly id: number;
   readonly node_id: string;
   readonly body: string;
-  readonly user: { readonly login: string };
+  readonly user: { readonly login: string } | null; // null for deleted users (ghost)
   readonly html_url: string;
   readonly pull_request_url: string;
   readonly path: string;

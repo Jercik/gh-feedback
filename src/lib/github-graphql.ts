@@ -17,7 +17,13 @@ export function graphqlPaginate<TNode>(
   extractPage: (response: unknown) => { pageInfo: PageInfo; nodes: TNode[] },
 ): TNode[] {
   const allNodes: TNode[] = [];
-  let cursor: string | undefined;
+  // Extract initial cursor from variables (if provided) and filter it out
+  // to avoid passing stale cursor on subsequent iterations
+  let cursor: string | undefined =
+    typeof variables.cursor === "string" ? variables.cursor : undefined;
+  const baseVariables = Object.fromEntries(
+    Object.entries(variables).filter(([key]) => key !== "cursor"),
+  );
   let hasNextPage = true;
 
   while (hasNextPage) {
@@ -26,7 +32,7 @@ export function graphqlPaginate<TNode>(
       "graphql",
       "-f",
       `query=${query}`,
-      ...Object.entries(variables).flatMap(([key, value]) => [
+      ...Object.entries(baseVariables).flatMap(([key, value]) => [
         "-F",
         `${key}=${String(value)}`,
       ]),

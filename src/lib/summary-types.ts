@@ -8,10 +8,16 @@
 /**
  * Semantic status derived from viewer's reactions AND resolution state.
  * Combines workflow state with done/not-done into a single field.
+ *
+ * IMPORTANT: "in-progress" items need careful attention - they may represent:
+ * 1. Work actively being done (eyes reaction)
+ * 2. Work interrupted from a previous session (needs continuation)
+ * 3. Items resolved outside our workflow (e.g., by someone else or accidentally)
+ *    - treat as new feedback and decide appropriate action
  */
 type FeedbackStatus =
   | "pending" // No reaction, not resolved - needs attention
-  | "in-progress" // Being worked on (or resolved without proper reaction)
+  | "in-progress" // Active work OR interrupted/incomplete - treat carefully
   | "awaiting-reply" // 😕 confused, not resolved - blocked on reviewer
   | "agreed" // 👍 thumbs_up + resolved - fixed
   | "disagreed" // 👎 thumbs_down + resolved - won't fix
@@ -68,11 +74,24 @@ export function reactionToStatus(
     reactions.filter((r) => r.viewerHasReacted).map((r) => r.content),
   );
 
+  // Check for conflicting final status reactions - indicates workflow issue
+  const hasThumbsUp = viewerReactions.has("THUMBS_UP");
+  const hasThumbsDown = viewerReactions.has("THUMBS_DOWN");
+  const hasRocket = viewerReactions.has("ROCKET");
+  const finalStatusCount = [hasThumbsUp, hasThumbsDown, hasRocket].filter(
+    Boolean,
+  ).length;
+
+  // Conflicting reactions = in-progress (something went wrong, needs review)
+  if (finalStatusCount > 1) {
+    return "in-progress";
+  }
+
   if (isDone) {
     // Item is resolved/hidden - show final status if properly reacted
-    if (viewerReactions.has("THUMBS_UP")) return "agreed";
-    if (viewerReactions.has("THUMBS_DOWN")) return "disagreed";
-    if (viewerReactions.has("ROCKET")) return "acknowledged";
+    if (hasThumbsUp) return "agreed";
+    if (hasThumbsDown) return "disagreed";
+    if (hasRocket) return "acknowledged";
     // Resolved without proper reaction - treat as in-progress so agent revisits
     return "in-progress";
   }

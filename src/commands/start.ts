@@ -8,7 +8,10 @@ import type { Command } from "@commander-js/extra-typings";
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
-import { addReactionToItem } from "../lib/react-item.js";
+import {
+  addReactionToItem,
+  tryRemoveReactionFromItem,
+} from "../lib/react-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerStartCommand(program: Command): void {
@@ -45,6 +48,12 @@ export function registerStartCommand(program: Command): void {
           console.error("Dry run: no changes made.");
           return;
         }
+
+        // Remove conflicting status reactions
+        tryRemoveReactionFromItem(item, "+1"); // agreed
+        tryRemoveReactionFromItem(item, "-1"); // disagreed
+        tryRemoveReactionFromItem(item, "rocket"); // acknowledged
+        tryRemoveReactionFromItem(item, "confused"); // awaiting-reply
 
         addReactionToItem(item, "eyes");
         console.error(`${SUCCESS} Marked #${itemId} as in-progress.`);

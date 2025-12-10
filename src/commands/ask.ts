@@ -14,7 +14,7 @@ import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
 import {
   addReactionToItem,
-  removeReactionFromItem,
+  tryRemoveReactionFromItem,
 } from "../lib/react-item.js";
 import { replyToItem } from "../lib/reply-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
@@ -77,12 +77,11 @@ export function registerAskCommand(program: Command): void {
           console.error("Posting question...");
           const reply = replyToItem(item, message);
 
-          // 2. Remove eyes if present (cleanup in-progress state)
-          try {
-            removeReactionFromItem(item, "eyes");
-          } catch {
-            // Ignore if not present
-          }
+          // 2. Remove conflicting status reactions
+          tryRemoveReactionFromItem(item, "eyes"); // in-progress
+          tryRemoveReactionFromItem(item, "+1"); // agreed
+          tryRemoveReactionFromItem(item, "-1"); // disagreed
+          tryRemoveReactionFromItem(item, "rocket"); // acknowledged
 
           // 3. Add confused (item stays open for response)
           console.error("Adding reaction...");

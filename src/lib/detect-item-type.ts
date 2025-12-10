@@ -9,6 +9,7 @@ import type { PullRequestReviewComment, IssueComment } from "./types.js";
 import { ghJson } from "./github-cli.js";
 import { getThreadForComment } from "./fetch-thread.js";
 import { exitWithMessage } from "./git-helpers.js";
+import { getPullRequestNumber } from "./github-environment.js";
 
 type ItemType = "thread" | "comment" | "review";
 
@@ -51,7 +52,7 @@ function tryDetectThread(
       type: "thread",
       id: itemId,
       nodeId: comment.node_id,
-      author: comment.user.login,
+      author: comment.user?.login ?? "ghost",
       threadId: thread.id,
       isResolved: thread.isResolved,
       prNumber,
@@ -83,7 +84,7 @@ function tryDetectComment(
       type: "comment",
       id: itemId,
       nodeId: comment.node_id,
-      author: comment.user.login,
+      author: comment.user?.login ?? "ghost",
       prNumber,
     };
   } catch {
@@ -94,7 +95,7 @@ function tryDetectComment(
 type ReviewResponse = {
   id: number;
   node_id: string;
-  user: { login: string };
+  user: { login: string } | null; // null for deleted users (ghost)
   pull_request_url: string;
 };
 
@@ -103,17 +104,42 @@ function tryDetectReview(
   repo: string,
   itemId: number,
 ): DetectedItem | undefined {
-  // Reviews need to be found by searching PR reviews
-  // This is more complex - we need to find which PR has this review
+  // Try current branch's PR first (most common case)
+  let currentPrNumber: number | undefined;
   try {
-    // Try to get the review directly if we know the PR
-    // For now, we'll search recent PRs
+    currentPrNumber = getPullRequestNumber();
+  } catch {
+    currentPrNumber = undefined;
+  }
+
+  if (currentPrNumber) {
+    try {
+      const review = ghJson<ReviewResponse>(
+        "api",
+        `repos/${owner}/${repo}/pulls/${currentPrNumber}/reviews/${itemId}`,
+      );
+      return {
+        type: "review",
+        id: itemId,
+        nodeId: review.node_id,
+        author: review.user?.login ?? "ghost",
+        prNumber: currentPrNumber,
+      };
+    } catch {
+      // Not in current PR, fall through to search
+    }
+  }
+
+  // Fallback: search recent PRs (limited to 20 - older reviews may not be found)
+  try {
     const prs = ghJson<Array<{ number: number }>>(
       "api",
       `repos/${owner}/${repo}/pulls?state=all&per_page=20`,
     );
 
     for (const pr of prs) {
+      // Skip current PR since we already checked it
+      if (pr.number === currentPrNumber) continue;
       try {
         const review = ghJson<ReviewResponse>(
           "api",
@@ -123,7 +149,7 @@ function tryDetectReview(
           type: "review",
           id: itemId,
           nodeId: review.node_id,
-          author: review.user.login,
+          author: review.user?.login ?? "ghost",
           prNumber: pr.number,
         };
       } catch {

@@ -12,9 +12,10 @@ import {
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
+import { getItemDoneStatus } from "../lib/fetch-item-status.js";
 import {
   addReactionToItem,
-  removeReactionFromItem,
+  tryRemoveReactionFromItem,
 } from "../lib/react-item.js";
 import { replyToItem } from "../lib/reply-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
@@ -57,6 +58,15 @@ export function registerDisagreeCommand(program: Command): void {
           console.error(`Detecting item type for #${itemId}...`);
           const item = detectItemType(owner, repo, itemId);
 
+          // Check if already in a done status - must use 'start' first
+          const doneStatus = getItemDoneStatus(item);
+          if (doneStatus) {
+            exitWithMessage(
+              `Error: Item #${itemId} is already "${doneStatus}". ` +
+                `Use 'start' first to re-open it before changing status.`,
+            );
+          }
+
           console.error(`Found ${item.type} #${item.id} by @${item.author}`);
           if (item.path) {
             console.error(
@@ -80,12 +90,11 @@ export function registerDisagreeCommand(program: Command): void {
           console.error("Posting reply...");
           const reply = replyToItem(item, message);
 
-          // 2. Remove eyes if present (cleanup in-progress state)
-          try {
-            removeReactionFromItem(item, "eyes");
-          } catch {
-            // Ignore if not present
-          }
+          // 2. Remove conflicting status reactions
+          tryRemoveReactionFromItem(item, "eyes"); // in-progress
+          tryRemoveReactionFromItem(item, "+1"); // agreed
+          tryRemoveReactionFromItem(item, "rocket"); // acknowledged
+          tryRemoveReactionFromItem(item, "confused"); // awaiting-reply
 
           // 3. Add thumbs_down
           console.error("Adding reaction...");

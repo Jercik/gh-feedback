@@ -9,7 +9,11 @@ import type { Command } from "@commander-js/extra-typings";
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
-import { addReactionToItem } from "../lib/react-item.js";
+import { getItemDoneStatus } from "../lib/fetch-item-status.js";
+import {
+  addReactionToItem,
+  tryRemoveReactionFromItem,
+} from "../lib/react-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
 
@@ -32,6 +36,15 @@ export function registerAckCommand(program: Command): void {
         console.error(`Detecting item type for #${itemId}...`);
         const item = detectItemType(owner, repo, itemId);
 
+        // Check if already in a done status - must use 'start' first
+        const doneStatus = getItemDoneStatus(item);
+        if (doneStatus) {
+          exitWithMessage(
+            `Error: Item #${itemId} is already "${doneStatus}". ` +
+              `Use 'start' first to re-open it before changing status.`,
+          );
+        }
+
         console.error(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
           console.error(
@@ -46,11 +59,17 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
-        // 1. Add rocket
+        // 1. Remove conflicting status reactions
+        tryRemoveReactionFromItem(item, "eyes"); // in-progress
+        tryRemoveReactionFromItem(item, "+1"); // agreed
+        tryRemoveReactionFromItem(item, "-1"); // disagreed
+        tryRemoveReactionFromItem(item, "confused"); // awaiting-reply
+
+        // 2. Add rocket
         console.error("Adding reaction...");
         addReactionToItem(item, "rocket");
 
-        // 2. Hide/resolve
+        // 3. Hide/resolve
         console.error("Hiding...");
         resolveItem(item);
 

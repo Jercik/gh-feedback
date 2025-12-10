@@ -28,7 +28,7 @@ export function tryFetchIssueComment(
     return {
       type: "comment",
       id: comment.id,
-      author: comment.user.login,
+      author: comment.user?.login ?? "ghost",
       url: comment.html_url,
       createdAt: comment.created_at,
       body: comment.body,
