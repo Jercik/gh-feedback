@@ -3,19 +3,6 @@ description: Process PR feedback systematically - fix issues, reject with eviden
 argument-hint: [optional focus area or specific instructions]
 ---
 
-# Testing Phase Notice
-
-This tool is in active development and testing. To help monitor API efficiency:
-
-1. **Always use the `--debug-rate-limit` flag** on every `gh-feedback` command
-2. **Review the rate limit report** at the end of each command output
-3. **Flag inefficient patterns** - report to the user if you observe:
-   - Unexpectedly high GraphQL call counts (e.g., >3 for a single item lookup)
-   - Multiple REST calls for the same endpoint
-   - Any command consuming more than 5 API calls total
-
-Example: `gh-feedback summary --debug-rate-limit`
-
 # Goal
 
 Process every review comment on the current PR so nothing is dropped or left ambiguous: each item ends fixed, rejected with evidence, acknowledged, or waiting for clarification.
@@ -47,15 +34,15 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 
 ## Resolution Actions
 
-| Scenario               | Command                                                         |
-| :--------------------- | :-------------------------------------------------------------- |
-| **Content clipped**    | Run `detail <id>` to fetch full text (look for `[...]` in body) |
-| **Valid issue**        | Fix code, push, then: `agree <id> -m "Fixed in <SHA>"`          |
-| **Already fixed**      | `agree <id> -m "Already fixed in <SHA>"`                        |
-| **Disagree**           | `disagree <id> -m "<evidence/reasoning>"`                       |
-| **Need clarification** | `ask <id> -m "<your question>"`                                 |
-| **Bot noise/summary**  | `ack <id>`                                                      |
-| **Duplicate**          | Same action as original item                                    |
+| Scenario               | Command                                                               |
+| :--------------------- | :-------------------------------------------------------------------- |
+| **Content clipped**    | Run `detail <id>` to fetch full text (look for `[TRUNCATED]` in body) |
+| **Valid issue**        | Fix code, push, then: `agree <id> -m "Fixed in <SHA>"`                |
+| **Already fixed**      | `agree <id> -m "Already fixed in <SHA>"`                              |
+| **Disagree**           | `disagree <id> -m "<evidence/reasoning>"`                             |
+| **Need clarification** | `ask <id> -m "<your question>"`                                       |
+| **Bot noise/summary**  | `ack <id>`                                                            |
+| **Duplicate**          | Same action as original item                                          |
 
 ## Best Practices
 
@@ -118,11 +105,3 @@ Run `gh-feedback summary` and confirm:
 # Output
 
 Summary of actions taken: items processed, fixes made, disagreements explained, and any items left awaiting clarification.
-
-## Rate Limit Report
-
-Include a brief summary of API efficiency observed during the session:
-
-- Total REST and GraphQL calls made
-- Any inefficient patterns detected (flag these clearly)
-- Remaining rate limit quota
