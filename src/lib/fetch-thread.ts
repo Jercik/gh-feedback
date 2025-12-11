@@ -109,10 +109,18 @@ function findThreadByCommentId(
 }
 
 /**
+ * Minimal comment data needed to extract PR number.
+ * Using a narrow type avoids unsafe type assertions when passing partial data.
+ */
+type CommentWithPrUrl = {
+  pull_request_url: string;
+};
+
+/**
  * Extract PR number from a pull request comment.
  */
 function extractPrNumber(
-  comment: PullRequestReviewComment,
+  comment: CommentWithPrUrl,
   commentDatabaseId: number,
 ): number {
   const prMatch = comment.pull_request_url.match(/\/pulls\/(\d+)$/u);
@@ -134,7 +142,7 @@ export function getThreadForComment(
   owner: string,
   repo: string,
   commentDatabaseId: number,
-  commentData?: PullRequestReviewComment,
+  commentData?: CommentWithPrUrl,
 ): {
   prNumber: number;
   thread: ThreadLookupResult;
