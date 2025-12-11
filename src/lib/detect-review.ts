@@ -112,8 +112,12 @@ function getReviewTargetInfo(
         siblingThreads: siblingThreads.length > 1 ? siblingThreads : undefined,
       };
     }
-  } catch {
-    // Fall back to review node_id
+  } catch (error) {
+    // Log errors to help debug sibling thread detection issues
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes("Not Found")) {
+      console.error(`Warning: Failed to fetch review comments: ${message}`);
+    }
   }
 
   return { nodeId: review.node_id };
