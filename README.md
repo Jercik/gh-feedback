@@ -119,6 +119,19 @@ Add to your `CLAUDE.md` or `AGENTS.md`:
 Before first use in a session, run `gh-feedback --help` and subcommand help (e.g., `gh-feedback agree --help`) to learn available commands and options.
 ```
 
+## Slash Command
+
+A ready-made slash command is available in `slash-command/process-feedback.md`. The prompt works with Claude Code, Cursor, and other agents that support markdown-based commands.
+
+To install for Claude Code:
+
+```bash
+mkdir -p .claude/commands
+cp "$(npm root -g)/gh-feedback/slash-command/process-feedback.md" .claude/commands/
+```
+
+Then invoke with `/process-feedback`. The command systematically processes all PR feedback items: fixing issues, rejecting with evidence, acknowledging bot noise, or requesting clarification.
+
 ## License
 
 MIT
