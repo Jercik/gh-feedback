@@ -15,11 +15,6 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 
 # Reference
 
-## Invocation
-
-- Prefer `pnpm exec gh-feedback ...` when running inside this repository so you always use the local version.
-- If `pnpm exec gh-feedback` fails because dependencies aren’t installed yet, run `pnpm install` and retry.
-
 ## Status meanings
 
 | Status           | Meaning                           | Action                           |
@@ -33,18 +28,18 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 
 ## Resolution commands
 
-| Scenario               | Command                                                                      |
-| :--------------------- | :--------------------------------------------------------------------------- |
-| **Valid issue**        | Fix code, push, then: `pnpm exec gh-feedback agree <id> -m "Fixed in <sha>"` |
-| **Already fixed**      | `pnpm exec gh-feedback agree <id> -m "Already fixed in <sha>"`               |
-| **Disagree**           | `pnpm exec gh-feedback disagree <id> -m "<evidence/reasoning>"`              |
-| **Need clarification** | `pnpm exec gh-feedback ask <id> -m "<your question>"`                        |
-| **Bot noise/summary**  | `pnpm exec gh-feedback ack <id>`                                             |
-| **Duplicate**          | Same action and reply as original item                                       |
+| Scenario               | Command                                                            |
+| :--------------------- | :----------------------------------------------------------------- |
+| **Valid issue**        | Fix code, push, then: `gh-feedback agree <id> -m "Fixed in <sha>"` |
+| **Already fixed**      | `gh-feedback agree <id> -m "Already fixed in <sha>"`               |
+| **Disagree**           | `gh-feedback disagree <id> -m "<evidence/reasoning>"`              |
+| **Need clarification** | `gh-feedback ask <id> -m "<your question>"`                        |
+| **Bot noise/summary**  | `gh-feedback ack <id>`                                             |
+| **Duplicate**          | Same action and reply as original item                             |
 
 ## Workflow rules
 
-- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `pnpm exec gh-feedback start <id>` to reopen it
+- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `gh-feedback start <id>` to reopen it
 - Never `agree` until the fix is pushed—the commit SHA proves the work is done
 - When using `disagree`, cite evidence: command output, doc links, or test results
 
@@ -53,16 +48,12 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 ## 1. Preflight (fail fast)
 
 1. Confirm the tool is runnable:
-   - Run `pnpm exec gh-feedback --help`.
-   - If it fails due to missing dependencies, run `pnpm install` and retry.
-   - If it still fails, stop and report the error output.
+   - Run `gh-feedback --help`.
+   - If it fails or the command is not found, stop and report the error output.
 
-2. Confirm GitHub access:
-   - Run `gh auth status`.
-   - If not authenticated, stop and report that login is required.
-
-3. Capture PR feedback state:
-   - Run `pnpm exec gh-feedback summary`.
+2. Capture PR feedback state (this also validates GitHub auth/permissions):
+   - Run `gh-feedback summary`.
+   - If the command errors (for example, unauthorized or missing permissions), stop and report the error output.
    - **No PR for current branch:** Stop and tell the user there is no PR associated with the current branch.
    - **No actionable items:** If there are no `pending`, `in-progress`, or `awaiting-reply` items, report that feedback processing is complete.
 
@@ -88,7 +79,7 @@ These may be active work, interrupted from a previous session, or resolved incor
 
 Check if the reviewer has responded since the question was asked:
 
-- **New reply found**: Run `pnpm exec gh-feedback start <id>` to reopen, then process based on the new information.
+- **New reply found**: Run `gh-feedback start <id>` to reopen, then process based on the new information.
 - **No reply yet**: Leave as `awaiting-reply` and move on.
 
 ### Priority 3: `pending` items
@@ -99,11 +90,11 @@ Standard processing—these are new and need full attention.
 
 ### Start work
 
-Run `pnpm exec gh-feedback start <id>` to mark the item as `in-progress`.
+Run `gh-feedback start <id>` to mark the item as `in-progress`.
 
 ### Analyze
 
-1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `pnpm exec gh-feedback detail <id>` to fetch full content.
+1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `gh-feedback detail <id>` to fetch full content.
 
 2. **Verify claims—don't accept blindly:**
    - Check if the code still exists or was already fixed
@@ -118,7 +109,7 @@ For fixes: push the changes first, then run the `agree` command with the commit 
 
 ## 5. Verify completion
 
-Run `pnpm exec gh-feedback summary` and confirm:
+Run `gh-feedback summary` and confirm:
 
 - No `pending` items remain
 - No `in-progress` items remain (except active bot processes)
