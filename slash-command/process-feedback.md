@@ -87,11 +87,11 @@ Run `gh-feedback start <id>` to mark the item as `in-progress`.
 
 ### Analyze
 
-1. **Check for truncation:** If the bodyi shows `[TRUNCATED]`, run `gh-feedback detail <id>` to fetch full content.
+1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `gh-feedback detail <id>` to fetch full content.
 
 2. **Verify claims—don't accept blindly:**
    - Check if the code still exists or was already fixed
-   - For most claims write a minimal test script to verify and reporoduce directly if possible
+   - For most claims write a minimal test script to verify and reproduce directly if possible
    - Consult official documentation for factual accuracy
 
 ### Resolve
