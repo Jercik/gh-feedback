@@ -58,6 +58,13 @@ function getReviewTargetInfo(
       `repos/${owner}/${repo}/pulls/${prNumber}/reviews/${review.id}/comments?per_page=100`,
     );
 
+    // Warn if we may have hit the pagination limit
+    if (comments.length === 100) {
+      console.error(
+        `Warning: Review #${review.id} has 100+ comments. Some sibling threads may not be tracked.`,
+      );
+    }
+
     // No comments - just return the review node_id
     if (comments.length === 0) {
       return { nodeId: review.node_id };
