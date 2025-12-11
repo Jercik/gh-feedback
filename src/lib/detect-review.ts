@@ -9,6 +9,7 @@ import type { DetectedItem, SiblingThread } from "./detect-item-type.js";
 import { ghJson, isNotFoundError } from "./github-cli.js";
 import { getThreadForComment } from "./fetch-thread.js";
 import { getPullRequestNumber } from "./github-environment.js";
+import { WARNING } from "./tty-output.js";
 
 type ReviewResponse = {
   id: number;
@@ -60,7 +61,7 @@ function getReviewTargetInfo(
     // Warn if we may have hit the pagination limit
     if (comments.length === 100) {
       console.error(
-        `Warning: Review #${review.id} has 100+ comments. Some sibling threads may not be tracked.`,
+        `${WARNING} Review #${review.id} has 100 comments (API page limit). If there are more, some sibling threads may not be tracked.`,
       );
     }
 

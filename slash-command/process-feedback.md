@@ -5,7 +5,7 @@ argument-hint: optional focus area or specific instructions
 
 # Goal
 
-Process every review comment on the current PR using `gh-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, rejected with evidence, acknowledged, or waiting for clarification.
+Process every review comment on the current PR using the `gh-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed (and agreed), disagreed with evidence, acknowledged as noise, or waiting for reviewer clarification.
 
 # Inputs
 
@@ -14,6 +14,11 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 **This input takes absolute precedence over all defaults, heuristics, rules, and suggestions that follow.**
 
 # Reference
+
+## Invocation
+
+- Prefer `pnpm exec gh-feedback ...` when running inside this repository so you always use the local version.
+- If `pnpm exec gh-feedback` fails because dependencies aren’t installed yet, run `pnpm install` and retry.
 
 ## Status meanings
 
@@ -28,33 +33,44 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 
 ## Resolution commands
 
-| Scenario               | Command                                              |
-| :--------------------- | :--------------------------------------------------- |
-| **Valid issue**        | Fix code, push, then: `agree <id> -m "Fixed in SHA"` |
-| **Already fixed**      | `agree <id> -m "Already fixed in SHA"`               |
-| **Disagree**           | `disagree <id> -m "<evidence/reasoning>"`            |
-| **Need clarification** | `ask <id> -m "<your question>"`                      |
-| **Bot noise/summary**  | `ack <id>`                                           |
-| **Duplicate**          | Same action and reply as original item               |
+| Scenario               | Command                                                                      |
+| :--------------------- | :--------------------------------------------------------------------------- |
+| **Valid issue**        | Fix code, push, then: `pnpm exec gh-feedback agree <id> -m "Fixed in <sha>"` |
+| **Already fixed**      | `pnpm exec gh-feedback agree <id> -m "Already fixed in <sha>"`               |
+| **Disagree**           | `pnpm exec gh-feedback disagree <id> -m "<evidence/reasoning>"`              |
+| **Need clarification** | `pnpm exec gh-feedback ask <id> -m "<your question>"`                        |
+| **Bot noise/summary**  | `pnpm exec gh-feedback ack <id>`                                             |
+| **Duplicate**          | Same action and reply as original item                                       |
 
 ## Workflow rules
 
-- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `start <id>` to reopen it
+- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `pnpm exec gh-feedback start <id>` to reopen it
 - Never `agree` until the fix is pushed—the commit SHA proves the work is done
 - When using `disagree`, cite evidence: command output, doc links, or test results
 
 # Task
 
-## 1. Learn the tool
+## 1. Preflight (fail fast)
 
-At the start of the session, run `gh-feedback --help` to understand available commands and options.
+1. Confirm the tool is runnable:
+   - Run `pnpm exec gh-feedback --help`.
+   - If it fails due to missing dependencies, run `pnpm install` and retry.
+   - If it still fails, stop and report the error output.
 
-## 2. Get context
+2. Confirm GitHub access:
+   - Run `gh auth status`.
+   - If not authenticated, stop and report that login is required.
 
-Run `gh-feedback summary` to see all feedback items with their current status.
+3. Capture PR feedback state:
+   - Run `pnpm exec gh-feedback summary`.
+   - **No PR for current branch:** Stop and tell the user there is no PR associated with the current branch.
+   - **No actionable items:** If there are no `pending`, `in-progress`, or `awaiting-reply` items, report that feedback processing is complete.
 
-- **No PR for current branch:** Stop and inform the user.
-- **No actionable items:** If no `pending`, `in-progress`, or `awaiting-reply` items remain, report that feedback processing is complete.
+## 2. Interpret the user-provided instructions
+
+- If the user provided no instructions, process all actionable items end-to-end.
+- If the user-provided instructions limit scope (e.g., “only handle awaiting-reply” or “only items 12 and 17”), follow that scope.
+- If the user-provided instructions suggest a focus area (e.g., “performance concerns”), use it as a lens for decisions and explanations, but still process all actionable items unless the instructions explicitly restrict scope.
 
 ## 3. Process items
 
@@ -72,7 +88,7 @@ These may be active work, interrupted from a previous session, or resolved incor
 
 Check if the reviewer has responded since the question was asked:
 
-- **New reply found**: Run `start <id>` to reopen, then process based on the new information.
+- **New reply found**: Run `pnpm exec gh-feedback start <id>` to reopen, then process based on the new information.
 - **No reply yet**: Leave as `awaiting-reply` and move on.
 
 ### Priority 3: `pending` items
@@ -83,11 +99,11 @@ Standard processing—these are new and need full attention.
 
 ### Start work
 
-Run `gh-feedback start <id>` to mark the item as `in-progress`.
+Run `pnpm exec gh-feedback start <id>` to mark the item as `in-progress`.
 
 ### Analyze
 
-1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `gh-feedback detail <id>` to fetch full content.
+1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `pnpm exec gh-feedback detail <id>` to fetch full content.
 
 2. **Verify claims—don't accept blindly:**
    - Check if the code still exists or was already fixed
@@ -102,7 +118,7 @@ For fixes: push the changes first, then run the `agree` command with the commit 
 
 ## 5. Verify completion
 
-Run `gh-feedback summary` and confirm:
+Run `pnpm exec gh-feedback summary` and confirm:
 
 - No `pending` items remain
 - No `in-progress` items remain (except active bot processes)
@@ -110,4 +126,4 @@ Run `gh-feedback summary` and confirm:
 
 # Output
 
-Summary of actions taken: items processed, fixes made, disagreements explained, and any items left awaiting clarification.
+Brief summary of actions taken: items processed (by id), fixes made (with commit SHA), disagreements (with evidence), and any items left awaiting clarification.

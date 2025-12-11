@@ -65,7 +65,8 @@ export function blockIfUnresolvedSiblings(
       `${unresolvedSiblings.length} still unresolved:`,
   );
   for (const sibling of unresolvedSiblings) {
-    console.error(`  - #${sibling.commentId} at ${formatLocation(sibling)}`);
+    const location = sibling.path ? ` at ${formatLocation(sibling)}` : "";
+    console.error(`  - #${sibling.commentId}${location}`);
   }
   console.error("");
   exitWithMessage(
