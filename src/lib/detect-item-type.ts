@@ -13,6 +13,20 @@ import { tryDetectReview } from "./detect-review.js";
 
 type ItemType = "thread" | "comment" | "review";
 
+/** Info about a sibling thread under the same review */
+export type SiblingThread = {
+  /** Thread's GraphQL ID */
+  id: string;
+  /** Comment database ID (for display) */
+  commentId: number;
+  /** Whether this thread is resolved */
+  isResolved: boolean;
+  /** File path (for location display) */
+  path: string | null;
+  /** Line number (for location display) */
+  line: number | null;
+};
+
 export type DetectedItem = {
   type: ItemType;
   id: number;
@@ -28,6 +42,8 @@ export type DetectedItem = {
   path?: string | null;
   /** Line number (for threads) */
   line?: number | null;
+  /** For reviews: all sibling threads under this review */
+  siblingThreads?: SiblingThread[];
 };
 
 function tryDetectThread(

@@ -16,6 +16,7 @@ import { getItemStatus } from "../lib/fetch-item-status.js";
 import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
 import { replyToItem } from "../lib/reply-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
+import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerAgreeCommand(program: Command): void {
@@ -73,6 +74,9 @@ export function registerAgreeCommand(program: Command): void {
           console.error("---");
           console.error(message);
           console.error("---");
+          // Check for unresolved sibling threads in multi-thread reviews
+          blockIfUnresolvedSiblings(item, "agree with");
+
           console.error("");
           console.error("Actions: reply + thumbs_up + resolve");
 
