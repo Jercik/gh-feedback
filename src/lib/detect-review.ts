@@ -9,6 +9,7 @@ import type { DetectedItem, SiblingThread } from "./detect-item-type.js";
 import { ghJson, isNotFoundError } from "./github-cli.js";
 import { getThreadForComment } from "./fetch-thread.js";
 import { getPullRequestNumber } from "./github-environment.js";
+import type { PullRequestReviewComment } from "./types.js";
 
 type ReviewResponse = {
   id: number;
@@ -21,6 +22,7 @@ type ReviewResponse = {
 type ReviewCommentResponse = {
   id: number;
   node_id: string;
+  pull_request_url: string;
 };
 
 type ReviewTargetInfo = {
@@ -66,7 +68,13 @@ function getReviewTargetInfo(
     const seenThreadIds = new Set<string>();
 
     for (const comment of comments) {
-      const { thread } = getThreadForComment(owner, repo, comment.id);
+      // Pass comment data to avoid extra API call per comment (N+1 optimization)
+      const { thread } = getThreadForComment(
+        owner,
+        repo,
+        comment.id,
+        comment as PullRequestReviewComment,
+      );
 
       // Skip duplicate threads (multiple comments in same thread)
       if (seenThreadIds.has(thread.id)) {
