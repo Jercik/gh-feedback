@@ -5,3 +5,6 @@
 
 /** Success indicator */
 export const SUCCESS = "[OK]";
+
+/** Warning indicator */
+export const WARNING = "[WARN]";

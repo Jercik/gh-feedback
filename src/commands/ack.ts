@@ -12,6 +12,7 @@ import { detectItemType } from "../lib/detect-item-type.js";
 import { getItemStatus } from "../lib/fetch-item-status.js";
 import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
+import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
 
 export function registerAckCommand(program: Command): void {
@@ -48,6 +49,10 @@ export function registerAckCommand(program: Command): void {
             `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
           );
         }
+
+        // Check for unresolved sibling threads in multi-thread reviews
+        blockIfUnresolvedSiblings(item, "ACK");
+
         console.error("");
         console.error("Actions: rocket + hide (acknowledge noise)");
 
