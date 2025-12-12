@@ -59,9 +59,13 @@ export function blockIfUnresolvedSiblings(
     return;
   }
 
+  const siblingThreadCount =
+    item.siblingThreads?.length ?? unresolvedSiblings.length;
+  const siblingThreadLabel = siblingThreadCount === 1 ? "thread" : "threads";
+
   console.error("");
   console.error(
-    `${WARNING} This review contains ${item.siblingThreads?.length} threads, ` +
+    `${WARNING} This review contains ${siblingThreadCount} ${siblingThreadLabel}, ` +
       `${unresolvedSiblings.length} still unresolved:`,
   );
   for (const sibling of unresolvedSiblings) {
