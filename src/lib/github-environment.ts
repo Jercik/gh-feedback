@@ -44,9 +44,7 @@ export function verifyPrerequisites(): void {
   try {
     ghRaw("auth", "status", "-h", "github.com");
   } catch {
-    exitWithMessage(
-      "Error: GitHub CLI not authenticated. Run: gh auth login",
-    );
+    exitWithMessage("Error: GitHub CLI not authenticated. Run: gh auth login");
   }
 }
 
