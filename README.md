@@ -13,6 +13,16 @@ npm install -g gh-feedback
 - Node.js 22.14+
 - Git repository with `origin` remote
 - GitHub CLI (`gh`) authenticated
+- Git installed (`git`)
+
+### Custom Paths
+
+To use a specific binary (or one not in `PATH`), set:
+
+```bash
+export GH_FEEDBACK_GH_PATH=/path/to/gh
+export GH_FEEDBACK_GIT_PATH=/path/to/git
+```
 
 ## Usage
 
@@ -31,6 +41,9 @@ gh-feedback start 123456
 
 # Mark as agreed/fixed (reply + resolve)
 gh-feedback agree 123456 -m 'Fixed in commit abc123'
+
+# Same, but read the message from stdin (scriptable)
+printf '%s\n' 'Fixed in commit abc123' | gh-feedback agree 123456
 
 # Mark as disagreed/won't fix
 gh-feedback disagree 123456 -m 'Intentional, see docs'

@@ -8,6 +8,18 @@ import type { RepoInfo } from "./types.js";
  */
 export function verifyPrerequisites(): void {
   try {
+    git("--version");
+  } catch (error) {
+    exitWithMessage(error instanceof Error ? error.message : String(error));
+  }
+
+  try {
+    ghRaw("--version");
+  } catch (error) {
+    exitWithMessage(error instanceof Error ? error.message : String(error));
+  }
+
+  try {
     git("rev-parse", "--is-inside-work-tree");
   } catch {
     exitWithMessage("Error: Not a Git repository.");
@@ -30,7 +42,6 @@ export function verifyPrerequisites(): void {
   }
 
   try {
-    ghRaw("--version");
     ghRaw("auth", "status", "-h", "github.com");
   } catch {
     exitWithMessage("Error: GitHub CLI not authenticated. Run: gh auth login");

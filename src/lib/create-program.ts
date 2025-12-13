@@ -6,6 +6,8 @@ import {
   formatRateLimitSummary,
   getRateLimitCalls,
 } from "./rate-limit-tracker.js";
+import { GH_PATH_ENV_VAR } from "./github-cli.js";
+import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
 
 /**
  * Create a Commander program with common configuration and preAction hooks.
@@ -25,10 +27,17 @@ export function createProgram(): Command {
     .version(packageJson.version)
     .showHelpAfterError("(add --help for additional information)")
     .showSuggestionAfterError()
+    .helpCommand(false)
     .option(
       "--debug-rate-limit",
       "Show GitHub API rate limit usage after command",
     );
+
+  program.addHelpText(
+    "before",
+    `Requires: git, gh (GitHub CLI)\n` +
+      `Override paths: ${GIT_PATH_ENV_VAR}, ${GH_PATH_ENV_VAR}\n\n`,
+  );
 
   // preAction: runs before every subcommand
   program.hook("preAction", (thisCommand) => {
