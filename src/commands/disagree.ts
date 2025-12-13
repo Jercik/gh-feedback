@@ -35,10 +35,16 @@ export function registerDisagreeCommand(program: Command): void {
     .option("-m, --message <text>", "Reply message explaining why")
     .option("-f, --file <path>", "Read reply message from a file")
     .option("-n, --dry-run", "Preview without executing")
+    .option("-i, --interactive", "Allow typing message via stdin (Ctrl+D)")
     .action(
       async (
         itemId: number,
-        options: { message?: string; file?: string; dryRun?: boolean },
+        options: {
+          message?: string;
+          file?: string;
+          dryRun?: boolean;
+          interactive?: boolean;
+        },
       ) => {
         try {
           const { owner, repo } = getRepositoryInfo();
@@ -50,6 +56,11 @@ export function registerDisagreeCommand(program: Command): void {
           } else if (options.message) {
             message = options.message;
           } else {
+            if (process.stdin.isTTY && !options.interactive) {
+              exitWithMessage(
+                "Error: Missing reply message. Provide -m/--message, -f/--file, pipe via stdin, or pass --interactive to type it.",
+              );
+            }
             message = await readMessageFromStdin("reply");
           }
 

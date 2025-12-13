@@ -1,4 +1,15 @@
 import { spawnSync } from "node:child_process";
+import packageJson from "../../package.json" with { type: "json" };
+import { resolveDependencyPath } from "./resolve-dependency-path.js";
+
+export const GIT_PATH_ENV_VAR = "GH_FEEDBACK_GIT_PATH";
+
+function getGitBinaryPath(): string {
+  return resolveDependencyPath({
+    defaultPath: "git",
+    envOverride: process.env[GIT_PATH_ENV_VAR],
+  });
+}
 
 /**
  * Run a git command synchronously and return its trimmed stdout.
@@ -25,12 +36,23 @@ export function git(
     gitArguments = arguments_ as string[];
   }
 
-  const result = spawnSync("git", gitArguments, {
+  const gitPath = getGitBinaryPath();
+  const result = spawnSync(gitPath, gitArguments, {
     encoding: "utf8",
     maxBuffer: 100 * 1024 * 1024, // 100 MB to accommodate large outputs
     ...(cwd && { cwd }),
   });
-  if (result.error) throw result.error;
+  if (result.error) {
+    const error = result.error as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `Error: Required dependency 'git' not found.\n` +
+          `Looked for: ${gitPath}\n` +
+          `To fix: install git, or set ${GIT_PATH_ENV_VAR}=/path/to/git`,
+      );
+    }
+    throw result.error;
+  }
   if (result.status !== 0) {
     throw new Error(
       result.stderr || `git ${gitArguments[0] ?? "command"} failed`,
@@ -44,6 +66,7 @@ export function git(
  */
 export function exitWithMessage(message: string): never {
   console.error(message);
+  console.error(`Try '${packageJson.name} --help' for details.`);
   // eslint-disable-next-line unicorn/no-process-exit
   process.exit(1);
 }

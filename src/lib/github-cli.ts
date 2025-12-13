@@ -5,6 +5,16 @@ import {
   extractRateLimitFromHeaders,
   recordRateLimit,
 } from "./rate-limit-tracker.js";
+import { resolveDependencyPath } from "./resolve-dependency-path.js";
+
+export const GH_PATH_ENV_VAR = "GH_FEEDBACK_GH_PATH";
+
+function getGhBinaryPath(): string {
+  return resolveDependencyPath({
+    defaultPath: "gh",
+    envOverride: process.env[GH_PATH_ENV_VAR],
+  });
+}
 
 /**
  * Format a command description for rate limit logging.
@@ -67,11 +77,22 @@ export function ghRaw(...arguments_: string[]): string {
       ? ["api", "--include", ...arguments_.slice(1)]
       : arguments_;
 
-  const result = spawnSync("gh", finalArguments, {
+  const ghPath = getGhBinaryPath();
+  const result = spawnSync(ghPath, finalArguments, {
     encoding: "utf8",
     maxBuffer: 100 * 1024 * 1024, // 100 MB for large PR responses
   });
-  if (result.error) throw result.error;
+  if (result.error) {
+    const error = result.error as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `Error: Required dependency 'gh' not found.\n` +
+          `Looked for: ${ghPath}\n` +
+          `To fix: install GitHub CLI, or set ${GH_PATH_ENV_VAR}=/path/to/gh`,
+      );
+    }
+    throw result.error;
+  }
   if (result.status !== 0) {
     throw new Error(result.stderr || `gh ${arguments_[0] ?? "command"} failed`);
   }
