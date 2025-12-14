@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Native Git hook - enable with: git config core.hooksPath .githooks
+set -euo pipefail
+
+commit_msg_file="$1"
+
+if [[ ! -f "$commit_msg_file" ]]; then
+  echo "Commit message file not found: $commit_msg_file" >&2
+  exit 2
+fi
+
+# Run commitlint via npx with @commitlint/config-conventional.
+# Extract the npx cache node_modules path from PATH and create a temp config
+# with an absolute path to the config-conventional module.
+npx -y -p @commitlint/cli -p @commitlint/config-conventional sh -c '
+  set -e
+  commit_msg_file="$1"
+
+  # Extract npx node_modules from PATH (first entry ending in .bin)
+  npx_bin=$(echo "$PATH" | tr ":" "\n" | grep "/_npx/.*/.bin$" | head -1)
+  npx_modules="${npx_bin%/.bin}"
+  config_path="$npx_modules/@commitlint/config-conventional/lib/index.js"
+
+  tmp_dir=$(mktemp -d)
+  tmp_config="$tmp_dir/commitlint.config.cjs"
+  trap "rm -rf \"$tmp_dir\"" EXIT
+
+  echo "module.exports = { extends: [\"$config_path\"] };" > "$tmp_config"
+  commitlint --config "$tmp_config" --edit "$commit_msg_file" --verbose
+' _ "$commit_msg_file"
