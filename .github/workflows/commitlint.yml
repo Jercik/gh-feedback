@@ -13,22 +13,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Validate commits with commitlint
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      - name: Setup node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: "package.json"
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate current commit (last commit) with commitlint
-        if: github.event_name == 'push'
-        run: pnpm exec commitlint --last --verbose
-
-      - name: Validate PR commits with commitlint
-        if: github.event_name == 'pull_request'
-        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            bash scripts/commitlint.sh --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+          else
+            bash scripts/commitlint.sh --last --verbose
+          fi
