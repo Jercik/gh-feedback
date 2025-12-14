@@ -13,6 +13,7 @@ import { getItemStatus } from "../lib/fetch-item-status.js";
 import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
 import { unresolveItem } from "../lib/resolve-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
+import { verboseLog } from "../lib/verbose-mode.js";
 
 export function registerStartCommand(program: Command): void {
   program
@@ -32,24 +33,24 @@ export function registerStartCommand(program: Command): void {
       try {
         const { owner, repo } = getRepositoryInfo();
 
-        console.error(`Detecting item type for #${itemId}...`);
+        verboseLog(`Detecting item type for #${itemId}...`);
         const item = detectItemType(owner, repo, itemId);
         const { viewerReactions, isMinimized } = getItemStatus(item);
 
         // Check if item needs reopening
         const needsReopen = item.isResolved || isMinimized;
 
-        console.error(`Found ${item.type} #${item.id} by @${item.author}`);
+        verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
-          console.error(
+          verboseLog(
             `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
           );
         }
-        console.error("");
+        verboseLog("");
         if (needsReopen) {
-          console.error("Actions: reopen + eyes reaction (in-progress)");
+          verboseLog("Actions: reopen + eyes reaction (in-progress)");
         } else {
-          console.error("Action: add eyes reaction (in-progress)");
+          verboseLog("Action: add eyes reaction (in-progress)");
         }
 
         if (options.dryRun) {
@@ -59,7 +60,7 @@ export function registerStartCommand(program: Command): void {
 
         // Reopen the item if it was resolved/hidden
         if (needsReopen) {
-          console.error("Reopening...");
+          verboseLog("Reopening...");
           unresolveItem(item, isMinimized);
         }
 
@@ -72,7 +73,7 @@ export function registerStartCommand(program: Command): void {
         ]);
 
         addReactionToItem(item, "eyes");
-        console.error(`${SUCCESS} Marked #${itemId} as in-progress.`);
+        verboseLog(`${SUCCESS} Marked #${itemId} as in-progress.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
       }

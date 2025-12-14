@@ -26,6 +26,7 @@ import { registerDisagreeCommand } from "./commands/disagree.js";
 import { registerAskCommand } from "./commands/ask.js";
 import { registerAckCommand } from "./commands/ack.js";
 import { registerDetailCommand } from "./commands/detail.js";
+import { verboseLog } from "./lib/verbose-mode.js";
 
 // =============================================================================
 // Signal Handlers
@@ -88,7 +89,7 @@ program
         const { owner, repo } = getRepositoryInfo();
         const prNumber = getPullRequestNumber();
 
-        console.error(`Fetching feedback for PR #${prNumber}...`);
+        verboseLog(`Fetching feedback for PR #${prNumber}...`);
         const summary = fetchSummary(owner, repo, prNumber, {
           hideHidden: options.hideHidden,
           hideResolved: options.hideResolved,

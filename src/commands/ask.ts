@@ -16,6 +16,7 @@ import { getItemStatus } from "../lib/fetch-item-status.js";
 import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
 import { replyToItem } from "../lib/reply-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
+import { verboseLog } from "../lib/verbose-mode.js";
 
 export function registerAskCommand(program: Command): void {
   program
@@ -60,7 +61,7 @@ export function registerAskCommand(program: Command): void {
             message = await readMessageFromStdin("question");
           }
 
-          console.error(`Detecting item type for #${itemId}...`);
+          verboseLog(`Detecting item type for #${itemId}...`);
           const item = detectItemType(owner, repo, itemId);
 
           // Check if already in a done status - must use 'start' first
@@ -72,19 +73,19 @@ export function registerAskCommand(program: Command): void {
             );
           }
 
-          console.error(`Found ${item.type} #${item.id} by @${item.author}`);
+          verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
           if (item.path) {
-            console.error(
+            verboseLog(
               `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
             );
           }
-          console.error("");
-          console.error("Question:");
-          console.error("---");
-          console.error(message);
-          console.error("---");
-          console.error("");
-          console.error("Actions: reply + confused (item stays open)");
+          verboseLog("");
+          verboseLog("Question:");
+          verboseLog("---");
+          verboseLog(message);
+          verboseLog("---");
+          verboseLog("");
+          verboseLog("Actions: reply + confused (item stays open)");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -92,7 +93,7 @@ export function registerAskCommand(program: Command): void {
           }
 
           // 1. Post reply
-          console.error("Posting question...");
+          verboseLog("Posting question...");
           const reply = replyToItem(item, message);
 
           // 2-3: Status updates (best-effort after reply succeeds)
@@ -106,7 +107,7 @@ export function registerAskCommand(program: Command): void {
             ]);
 
             // 3. Add confused (item stays open for response)
-            console.error("Adding reaction...");
+            verboseLog("Adding reaction...");
             addReactionToItem(item, "confused");
           } catch (statusError) {
             console.error(
@@ -118,7 +119,7 @@ export function registerAskCommand(program: Command): void {
 
           // Note: Do NOT resolve - item stays open awaiting reply
 
-          console.error(`${SUCCESS} Asked for clarification on #${itemId}.`);
+          verboseLog(`${SUCCESS} Asked for clarification on #${itemId}.`);
           console.log(reply.url);
         } catch (error) {
           exitWithMessage(

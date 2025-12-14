@@ -6,6 +6,7 @@ import {
   formatRateLimitSummary,
   getRateLimitCalls,
 } from "./rate-limit-tracker.js";
+import { enableVerboseMode } from "./verbose-mode.js";
 import { GH_PATH_ENV_VAR } from "./github-cli.js";
 import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
 
@@ -14,10 +15,11 @@ import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
  * Imports name, version, and description from package.json.
  *
  * Global options:
+ * - -v, --verbose: Show progress messages (quiet by default)
  * - --debug-rate-limit: Track and display GitHub API rate limit consumption
  *
  * Hooks:
- * - preAction: Verify gh CLI is authenticated, enable rate limit tracking
+ * - preAction: Verify gh CLI is authenticated, enable verbose/rate-limit modes
  * - postAction: Display rate limit summary if tracking was enabled
  */
 export function createProgram(): Command {
@@ -28,6 +30,7 @@ export function createProgram(): Command {
     .showHelpAfterError("(add --help for additional information)")
     .showSuggestionAfterError()
     .helpCommand(false)
+    .option("-v, --verbose", "Show progress messages (quiet by default)")
     .option(
       "--debug-rate-limit",
       "Show GitHub API rate limit usage after command",
@@ -44,8 +47,17 @@ export function createProgram(): Command {
     // Ensure gh CLI is installed and authenticated
     verifyPrerequisites();
 
+    const options = thisCommand.opts() as {
+      verbose?: boolean;
+      debugRateLimit?: boolean;
+    };
+
+    // Enable verbose mode if --verbose flag is present
+    if (options.verbose) {
+      enableVerboseMode();
+    }
+
     // Enable rate limit tracking if --debug-rate-limit flag is present
-    const options = thisCommand.opts() as { debugRateLimit?: boolean };
     if (options.debugRateLimit) {
       enableRateLimitTracking();
     }
