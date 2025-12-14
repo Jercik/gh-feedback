@@ -18,6 +18,7 @@ import { replyToItem } from "../lib/reply-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
 import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
+import { verboseLog } from "../lib/verbose-mode.js";
 
 export function registerDisagreeCommand(program: Command): void {
   program
@@ -64,7 +65,7 @@ export function registerDisagreeCommand(program: Command): void {
             message = await readMessageFromStdin("reply");
           }
 
-          console.error(`Detecting item type for #${itemId}...`);
+          verboseLog(`Detecting item type for #${itemId}...`);
           const item = detectItemType(owner, repo, itemId);
 
           // Check if already in a done status - must use 'start' first
@@ -76,23 +77,23 @@ export function registerDisagreeCommand(program: Command): void {
             );
           }
 
-          console.error(`Found ${item.type} #${item.id} by @${item.author}`);
+          verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
           if (item.path) {
-            console.error(
+            verboseLog(
               `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
             );
           }
-          console.error("");
-          console.error("Reply:");
-          console.error("---");
-          console.error(message);
-          console.error("---");
+          verboseLog("");
+          verboseLog("Reply:");
+          verboseLog("---");
+          verboseLog(message);
+          verboseLog("---");
 
           // Check for unresolved sibling threads in multi-thread reviews
           blockIfUnresolvedSiblings(item, "disagree with");
 
-          console.error("");
-          console.error("Actions: reply + thumbs_down + resolve");
+          verboseLog("");
+          verboseLog("Actions: reply + thumbs_down + resolve");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -100,7 +101,7 @@ export function registerDisagreeCommand(program: Command): void {
           }
 
           // 1. Post reply
-          console.error("Posting reply...");
+          verboseLog("Posting reply...");
           const reply = replyToItem(item, message);
 
           // 2-4: Status updates (best-effort after reply succeeds)
@@ -114,11 +115,11 @@ export function registerDisagreeCommand(program: Command): void {
             ]);
 
             // 3. Add thumbs_down
-            console.error("Adding reaction...");
+            verboseLog("Adding reaction...");
             addReactionToItem(item, "-1");
 
             // 4. Resolve
-            console.error("Resolving...");
+            verboseLog("Resolving...");
             resolveItem(item);
           } catch (statusError) {
             console.error(
@@ -128,7 +129,7 @@ export function registerDisagreeCommand(program: Command): void {
             // Continue - reply was posted successfully
           }
 
-          console.error(`${SUCCESS} Marked #${itemId} as disagreed.`);
+          verboseLog(`${SUCCESS} Marked #${itemId} as disagreed.`);
           console.log(reply.url);
         } catch (error) {
           exitWithMessage(

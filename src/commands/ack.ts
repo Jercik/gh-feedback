@@ -14,6 +14,7 @@ import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
 import { resolveItem } from "../lib/resolve-item.js";
 import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
+import { verboseLog } from "../lib/verbose-mode.js";
 
 export function registerAckCommand(program: Command): void {
   program
@@ -31,7 +32,7 @@ export function registerAckCommand(program: Command): void {
       try {
         const { owner, repo } = getRepositoryInfo();
 
-        console.error(`Detecting item type for #${itemId}...`);
+        verboseLog(`Detecting item type for #${itemId}...`);
         const item = detectItemType(owner, repo, itemId);
 
         // Check if already in a done status - must use 'start' first
@@ -43,9 +44,9 @@ export function registerAckCommand(program: Command): void {
           );
         }
 
-        console.error(`Found ${item.type} #${item.id} by @${item.author}`);
+        verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
-          console.error(
+          verboseLog(
             `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
           );
         }
@@ -53,8 +54,8 @@ export function registerAckCommand(program: Command): void {
         // Check for unresolved sibling threads in multi-thread reviews
         blockIfUnresolvedSiblings(item, "ACK");
 
-        console.error("");
-        console.error("Actions: rocket + hide (acknowledge noise)");
+        verboseLog("");
+        verboseLog("Actions: rocket + hide (acknowledge noise)");
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
@@ -70,14 +71,14 @@ export function registerAckCommand(program: Command): void {
         ]);
 
         // 2. Add rocket
-        console.error("Adding reaction...");
+        verboseLog("Adding reaction...");
         addReactionToItem(item, "rocket");
 
         // 3. Hide/resolve
-        console.error("Hiding...");
+        verboseLog("Hiding...");
         resolveItem(item);
 
-        console.error(`${SUCCESS} Acknowledged #${itemId}.`);
+        verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));
       }
