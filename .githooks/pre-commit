@@ -31,7 +31,7 @@ if [[ "$lint_staged" == "true" ]]; then
   elif command -v npm >/dev/null 2>&1; then
     npm exec -- lint-staged
   else
-    npx -y lint-staged@16
+    npx -y lint-staged@16.2.7
   fi
 else
   prettier_cmd=()
@@ -42,7 +42,7 @@ else
   elif command -v npm >/dev/null 2>&1; then
     prettier_cmd=(npm exec -- prettier)
   else
-    prettier_cmd=(npx -y prettier)
+    prettier_cmd=(npx -y prettier@3.7.4)
   fi
 
   # Check if there are any staged files (read returns false at EOF but this is intentional)
