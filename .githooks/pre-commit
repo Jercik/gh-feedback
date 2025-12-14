@@ -10,9 +10,18 @@ fi
 
 if command -v npm >/dev/null 2>&1; then
   npm pkg fix || true
+  git add package.json 2>/dev/null || true
 fi
 
-lint_staged="$(node -e 'const fs=require("fs"); const pkg=JSON.parse(fs.readFileSync("package.json","utf8")); const deps={...(pkg.dependencies||{}),...(pkg.devDependencies||{})}; const enabled=("lint-staged" in deps) || (pkg["lint-staged"]!=null); process.stdout.write(enabled?"true":"false");' 2>/dev/null || echo false)"
+lint_staged="$(
+  node <<'EOF'
+const fs = require("fs");
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+const enabled = "lint-staged" in deps || pkg["lint-staged"] != null;
+process.stdout.write(enabled ? "true" : "false");
+EOF
+)" 2>/dev/null || echo false
 
 if [[ "$lint_staged" == "true" ]]; then
   if [[ -x ./node_modules/.bin/lint-staged ]]; then
@@ -22,7 +31,7 @@ if [[ "$lint_staged" == "true" ]]; then
   elif command -v npm >/dev/null 2>&1; then
     npm exec -- lint-staged
   else
-    npx -y lint-staged
+    npx -y lint-staged@16
   fi
 else
   prettier_cmd=()
@@ -36,6 +45,7 @@ else
     prettier_cmd=(npx -y prettier)
   fi
 
+  # Check if there are any staged files (read returns false at EOF but this is intentional)
   if IFS= read -r -d '' _ < <(git diff --cached --name-only --diff-filter=ACMR -z); then
     git diff --cached --name-only --diff-filter=ACMR -z \
       | xargs -0 -I{} sh -c 'test -L "$1" || printf "%s\0" "$1"' _ {} \
@@ -47,7 +57,14 @@ fi
 
 run_script() {
   local script_name="$1"
-  if node -e 'const fs=require("fs"); const pkg=JSON.parse(fs.readFileSync("package.json","utf8")); const scripts=pkg.scripts||{}; process.exit(scripts[process.argv[1]]?0:1);' "$script_name"; then
+  # Check if the script exists in package.json (node - reads from stdin, arg becomes argv[2])
+  if node - "$script_name" <<'EOF'
+const fs = require("fs");
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const scripts = pkg.scripts || {};
+process.exit(scripts[process.argv[2]] ? 0 : 1);
+EOF
+  then
     if command -v pnpm >/dev/null 2>&1; then
       pnpm -s run "$script_name"
     elif command -v npm >/dev/null 2>&1; then
