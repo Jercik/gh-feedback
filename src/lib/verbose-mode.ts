@@ -16,11 +16,19 @@ export function enableVerboseMode(): void {
 }
 
 /**
- * Log a message to stderr only in verbose mode.
+ * Reset verbose mode to disabled state.
+ * For testing purposes only.
+ */
+export function resetVerboseMode(): void {
+  enabled = false;
+}
+
+/**
+ * Log to stderr only in verbose mode.
  * Use for progress messages, context info, and success confirmations.
  */
-export function verboseLog(message: string): void {
+export function verboseLog(...arguments_: unknown[]): void {
   if (enabled) {
-    console.error(message);
+    console.error(...arguments_);
   }
 }
