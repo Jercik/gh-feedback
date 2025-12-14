@@ -13,47 +13,11 @@ if command -v npm >/dev/null 2>&1; then
   git add package.json 2>/dev/null || true
 fi
 
-lint_staged="$(
-  node <<'EOF'
-const fs = require("fs");
-const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-const enabled = "lint-staged" in deps || pkg["lint-staged"] != null;
-process.stdout.write(enabled ? "true" : "false");
-EOF
-)" 2>/dev/null || echo false
-
-if [[ "$lint_staged" == "true" ]]; then
-  if [[ -x ./node_modules/.bin/lint-staged ]]; then
-    ./node_modules/.bin/lint-staged
-  elif command -v pnpm >/dev/null 2>&1; then
-    pnpm exec lint-staged
-  elif command -v npm >/dev/null 2>&1; then
-    npm exec -- lint-staged
-  else
-    npx -y lint-staged@16.2.7
-  fi
-else
-  prettier_cmd=()
-  if [[ -x ./node_modules/.bin/prettier ]]; then
-    prettier_cmd=(./node_modules/.bin/prettier)
-  elif command -v pnpm >/dev/null 2>&1; then
-    prettier_cmd=(pnpm exec prettier)
-  elif command -v npm >/dev/null 2>&1; then
-    prettier_cmd=(npm exec -- prettier)
-  else
-    prettier_cmd=(npx -y prettier@3.7.4)
-  fi
-
-  # Check if there are any staged files (read returns false at EOF but this is intentional)
-  if IFS= read -r -d '' _ < <(git diff --cached --name-only --diff-filter=ACMR -z); then
-    git diff --cached --name-only --diff-filter=ACMR -z \
-      | xargs -0 -I{} sh -c 'test -L "$1" || printf "%s\0" "$1"' _ {} \
-      | xargs -0 -- "${prettier_cmd[@]}" --write --ignore-unknown --log-level warn --
-
-    git update-index --again
-  fi
-fi
+# Format staged files with prettier (filter out symlinks - prettier refuses to format them)
+git diff --cached --name-only --diff-filter=ACMR -z \
+  | xargs -0 -I{} sh -c 'test -L "$1" || printf "%s\0" "$1"' _ {} \
+  | xargs -0 pnpm exec prettier --write --ignore-unknown --log-level warn --
+git update-index --again
 
 run_script() {
   local script_name="$1"
