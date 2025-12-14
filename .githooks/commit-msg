@@ -1,12 +1,43 @@
 #!/usr/bin/env bash
 # Native Git hook - enable with: git config core.hooksPath .githooks
+# Also supports CI usage: .githooks/commit-msg --from <sha> --to <sha>
 set -euo pipefail
 
-commit_msg_file="$1"
-
-if [[ ! -f "$commit_msg_file" ]]; then
-  echo "Commit message file not found: $commit_msg_file" >&2
+if (( $# == 0 )); then
+  echo "Usage:" >&2
+  echo "  commit-msg <commit-msg-file>              # Git hook mode" >&2
+  echo "  commit-msg --last                         # Validate last commit" >&2
+  echo "  commit-msg --from <sha> --to <sha>        # Validate commit range" >&2
   exit 2
+fi
+
+# Build commitlint arguments
+commitlint_args=()
+
+if [[ "${1:-}" == --* ]]; then
+  # CI mode: pass flags directly to commitlint
+  commitlint_args=("$@")
+else
+  # Git hook mode: validate commit message file
+  commit_msg_file="$1"
+  shift
+  if [[ ! -f "$commit_msg_file" ]]; then
+    echo "Commit message file not found: $commit_msg_file" >&2
+    exit 2
+  fi
+  commitlint_args=(--edit "$commit_msg_file" "$@")
+fi
+
+# Add --verbose if not already present
+has_verbose="false"
+for arg in "${commitlint_args[@]}"; do
+  if [[ "$arg" == "--verbose" ]]; then
+    has_verbose="true"
+    break
+  fi
+done
+if [[ "$has_verbose" != "true" ]]; then
+  commitlint_args+=(--verbose)
 fi
 
 # Run commitlint via npx with @commitlint/config-conventional.
@@ -14,8 +45,6 @@ fi
 # with an absolute path to the config-conventional module.
 npx -y -p @commitlint/cli -p @commitlint/config-conventional sh -c '
   set -e
-  commit_msg_file="$1"
-
   # Extract npx node_modules from PATH (first entry ending in .bin)
   npx_bin=$(echo "$PATH" | tr ":" "\n" | grep "/_npx/.*/.bin$" | head -1)
   npx_modules="${npx_bin%/.bin}"
@@ -26,5 +55,5 @@ npx -y -p @commitlint/cli -p @commitlint/config-conventional sh -c '
   trap "rm -rf \"$tmp_dir\"" EXIT
 
   echo "module.exports = { extends: [\"$config_path\"] };" > "$tmp_config"
-  commitlint --config "$tmp_config" --edit "$commit_msg_file" --verbose
-' _ "$commit_msg_file"
+  commitlint --config "$tmp_config" "$@"
+' _ "${commitlint_args[@]}"
