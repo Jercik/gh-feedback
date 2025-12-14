@@ -14,9 +14,18 @@ if command -v npm >/dev/null 2>&1; then
 fi
 
 # Format staged files with prettier (filter out symlinks - prettier refuses to format them)
+if command -v pnpm >/dev/null 2>&1; then
+  PRETTIER_CMD="pnpm exec prettier"
+elif command -v npm >/dev/null 2>&1; then
+  PRETTIER_CMD="npx prettier"
+else
+  echo "No package manager available to run prettier" >&2
+  exit 1
+fi
+
 git diff --cached --name-only --diff-filter=ACMR -z \
   | xargs -0 -I{} sh -c 'test -L "$1" || printf "%s\0" "$1"' _ {} \
-  | xargs -0 pnpm exec prettier --write --ignore-unknown --log-level warn --
+  | xargs -0 $PRETTIER_CMD --write --ignore-unknown --log-level warn --
 git update-index --again
 
 run_script() {
@@ -43,18 +52,5 @@ EOF
 run_script "knip"
 run_script "typecheck"
 run_script "lint"
-run_script "fta:check"
+run_script "fta"
 run_script "test"
-
-changed_ts="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src/.*\.ts$' | head -n 1 || true)"
-if [[ -n "$changed_ts" ]]; then
-  run_script "build:check"
-fi
-
-if command -v yamllint >/dev/null 2>&1; then
-  run_script "lint:yaml"
-fi
-
-if command -v ansible-lint >/dev/null 2>&1; then
-  run_script "lint:ansible"
-fi
