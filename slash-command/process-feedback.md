@@ -231,7 +231,7 @@ Apply one of the resolution commands from the Reference section based on your an
 
 **For fixes:** Push the changes first, then run the `agree` command with the commit SHA in the reply.
 
-**For disagreements:** Before rejecting, ask yourself: "Why did the reviewer think this was a problem?" If there's any ambiguity in the code or docs that could cause future confusion:
+**For disagreements:** Before disagreeing, ask yourself: "Why did the reviewer think this was a problem?" If there's any ambiguity in the code or docs that could cause future confusion:
 
 1. Make a clarifying improvement (comment, rename, doc update, or restructure)
 2. Push the improvement
