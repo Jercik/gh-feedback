@@ -270,7 +270,7 @@ Run `gh-feedback summary` and confirm:
 
 ## 7. Handle continuous review stream
 
-CI reviews may post new feedback while you're processing existing items—especially after pushing fixes. This is expected behavior. Process any new items that appeared the same way as before.
+CI reviews may post new feedback while you're processing existing items—especially after pushing fixes. This is expected behavior. Re-run `gh-feedback summary`; if new `pending` items appear, process them, then repeat step 6 verification until no new items remain.
 
 # Output
 
