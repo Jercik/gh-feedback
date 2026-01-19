@@ -1,11 +1,11 @@
 ---
-description: Process PR feedback systematically - fix issues, reject with evidence, or request clarification
+description: Process PR feedback systematically - fix issues, disagree with evidence, or request clarification
 argument-hint: optional focus area or specific instructions
 ---
 
 # Goal
 
-Process every review comment on the current PR using `gh-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, rejected with evidence, acknowledged, or waiting for clarification.
+Process every review comment on the current PR using `gh-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, disagreed with evidence, acknowledged, or waiting for clarification.
 
 # Inputs
 
