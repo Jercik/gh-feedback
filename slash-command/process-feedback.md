@@ -43,7 +43,7 @@ Approach reviews are usually high-level reviews questioning whether the PR uses 
   1. Summarize the suggestion to the user
   2. Ask: "The approach review suggests [X]. Should we implement this change?"
   3. Wait for user decision before proceeding
-  4. Based on user response: implement the change, or `disagree` with explanation
+  4. Based on user response: implement the change, or `gh-feedback disagree` with explanation
 
 ## Resolution commands
 
