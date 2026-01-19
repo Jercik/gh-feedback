@@ -38,7 +38,7 @@ Code reviews focus on implementation details: correctness, error handling, perfo
 
 Approach reviews are usually high-level reviews questioning whether the PR uses the best solution to the problem. Unlike code reviews (which are mostly objectively correct or not), approach alternatives are judgment calls. **These should be taken seriously and they require user decision:**
 
-- If the review says "approach looks good" with no suggestions → `ack`
+- If the review says "approach looks good" with no suggestions → `gh-feedback ack` (positive confirmation, no action needed)
 - If the review proposes an alternative approach:
   1. Summarize the suggestion to the user
   2. Ask: "The approach review suggests [X]. Should we implement this change?"
@@ -47,15 +47,15 @@ Approach reviews are usually high-level reviews questioning whether the PR uses 
 
 ## Resolution commands
 
-| Scenario               | Command                                              |
-| :--------------------- | :--------------------------------------------------- |
-| **Valid issue**        | Fix code, push, then: `agree <id> -m "Fixed in SHA"` |
-| **Already fixed**      | `agree <id> -m "Already fixed in SHA"`               |
-| **Disagree**           | See "Disagreement with proactive improvement" below  |
-| **Need clarification** | `ask <id> -m "<your question>"`                      |
-| **Bot noise/summary**  | `ack <id>`                                           |
-| **Duplicate**          | Same action and reply as original item               |
-| **Out of scope**       | See "Scope decisions" below                          |
+| Scenario               | Command                                                          |
+| :--------------------- | :--------------------------------------------------------------- |
+| **Valid issue**        | Fix code, push, then: `gh-feedback agree <id> -m "Fixed in SHA"` |
+| **Already fixed**      | `gh-feedback agree <id> -m "Already fixed in SHA"`               |
+| **Disagree**           | See "Disagreement with proactive improvement" below              |
+| **Need clarification** | `gh-feedback ask <id> -m "<your question>"`                      |
+| **Bot noise/summary**  | `gh-feedback ack <id>`                                           |
+| **Duplicate**          | Same action and reply as original item                           |
+| **Out of scope**       | See "Scope decisions" below                                      |
 
 ## Disagreement with proactive improvement
 
@@ -125,7 +125,7 @@ When uncertain, ask: "Would a thorough developer include this in the same PR?" I
 
 ## Workflow rules
 
-- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `start <id>` to reopen it
+- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `gh-feedback start <id>` to reopen it
 - Never mark an item `agreed` until the fix is pushed—the commit SHA proves the work is done
 - When marking an item `disagreed`, cite evidence: command output, doc links, or test results
 
@@ -171,7 +171,7 @@ These may be active work, interrupted from a previous session, or resolved incor
 
 Check if the reviewer has responded since the question was asked:
 
-- **New reply found**: Run `start <id>` to reopen, then process based on the new information.
+- **New reply found**: Run `gh-feedback start <id>` to reopen, then process based on the new information.
 - **No reply yet**: Leave as `awaiting-reply` and move on.
 
 ### Priority 3: `pending` items
