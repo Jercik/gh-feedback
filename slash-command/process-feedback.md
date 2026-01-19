@@ -82,13 +82,13 @@ When you disagree with a reviewer's assessment, their confusion signals that the
 After making any improvements, run:
 
 ```
-disagree <id> -m "<explanation>. Added clarification in <location> to prevent future confusion."
+gh-feedback disagree <id> -m "<explanation>. Added clarification in <location> to prevent future confusion."
 ```
 
 Or if no improvement was warranted:
 
 ```
-disagree <id> -m "<evidence/reasoning>"
+gh-feedback disagree <id> -m "<evidence/reasoning>"
 ```
 
 ## Scope decisions
