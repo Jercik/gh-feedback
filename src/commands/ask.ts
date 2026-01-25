@@ -30,7 +30,10 @@ export function registerAskCommand(program: Command): void {
       return id;
     })
     .option("-m, --message <text>", "Question or clarification request")
-    .option("-f, --file <path>", "Read message from a file")
+    .option(
+      "-f, --body-file <path>",
+      "Read message from file (use - for stdin)",
+    )
     .option("-n, --dry-run", "Preview without executing")
     .option("-i, --interactive", "Allow typing message via stdin (Ctrl+D)")
     .action(
@@ -38,7 +41,7 @@ export function registerAskCommand(program: Command): void {
         itemId: number,
         options: {
           message?: string;
-          file?: string;
+          bodyFile?: string;
           dryRun?: boolean;
           interactive?: boolean;
         },
@@ -48,14 +51,14 @@ export function registerAskCommand(program: Command): void {
 
           // Get message
           let message: string;
-          if (options.file) {
-            message = await readMessageFromFile(options.file);
+          if (options.bodyFile) {
+            message = await readMessageFromFile(options.bodyFile, "question");
           } else if (options.message) {
             message = options.message;
           } else {
             if (process.stdin.isTTY && !options.interactive) {
               exitWithMessage(
-                "Error: Missing question message. Provide -m/--message, -f/--file, pipe via stdin, or pass --interactive to type it.",
+                "Error: Missing question message. Provide -m/--message, -f/--body-file, pipe via stdin, or pass --interactive to type it.",
               );
             }
             message = await readMessageFromStdin("question");
