@@ -45,6 +45,12 @@ gh-feedback agree 123456 -m 'Fixed in commit abc123'
 # Same, but read the message from stdin (scriptable)
 printf '%s\n' 'Fixed in commit abc123' | gh-feedback agree 123456
 
+# Heredoc for messages with special characters (backticks, $, {})
+gh-feedback disagree 123456 -f - <<'EOF'
+In destructuring, `const { foo: foo } = obj` is equivalent to `const { foo } = obj`.
+Updated transform and added test coverage.
+EOF
+
 # Mark as disagreed/won't fix
 gh-feedback disagree 123456 -m 'Intentional, see docs'
 

@@ -32,7 +32,10 @@ export function registerAgreeCommand(program: Command): void {
       return id;
     })
     .option("-m, --message <text>", "Reply message (e.g., commit SHA)")
-    .option("-f, --file <path>", "Read reply message from a file")
+    .option(
+      "-f, --body-file <path>",
+      "Read message from file (use - for stdin)",
+    )
     .option("-n, --dry-run", "Preview without executing")
     .option("-i, --interactive", "Allow typing message via stdin (Ctrl+D)")
     .action(
@@ -40,7 +43,7 @@ export function registerAgreeCommand(program: Command): void {
         itemId: number,
         options: {
           message?: string;
-          file?: string;
+          bodyFile?: string;
           dryRun?: boolean;
           interactive?: boolean;
         },
@@ -50,14 +53,14 @@ export function registerAgreeCommand(program: Command): void {
 
           // Get message
           let message: string;
-          if (options.file) {
-            message = await readMessageFromFile(options.file);
+          if (options.bodyFile) {
+            message = await readMessageFromFile(options.bodyFile);
           } else if (options.message) {
             message = options.message;
           } else {
             if (process.stdin.isTTY && !options.interactive) {
               exitWithMessage(
-                "Error: Missing reply message. Provide -m/--message, -f/--file, pipe via stdin, or pass --interactive to type it.",
+                "Error: Missing reply message. Provide -m/--message, -f/--body-file, pipe via stdin, or pass --interactive to type it.",
               );
             }
             message = await readMessageFromStdin("reply");

@@ -7,6 +7,11 @@ import * as readline from "node:readline/promises";
 import { exitWithMessage } from "./git-helpers.js";
 
 export async function readMessageFromFile(filePath: string): Promise<string> {
+  // Treat "-" as stdin (standard Unix convention)
+  if (filePath === "-") {
+    return readMessageFromStdin("message");
+  }
+
   try {
     const content = await fs.readFile(filePath, "utf8");
     return content.trim();
