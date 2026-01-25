@@ -56,7 +56,7 @@ export function registerDisagreeCommand(program: Command): void {
           // Get message
           let message: string;
           if (options.bodyFile) {
-            message = await readMessageFromFile(options.bodyFile);
+            message = await readMessageFromFile(options.bodyFile, "reply");
           } else if (options.message) {
             message = options.message;
           } else {
