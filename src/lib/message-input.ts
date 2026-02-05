@@ -23,7 +23,8 @@ export async function readMessageFromStdin(prompt: string): Promise<string> {
     output: process.stderr,
   });
 
-  if (process.stdin.isTTY) {
+  const isCI = process.env.CI === "1" || process.env.CI === "true";
+  if (process.stdin.isTTY && !isCI) {
     console.error(`Enter your ${prompt} (press Ctrl+D when done):`);
     console.error("---");
   }

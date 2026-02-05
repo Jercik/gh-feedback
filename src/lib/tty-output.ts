@@ -3,8 +3,13 @@
  * Uses ASCII for maximum compatibility across terminals and pipelines.
  */
 
+const canUseColor = process.stderr.isTTY && process.env.NO_COLOR === undefined;
+
+const colorize = (label: string, code: string): string =>
+  canUseColor ? `\u001B[${code}m${label}\u001B[0m` : label;
+
 /** Success indicator */
-export const SUCCESS = "[OK]";
+export const SUCCESS = colorize("[OK]", "32");
 
 /** Warning indicator */
-export const WARNING = "[WARN]";
+export const WARNING = colorize("[WARN]", "33");
