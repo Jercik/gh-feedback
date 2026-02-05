@@ -3,7 +3,9 @@
  * Uses ASCII for maximum compatibility across terminals and pipelines.
  */
 
-const canUseColor = process.stderr.isTTY && process.env.NO_COLOR === undefined;
+const isNoColorSet =
+  process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== "";
+const canUseColor = process.stderr.isTTY && !isNoColorSet;
 
 const colorize = (label: string, code: string): string =>
   canUseColor ? `\u001B[${code}m${label}\u001B[0m` : label;

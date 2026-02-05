@@ -89,7 +89,7 @@ export function ghRaw(...arguments_: string[]): string {
         `Error: Required dependency 'gh' not found.\n` +
           `Looked for: ${ghPath}\n` +
           `To fix, either:\n` +
-          `  1. Install GitHub CLI (brew install gh)\n` +
+          `  1. Install GitHub CLI (see https://cli.github.com/)\n` +
           `  2. Set ${GH_PATH_ENV_VAR}=/path/to/gh`,
       );
     }
