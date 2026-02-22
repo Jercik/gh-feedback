@@ -23,7 +23,7 @@ export function registerAskCommand(program: Command): void {
     .command("ask")
     .description("Request clarification (reply + confused, keeps open)")
     .argument("<id>", "The feedback item ID", (value) => {
-      const id = Number.parseInt(value);
+      const id = Number.parseInt(value, 10);
       if (Number.isNaN(id) || id <= 0) {
         exitWithMessage(`Error: Invalid ID "${value}".`);
       }

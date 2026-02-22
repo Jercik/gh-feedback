@@ -97,7 +97,7 @@ function tryDetectComment(
     if (!prMatch?.[1]) {
       return undefined;
     }
-    const prNumber = Number.parseInt(prMatch[1]);
+    const prNumber = Number.parseInt(prMatch[1], 10);
 
     return {
       type: "comment",

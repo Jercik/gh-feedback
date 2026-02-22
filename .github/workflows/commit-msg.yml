@@ -8,6 +8,7 @@ permissions:
 jobs:
   commitlint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
         with:
@@ -19,7 +20,7 @@ jobs:
           set -euo pipefail
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            bash .githooks/commit-msg --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}"
+            npx -y conventional-commit-msg --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}"
           else
-            bash .githooks/commit-msg --last
+            npx -y conventional-commit-msg --last
           fi

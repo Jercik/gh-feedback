@@ -129,7 +129,7 @@ function extractPrNumber(
       `Could not determine PR for review comment #${commentDatabaseId}.`,
     );
   }
-  return Number.parseInt(prMatch[1]);
+  return Number.parseInt(prMatch[1], 10);
 }
 
 /**
