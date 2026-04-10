@@ -10,7 +10,7 @@ npm install -g gh-feedback
 
 ## Prerequisites
 
-- Node.js 22.14+
+- Node.js 22.19+
 - Git repository with `origin` remote
 - GitHub CLI (`gh`) authenticated
 - Git installed (`git`)

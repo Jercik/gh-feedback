@@ -1,26 +1,12 @@
 {
   "name": "gh-feedback",
-  "author": "Łukasz Jerciński",
-  "license": "MIT",
   "version": "1.0.0",
   "description": "Read, reply, react, and resolve GitHub PR feedback on the current branch",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Jercik/gh-feedback.git"
-  },
-  "type": "module",
-  "bin": {
-    "gh-feedback": "bin/gh-feedback"
-  },
-  "files": [
-    "bin/",
-    "dist/",
-    "README.md",
-    "LICENSE"
-  ],
+  "author": "Łukasz Jerciński",
+  "license": "MIT",
   "scripts": {
+    "prepack": "pnpm run rebuild",
     "prepare": "git config core.hooksPath .githooks",
-    "prepublishOnly": "pnpm run rebuild",
     "build": "tsc -p tsconfig.app.json",
     "clean": "rm -rf dist *.tsbuildinfo",
     "format": "prettier --write .",
@@ -35,10 +21,24 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jercik/gh-feedback.git"
+  },
+  "type": "module",
+  "bin": {
+    "gh-feedback": "bin/gh-feedback"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [],
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=22.14.0"
+    "node": ">=22.19.0"
   },
   "dependencies": {
     "@commander-js/extra-typings": "^14.0.0",
@@ -46,16 +46,16 @@
   },
   "devDependencies": {
     "@total-typescript/ts-reset": "^0.6.1",
-    "@types/node": "^25.3.5",
-    "@vitest/coverage-v8": "^4.0.18",
-    "eslint": "^10.0.2",
-    "eslint-config-axkit": "^1.4.0",
+    "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "eslint": "^10.2.0",
+    "eslint-config-axkit": "^1.6.3",
     "fta-check": "^1.5.1",
     "fta-cli": "^3.0.0",
-    "knip": "^5.85.0",
-    "prettier": "3.8.1",
+    "knip": "^6.3.1",
+    "prettier": "3.8.2",
     "semantic-release": "^25.0.3",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
   }
 }
