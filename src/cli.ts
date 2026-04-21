@@ -13,10 +13,7 @@
  */
 
 import { createProgram } from "./lib/create-program.js";
-import {
-  getRepositoryInfo,
-  getPullRequestNumber,
-} from "./lib/github-environment.js";
+import { getRepositoryInfo, getPullRequestNumber } from "./lib/github-environment.js";
 import { exitWithMessage } from "./lib/git-helpers.js";
 import { fetchSummary } from "./lib/fetch-summary.js";
 import { formatSummary } from "./lib/format-summary.js";
@@ -73,10 +70,7 @@ program
   .description("Get all PR feedback with semantic status")
   .option("--hide-hidden", "Exclude minimized items")
   .option("--hide-resolved", "Exclude resolved items")
-  .option(
-    "-p, --porcelain",
-    "Output as TSV (auto-detected when stdout is not a TTY)",
-  )
+  .option("-p, --porcelain", "Output as TSV (auto-detected when stdout is not a TTY)")
   .option("-j, --json", "Output as JSON")
   .action(
     (options: {

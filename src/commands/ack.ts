@@ -46,9 +46,7 @@ export function registerAckCommand(program: Command): void {
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
-          verboseLog(
-            `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
-          );
+          verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
         }
 
         // Check for unresolved sibling threads in multi-thread reviews

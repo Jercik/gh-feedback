@@ -18,9 +18,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerStartCommand(program: Command): void {
   program
     .command("start")
-    .description(
-      "Mark a feedback item as work-in-progress (adds eyes reaction)",
-    )
+    .description("Mark a feedback item as work-in-progress (adds eyes reaction)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Number.parseInt(value, 10);
       if (Number.isNaN(id) || id <= 0) {
@@ -38,13 +36,11 @@ export function registerStartCommand(program: Command): void {
         const { viewerReactions, isMinimized } = getItemStatus(item);
 
         // Check if item needs reopening
-        const needsReopen = item.isResolved || isMinimized;
+        const needsReopen = item.isResolved ?? isMinimized;
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
-          verboseLog(
-            `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
-          );
+          verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
         }
         verboseLog("");
         if (needsReopen) {

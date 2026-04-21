@@ -8,7 +8,7 @@ import { getPullRequestNumber } from "./github-environment.js";
 import { graphqlQuery, mapReactions } from "./github-graphql.js";
 import { REVIEW_REACTIONS_QUERY } from "./graphql-queries.js";
 
-export type ReviewDetail = {
+export interface ReviewDetail {
   type: "review";
   id: number;
   author: string;
@@ -17,7 +17,7 @@ export type ReviewDetail = {
   submittedAt: string;
   body: string;
   reactions: Reaction[];
-};
+}
 
 export function tryFetchReview(
   owner: string,
@@ -31,7 +31,9 @@ export function tryFetchReview(
     prNumber = undefined;
   }
 
-  if (!prNumber) return undefined;
+  if (!prNumber) {
+    return undefined;
+  }
 
   try {
     const reviewRest = ghJson<{
@@ -49,7 +51,9 @@ export function tryFetchReview(
     }>(REVIEW_REACTIONS_QUERY, { id: reviewRest.node_id });
     const r = result.data.node;
 
-    if (!r) return undefined;
+    if (!r) {
+      return undefined;
+    }
 
     return {
       type: "review",
@@ -62,7 +66,9 @@ export function tryFetchReview(
       reactions: mapReactions(r.reactionGroups),
     };
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }

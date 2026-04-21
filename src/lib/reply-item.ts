@@ -11,10 +11,10 @@ import { ghJson } from "./github-cli.js";
 import { getRepositoryInfo } from "./github-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 
-type ReplyResult = {
+interface ReplyResult {
   id: number;
   url: string;
-};
+}
 
 /** GitHub API limit for comment body length */
 const MAX_COMMENT_LENGTH = 65_536;
@@ -41,20 +41,16 @@ function replyToThread(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes("404")) {
-      exitWithMessage(
+      return exitWithMessage(
         `Error: Unable to reply to thread #${commentId}. ` +
           `This may be a reply to another comment (can't reply to replies).`,
       );
     }
-    exitWithMessage(`Error posting reply: ${errorMessage}`);
+    return exitWithMessage(`Error posting reply: ${errorMessage}`);
   }
 }
 
-function postPRComment(
-  ownerRepo: string,
-  prNumber: number,
-  message: string,
-): ReplyResult {
+function postPRComment(ownerRepo: string, prNumber: number, message: string): ReplyResult {
   try {
     const result = ghJson<{ id: number; html_url: string }>(
       "api",
@@ -69,7 +65,7 @@ function postPRComment(
 
     return { id: result.id, url: result.html_url };
   } catch (error) {
-    exitWithMessage(
+    return exitWithMessage(
       `Error posting comment: ${error instanceof Error ? error.message : String(error)}`,
     );
   }

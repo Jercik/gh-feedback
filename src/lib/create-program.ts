@@ -31,10 +31,7 @@ export function createProgram(): Command {
     .showSuggestionAfterError()
     .helpCommand(false)
     .option("-v, --verbose", "Show progress messages (quiet by default)")
-    .option(
-      "--debug-rate-limit",
-      "Show GitHub API rate limit usage after command",
-    );
+    .option("--debug-rate-limit", "Show GitHub API rate limit usage after command");
 
   program.addHelpText(
     "before",

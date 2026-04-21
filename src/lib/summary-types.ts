@@ -26,17 +26,17 @@ type FeedbackStatus =
 /**
  * A response/reply to a feedback item.
  */
-export type FeedbackResponse = {
+export interface FeedbackResponse {
   readonly author: string;
   readonly timestamp: string;
   readonly body: string;
-};
+}
 
 /**
  * Unified feedback item for summary output.
  * Combines threads, comments, and reviews into one type.
  */
-export type FeedbackItem = {
+export interface FeedbackItem {
   readonly id: number;
   readonly timestamp: string;
   readonly status: FeedbackStatus;
@@ -45,17 +45,17 @@ export type FeedbackItem = {
   readonly location: string;
   readonly body: string;
   readonly responses: readonly FeedbackResponse[];
-};
+}
 
 /**
  * Complete summary output.
  */
-export type FeedbackSummary = {
+export interface FeedbackSummary {
   readonly prNumber: number;
   readonly prUrl: string;
   readonly prTitle: string;
   readonly items: readonly FeedbackItem[];
-};
+}
 
 /**
  * Map GraphQL reaction content + resolution state to semantic status.
@@ -67,7 +67,7 @@ export type FeedbackSummary = {
  * This ensures status alone tells you if action is needed.
  */
 export function reactionToStatus(
-  reactions: ReadonlyArray<{ content: string; viewerHasReacted: boolean }>,
+  reactions: readonly { content: string; viewerHasReacted: boolean }[],
   isDone: boolean,
 ): FeedbackStatus {
   const viewerReactions = new Set(
@@ -78,9 +78,7 @@ export function reactionToStatus(
   const hasThumbsUp = viewerReactions.has("THUMBS_UP");
   const hasThumbsDown = viewerReactions.has("THUMBS_DOWN");
   const hasRocket = viewerReactions.has("ROCKET");
-  const finalStatusCount = [hasThumbsUp, hasThumbsDown, hasRocket].filter(
-    Boolean,
-  ).length;
+  const finalStatusCount = [hasThumbsUp, hasThumbsDown, hasRocket].filter(Boolean).length;
 
   // Conflicting reactions = in-progress (something went wrong, needs review)
   if (finalStatusCount > 1) {
@@ -89,16 +87,26 @@ export function reactionToStatus(
 
   if (isDone) {
     // Item is resolved/hidden - show final status if properly reacted
-    if (hasThumbsUp) return "agreed";
-    if (hasThumbsDown) return "disagreed";
-    if (hasRocket) return "acknowledged";
+    if (hasThumbsUp) {
+      return "agreed";
+    }
+    if (hasThumbsDown) {
+      return "disagreed";
+    }
+    if (hasRocket) {
+      return "acknowledged";
+    }
     // Resolved without proper reaction - treat as in-progress so agent revisits
     return "in-progress";
   }
 
   // Item is NOT resolved/hidden - show work-in-progress status
-  if (viewerReactions.has("CONFUSED")) return "awaiting-reply";
-  if (viewerReactions.size > 0) return "in-progress";
+  if (viewerReactions.has("CONFUSED")) {
+    return "awaiting-reply";
+  }
+  if (viewerReactions.size > 0) {
+    return "in-progress";
+  }
   return "pending";
 }
 
@@ -106,9 +114,7 @@ export function reactionToStatus(
  * Check if a status represents a "done" state.
  */
 export function isStatusDone(status: FeedbackStatus): boolean {
-  return (
-    status === "agreed" || status === "disagreed" || status === "acknowledged"
-  );
+  return status === "agreed" || status === "disagreed" || status === "acknowledged";
 }
 
 /**
@@ -116,7 +122,9 @@ export function isStatusDone(status: FeedbackStatus): boolean {
  * Preserves start and end for context.
  */
 export function truncateMiddle(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
+  if (text.length <= maxLength) {
+    return text;
+  }
 
   const ellipsis = " [TRUNCATED] ";
   const availableLength = maxLength - ellipsis.length;
@@ -133,6 +141,8 @@ export function formatLocation(
   path: string | null | undefined,
   line: number | null | undefined,
 ): string {
-  if (!path) return "";
+  if (!path) {
+    return "";
+  }
   return line ? `${path}:${line}` : path;
 }

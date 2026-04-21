@@ -20,10 +20,10 @@ import {
   type SummaryThreadNode,
 } from "./transform-summary.js";
 
-type FetchOptions = {
+interface FetchOptions {
   hideHidden?: boolean;
   hideResolved?: boolean;
-};
+}
 
 export function fetchSummary(
   owner: string,
@@ -99,10 +99,7 @@ export function fetchSummary(
   }
 
   // Paginate threads
-  if (
-    pr.reviewThreads.pageInfo.hasNextPage &&
-    pr.reviewThreads.pageInfo.endCursor
-  ) {
+  if (pr.reviewThreads.pageInfo.hasNextPage && pr.reviewThreads.pageInfo.endCursor) {
     const rest = graphqlPaginate<SummaryThreadNode>(
       SUMMARY_THREADS_PAGINATION_QUERY,
       {
@@ -136,15 +133,9 @@ export function fetchSummary(
   const commentItems = transformComments(allComments, hideHidden);
 
   // Combine all items and sort by timestamp
-  const allItems: FeedbackItem[] = [
-    ...reviewItems,
-    ...threadItems,
-    ...commentItems,
-  ];
+  const allItems: FeedbackItem[] = [...reviewItems, ...threadItems, ...commentItems];
   // Sort in place (allItems is already a new array from spread)
-  allItems.sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-  );
+  allItems.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   return {
     prNumber,

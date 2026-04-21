@@ -11,21 +11,21 @@ import { tryFetchReview, type ReviewDetail } from "./fetch-review.js";
 import { tryFetchIssueComment, type CommentDetail } from "./fetch-comment.js";
 import { getThreadForComment, fetchThreadDetail } from "./fetch-thread.js";
 
-type ThreadDetail = {
+interface ThreadDetail {
   type: "thread";
   id: number;
   path: string | null;
   line: number | null;
   isOutdated: boolean;
   isResolved: boolean;
-  comments: Array<{
+  comments: {
     id: number;
     author: string;
     body: string;
     createdAt: string;
     reactions: Reaction[];
-  }>;
-};
+  }[];
+}
 
 export type ItemDetail = ReviewDetail | ThreadDetail | CommentDetail;
 
@@ -39,11 +39,7 @@ export type ItemDetail = ReviewDetail | ThreadDetail | CommentDetail;
  *
  * This avoids paginating through all threads with full data.
  */
-function tryFetchThread(
-  owner: string,
-  repo: string,
-  itemId: number,
-): ThreadDetail | undefined {
+function tryFetchThread(owner: string, repo: string, itemId: number): ThreadDetail | undefined {
   try {
     // Get comment to determine PR number
     const comment = ghJson<PullRequestReviewComment>(
@@ -52,16 +48,13 @@ function tryFetchThread(
     );
 
     // Stage 1: Lightweight lookup to find the thread (with early exit)
-    const { thread: threadLookup } = getThreadForComment(
-      owner,
-      repo,
-      itemId,
-      comment,
-    );
+    const { thread: threadLookup } = getThreadForComment(owner, repo, itemId, comment);
 
     // Stage 2: Fetch full thread data by node_id (single GraphQL call)
     const thread = fetchThreadDetail(threadLookup.id);
-    if (!thread) return undefined;
+    if (!thread) {
+      return undefined;
+    }
 
     return {
       type: "thread",
@@ -79,29 +72,33 @@ function tryFetchThread(
       })),
     };
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }
 
-export function fetchItemDetail(
-  owner: string,
-  repo: string,
-  itemId: number,
-): ItemDetail {
+export function fetchItemDetail(owner: string, repo: string, itemId: number): ItemDetail {
   // Try thread first (most common for PR feedback)
   const thread = tryFetchThread(owner, repo, itemId);
-  if (thread) return thread;
+  if (thread) {
+    return thread;
+  }
 
   // Try issue comment
   const comment = tryFetchIssueComment(owner, repo, itemId);
-  if (comment) return comment;
+  if (comment) {
+    return comment;
+  }
 
   // Try review
   const review = tryFetchReview(owner, repo, itemId);
-  if (review) return review;
+  if (review) {
+    return review;
+  }
 
-  exitWithMessage(
+  return exitWithMessage(
     `Error: Could not find item #${itemId}. Commands now search only the current branch's PR; check out the target PR and retry if the item belongs elsewhere.`,
   );
 }

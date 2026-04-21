@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  enableVerboseMode,
-  resetVerboseMode,
-  verboseLog,
-} from "./verbose-mode.js";
+import { enableVerboseMode, resetVerboseMode, verboseLog } from "./verbose-mode.js";
 
 describe("verbose-mode", () => {
   beforeEach(() => {

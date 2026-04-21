@@ -13,38 +13,38 @@ import { THREAD_LOOKUP_QUERY, THREAD_DETAIL_QUERY } from "./graphql-queries.js";
  * Minimal thread info returned by the lookup query.
  * Only contains data needed for DetectedItem.
  */
-type ThreadLookupResult = {
+interface ThreadLookupResult {
   id: string;
   isResolved: boolean;
   isOutdated: boolean;
   path: string | null;
   line: number | null;
-};
+}
 
 /**
  * Response shape for the lightweight thread lookup query.
  */
-type ThreadLookupResponse = {
+interface ThreadLookupResponse {
   data: {
     repository: {
       pullRequest: {
         reviewThreads: {
           pageInfo: { endCursor: string | null; hasNextPage: boolean };
-          nodes: Array<{
+          nodes: {
             id: string;
             isResolved: boolean;
             isOutdated: boolean;
             path: string | null;
             line: number | null;
             comments: {
-              nodes: Array<{ databaseId: number }>;
+              nodes: { databaseId: number }[];
             };
-          }>;
+          }[];
         };
       };
     };
   };
-};
+}
 
 /**
  * Find a thread by comment ID using lightweight query with early exit.
@@ -75,19 +75,13 @@ function findThreadByCommentId(
       variables.cursor = cursor;
     }
 
-    const response = graphqlQuery<ThreadLookupResponse>(
-      THREAD_LOOKUP_QUERY,
-      variables,
-    );
+    const response = graphqlQuery<ThreadLookupResponse>(THREAD_LOOKUP_QUERY, variables);
 
-    const { pageInfo, nodes } =
-      response.data.repository.pullRequest.reviewThreads;
+    const { pageInfo, nodes } = response.data.repository.pullRequest.reviewThreads;
 
     // Search this page for the thread containing our comment
     for (const thread of nodes) {
-      const found = thread.comments.nodes.some(
-        (c) => c.databaseId === commentDatabaseId,
-      );
+      const found = thread.comments.nodes.some((c) => c.databaseId === commentDatabaseId);
       if (found) {
         // Early exit - found the thread!
         return {
@@ -112,22 +106,17 @@ function findThreadByCommentId(
  * Minimal comment data needed to extract PR number.
  * Using a narrow type avoids unsafe type assertions when passing partial data.
  */
-type CommentWithPrUrl = {
+interface CommentWithPrUrl {
   pull_request_url: string;
-};
+}
 
 /**
  * Extract PR number from a pull request comment.
  */
-function extractPrNumber(
-  comment: CommentWithPrUrl,
-  commentDatabaseId: number,
-): number {
-  const prMatch = comment.pull_request_url.match(/\/pulls\/(\d+)$/u);
+function extractPrNumber(comment: CommentWithPrUrl, commentDatabaseId: number): number {
+  const prMatch = /\/pulls\/(\d+)$/u.exec(comment.pull_request_url);
   if (!prMatch?.[1]) {
-    throw new Error(
-      `Could not determine PR for review comment #${commentDatabaseId}.`,
-    );
+    throw new Error(`Could not determine PR for review comment #${commentDatabaseId}.`);
   }
   return Number.parseInt(prMatch[1], 10);
 }
@@ -158,12 +147,7 @@ export function getThreadForComment(
   const prNumber = extractPrNumber(comment, commentDatabaseId);
 
   // Find thread using lightweight query with early exit
-  const thread = findThreadByCommentId(
-    owner,
-    repo,
-    prNumber,
-    commentDatabaseId,
-  );
+  const thread = findThreadByCommentId(owner, repo, prNumber, commentDatabaseId);
 
   if (!thread) {
     throw new Error(
@@ -177,14 +161,14 @@ export function getThreadForComment(
 /**
  * Full thread data returned by the detail query.
  */
-type ThreadDetailData = {
+interface ThreadDetailData {
   id: string;
   isResolved: boolean;
   isOutdated: boolean;
   path: string | null;
   line: number | null;
   comments: {
-    nodes: Array<{
+    nodes: {
       databaseId: number;
       author: { login: string };
       body: string;
@@ -192,18 +176,18 @@ type ThreadDetailData = {
       line: number | null;
       createdAt: string;
       reactionGroups: ReactionGroupNode[];
-    }>;
+    }[];
   };
-};
+}
 
 /**
  * Response shape for the thread detail query.
  */
-type ThreadDetailResponse = {
+interface ThreadDetailResponse {
   data: {
     node: ThreadDetailData | null;
   };
-};
+}
 
 /**
  * Fetch full thread data by node_id.
@@ -211,9 +195,7 @@ type ThreadDetailResponse = {
  * Used after lightweight lookup identifies which thread to display.
  * Much cheaper than paginating all threads to find the target.
  */
-export function fetchThreadDetail(
-  threadNodeId: string,
-): ThreadDetailData | undefined {
+export function fetchThreadDetail(threadNodeId: string): ThreadDetailData | undefined {
   const response = graphqlQuery<ThreadDetailResponse>(THREAD_DETAIL_QUERY, {
     id: threadNodeId,
   });

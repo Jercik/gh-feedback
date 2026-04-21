@@ -11,27 +11,27 @@ import { getThreadForComment } from "./fetch-thread.js";
 import { getPullRequestNumber } from "./github-environment.js";
 import { WARNING } from "./tty-output.js";
 
-type ReviewResponse = {
+interface ReviewResponse {
   id: number;
   node_id: string;
   body: string;
   user: { login: string } | null;
   pull_request_url: string;
-};
+}
 
-type ReviewCommentResponse = {
+interface ReviewCommentResponse {
   id: number;
   node_id: string;
   pull_request_url: string;
-};
+}
 
-type ReviewTargetInfo = {
+interface ReviewTargetInfo {
   nodeId: string;
   threadId?: string;
   isResolved?: boolean;
   /** All sibling threads under this review */
   siblingThreads?: SiblingThread[];
-};
+}
 
 /**
  * Get the appropriate target info for reacting to a review.
@@ -162,7 +162,9 @@ export function tryDetectReview(
       const target = getReviewTargetInfo(owner, repo, currentPrNumber, review);
       return buildReviewItem(itemId, currentPrNumber, review, target);
     } catch (error) {
-      if (!isNotFoundError(error)) throw error;
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
     }
   }
 
@@ -171,13 +173,15 @@ export function tryDetectReview(
   );
 
   try {
-    const prs = ghJson<Array<{ number: number }>>(
+    const prs = ghJson<{ number: number }[]>(
       "api",
       `repos/${owner}/${repo}/pulls?state=all&per_page=20`,
     );
 
     for (const pr of prs) {
-      if (pr.number === currentPrNumber) continue;
+      if (pr.number === currentPrNumber) {
+        continue;
+      }
       try {
         const review = ghJson<ReviewResponse>(
           "api",
@@ -186,12 +190,16 @@ export function tryDetectReview(
         const target = getReviewTargetInfo(owner, repo, pr.number, review);
         return buildReviewItem(itemId, pr.number, review, target);
       } catch (error) {
-        if (!isNotFoundError(error)) throw error;
+        if (!isNotFoundError(error)) {
+          throw error;
+        }
       }
     }
     return undefined;
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }

@@ -38,25 +38,25 @@ const ITEM_REACTIONS_QUERY = `
   }
 `;
 
-type ReactionGroup = {
+interface ReactionGroup {
   content: string;
   viewerHasReacted: boolean;
-};
+}
 
-type QueryResult = {
+interface QueryResult {
   data: {
     node: {
       isMinimized?: boolean;
       reactionGroups: ReactionGroup[];
     } | null;
   };
-};
+}
 
-type ItemStatusResult = {
+interface ItemStatusResult {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
-};
+}
 
 /**
  * Fetch item workflow status and viewer's current reactions.

@@ -5,5 +5,5 @@ interface DependencyPathOptions {
 
 export function resolveDependencyPath(options: DependencyPathOptions): string {
   const trimmedOverride = options.envOverride?.trim();
-  return trimmedOverride || options.defaultPath;
+  return trimmedOverride ?? options.defaultPath;
 }

@@ -5,10 +5,7 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
-import {
-  readMessageFromFile,
-  readMessageFromStdin,
-} from "../lib/message-input.js";
+import { readMessageFromFile, readMessageFromStdin } from "../lib/message-input.js";
 import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { detectItemType } from "../lib/detect-item-type.js";
@@ -23,9 +20,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerDisagreeCommand(program: Command): void {
   program
     .command("disagree")
-    .description(
-      "Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve)",
-    )
+    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Number.parseInt(value, 10);
       if (Number.isNaN(id) || id <= 0) {
@@ -34,10 +29,7 @@ export function registerDisagreeCommand(program: Command): void {
       return id;
     })
     .option("-m, --message <text>", "Reply message explaining why")
-    .option(
-      "-f, --body-file <path>",
-      "Read message from file (use - for stdin)",
-    )
+    .option("-f, --body-file <path>", "Read message from file (use - for stdin)")
     .option("-n, --dry-run", "Preview without executing")
     .option("-i, --interactive", "Allow typing message via stdin (Ctrl+D)")
     .action(
@@ -82,9 +74,7 @@ export function registerDisagreeCommand(program: Command): void {
 
           verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
           if (item.path) {
-            verboseLog(
-              `Location: ${item.path}${item.line ? `:${item.line}` : ""}`,
-            );
+            verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
           }
           verboseLog("");
           verboseLog("Reply:");
@@ -135,9 +125,7 @@ export function registerDisagreeCommand(program: Command): void {
           verboseLog(`${SUCCESS} Marked #${itemId} as disagreed.`);
           console.log(reply.url);
         } catch (error) {
-          exitWithMessage(
-            error instanceof Error ? error.message : String(error),
-          );
+          exitWithMessage(error instanceof Error ? error.message : String(error));
         }
       },
     );

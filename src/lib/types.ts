@@ -2,11 +2,11 @@
 // Repository Types
 // =============================================================================
 
-export type RepoInfo = {
+export interface RepoInfo {
   readonly owner: string;
   readonly repo: string;
   readonly ownerRepo: string;
-};
+}
 
 // =============================================================================
 // Reaction Types
@@ -22,39 +22,33 @@ export type ReactionContent =
   | "rocket"
   | "eyes";
 
-export type ReactionGroupNode = {
+export interface ReactionGroupNode {
   readonly content: string;
   readonly users: {
     readonly totalCount: number;
-    readonly nodes: ReadonlyArray<{ readonly login: string }>;
+    readonly nodes: readonly { readonly login: string }[];
   };
   readonly viewerHasReacted: boolean;
-};
+}
 
-export type Reaction = {
+export interface Reaction {
   readonly content: string;
   readonly count: number;
   readonly viewerHasReacted: boolean;
   readonly users: readonly string[];
-};
+}
 
 // =============================================================================
 // Comment Classification
 // =============================================================================
 
-export type Classifier =
-  | "SPAM"
-  | "ABUSE"
-  | "OFF_TOPIC"
-  | "OUTDATED"
-  | "DUPLICATE"
-  | "RESOLVED";
+export type Classifier = "SPAM" | "ABUSE" | "OFF_TOPIC" | "OUTDATED" | "DUPLICATE" | "RESOLVED";
 
 // =============================================================================
 // Issue Comment Types (Conversation Tab)
 // =============================================================================
 
-export type IssueComment = {
+export interface IssueComment {
   readonly id: number;
   readonly node_id: string;
   readonly body: string;
@@ -74,13 +68,13 @@ export type IssueComment = {
     readonly rocket: number;
     readonly eyes: number;
   };
-};
+}
 
 // =============================================================================
 // Review Comment Types (Files Changed Tab)
 // =============================================================================
 
-export type PullRequestReviewComment = {
+export interface PullRequestReviewComment {
   readonly id: number;
   readonly node_id: string;
   readonly body: string;
@@ -91,24 +85,19 @@ export type PullRequestReviewComment = {
   readonly line: number | null;
   readonly created_at: string;
   readonly updated_at: string;
-};
+}
 
 // =============================================================================
 // Review Summary Types
 // =============================================================================
 
-export type ReviewState =
-  | "APPROVED"
-  | "CHANGES_REQUESTED"
-  | "COMMENTED"
-  | "DISMISSED"
-  | "PENDING";
+export type ReviewState = "APPROVED" | "CHANGES_REQUESTED" | "COMMENTED" | "DISMISSED" | "PENDING";
 
 // =============================================================================
 // GraphQL Pagination Types
 // =============================================================================
 
-export type PageInfo = {
+export interface PageInfo {
   readonly endCursor: string | null;
   readonly hasNextPage: boolean;
-};
+}

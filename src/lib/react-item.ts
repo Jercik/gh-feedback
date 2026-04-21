@@ -9,21 +9,15 @@ import type { ReactionContent } from "./types.js";
 import type { DetectedItem } from "./detect-item-type.js";
 import { addReaction, removeReaction } from "./github-mutations.js";
 
-type ReactResult = {
+interface ReactResult {
   content: string;
-};
+}
 
-export function addReactionToItem(
-  item: DetectedItem,
-  reaction: ReactionContent,
-): ReactResult {
+export function addReactionToItem(item: DetectedItem, reaction: ReactionContent): ReactResult {
   return addReaction(item.nodeId, reaction);
 }
 
-function removeReactionFromItem(
-  item: DetectedItem,
-  reaction: ReactionContent,
-): ReactResult {
+function removeReactionFromItem(item: DetectedItem, reaction: ReactionContent): ReactResult {
   return removeReaction(item.nodeId, reaction);
 }
 

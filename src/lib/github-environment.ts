@@ -34,7 +34,9 @@ export function verifyPrerequisites(): void {
   try {
     const userName = git("config", "user.name");
     const userEmail = git("config", "user.email");
-    if (!userName || !userEmail) throw new Error("Git user not configured");
+    if (!userName || !userEmail) {
+      throw new Error("Git user not configured");
+    }
   } catch {
     exitWithMessage(
       "Error: Git user not configured. Run: git config user.name 'Your Name' && git config user.email 'you@example.com'",
@@ -52,15 +54,11 @@ export function verifyPrerequisites(): void {
  * Get repository owner/name information from the current directory.
  */
 export function getRepositoryInfo(): RepoInfo {
-  const result = ghJson<{ nameWithOwner: string }>(
-    "repo",
-    "view",
-    "--json",
-    "nameWithOwner",
-  );
+  const result = ghJson<{ nameWithOwner: string }>("repo", "view", "--json", "nameWithOwner");
   const [owner, repo] = result.nameWithOwner.split("/");
-  if (!owner || !repo)
+  if (!owner || !repo) {
     throw new Error(`Invalid repository format: ${result.nameWithOwner}`);
+  }
   return { owner, repo, ownerRepo: result.nameWithOwner };
 }
 
@@ -68,19 +66,13 @@ export function getRepositoryInfo(): RepoInfo {
  * Get the PR number for the given identifier (PR number, branch name, or current branch).
  */
 export function getPullRequestNumber(identifier?: string): number {
-  const target = identifier || "";
+  const target = identifier ?? "";
   try {
-    const result = ghJson<{ number: number }>(
-      "pr",
-      "view",
-      target,
-      "--json",
-      "number",
-    );
+    const result = ghJson<{ number: number }>("pr", "view", target, "--json", "number");
     return result.number;
   } catch {
-    const displayTarget = identifier || "current branch";
-    exitWithMessage(`Error: No pull request found for ${displayTarget}.`);
+    const displayTarget = identifier ?? "current branch";
+    return exitWithMessage(`Error: No pull request found for ${displayTarget}.`);
   }
 }
 

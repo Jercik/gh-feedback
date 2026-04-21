@@ -11,7 +11,9 @@ import { WARNING } from "./tty-output.js";
 
 /** Format location for display */
 function formatLocation(thread: SiblingThread): string {
-  if (!thread.path) return `#${thread.commentId}`;
+  if (!thread.path) {
+    return `#${thread.commentId}`;
+  }
   const line = thread.line ? `:${thread.line}` : "";
   return `${thread.path}${line}`;
 }
@@ -24,9 +26,7 @@ function formatLocation(thread: SiblingThread): string {
  *
  * Returns undefined if there are no concerns.
  */
-function getUnresolvedSiblingThreads(
-  item: DetectedItem,
-): SiblingThread[] | undefined {
+function getUnresolvedSiblingThreads(item: DetectedItem): SiblingThread[] | undefined {
   if (!item.siblingThreads || item.siblingThreads.length === 0) {
     return undefined;
   }
@@ -50,17 +50,13 @@ function getUnresolvedSiblingThreads(
  * @param item - The detected item being resolved
  * @param actionVerb - The action being performed (e.g., "ACK", "agree with", "disagree with")
  */
-export function blockIfUnresolvedSiblings(
-  item: DetectedItem,
-  actionVerb: string,
-): void {
+export function blockIfUnresolvedSiblings(item: DetectedItem, actionVerb: string): void {
   const unresolvedSiblings = getUnresolvedSiblingThreads(item);
   if (!unresolvedSiblings) {
     return;
   }
 
-  const siblingThreadCount =
-    item.siblingThreads?.length ?? unresolvedSiblings.length;
+  const siblingThreadCount = item.siblingThreads?.length ?? unresolvedSiblings.length;
   const siblingThreadLabel = siblingThreadCount === 1 ? "thread" : "threads";
 
   console.error("");
@@ -75,9 +71,8 @@ export function blockIfUnresolvedSiblings(
   console.error("");
   exitWithMessage(
     `Error: Cannot ${actionVerb} review #${item.id} - it would hide unresolved feedback.\n` +
-      `Handle each thread individually instead:\n` +
-      unresolvedSiblings
+      `Handle each thread individually instead:\n${unresolvedSiblings
         .map((s) => `  gh-feedback <command> ${s.commentId}`)
-        .join("\n"),
+        .join("\n")}`,
   );
 }

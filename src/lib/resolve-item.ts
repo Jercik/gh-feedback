@@ -15,10 +15,10 @@ import {
   unminimizeComment,
 } from "./github-mutations.js";
 
-type ResolveResult = {
+interface ResolveResult {
   resolved: boolean;
   method: "resolved" | "hidden";
-};
+}
 
 export function resolveItem(item: DetectedItem): ResolveResult {
   // Threads (including reviews that target thread comments)
@@ -36,10 +36,10 @@ export function resolveItem(item: DetectedItem): ResolveResult {
   return { resolved: result.isMinimized, method: "hidden" };
 }
 
-type UnresolveResult = {
+interface UnresolveResult {
   unresolved: boolean;
   method: "unresolved" | "unhidden";
-};
+}
 
 /**
  * Unresolve/unhide a feedback item.
@@ -48,10 +48,7 @@ type UnresolveResult = {
  * - Reviews with thread comments: unresolve the underlying thread
  * - Comments/Reviews: unhidden (unminimized)
  */
-export function unresolveItem(
-  item: DetectedItem,
-  isMinimized: boolean,
-): UnresolveResult {
+export function unresolveItem(item: DetectedItem, isMinimized: boolean): UnresolveResult {
   // Threads (including reviews that target thread comments)
   if (item.threadId && item.isResolved) {
     const result = unresolveThread(item.threadId);

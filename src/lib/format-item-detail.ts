@@ -17,9 +17,7 @@ export function formatItemDetail(item: ItemDetail): string {
         `URL: ${item.url}`,
       );
       if (item.reactions.length > 0) {
-        const reactionString = item.reactions
-          .map((r) => `${r.content}: ${r.count}`)
-          .join(", ");
+        const reactionString = item.reactions.map((r) => `${r.content}: ${r.count}`).join(", ");
         lines.push(`Reactions: ${reactionString}`);
       }
       lines.push("", "Body:", "---", item.body || "(no body)", "---");
@@ -28,9 +26,7 @@ export function formatItemDetail(item: ItemDetail): string {
     case "thread": {
       lines.push(`Review comment thread #${item.id}`);
       if (item.path) {
-        lines.push(
-          `Location: ${item.path}${item.line === null ? "" : `:${item.line}`}`,
-        );
+        lines.push(`Location: ${item.path}${item.line === null ? "" : `:${item.line}`}`);
       }
       lines.push(`Status: ${item.isResolved ? "resolved" : "unresolved"}`);
       if (item.isOutdated) {
@@ -67,9 +63,7 @@ export function formatItemDetail(item: ItemDetail): string {
         `URL: ${item.url}`,
       );
       if (item.reactions.length > 0) {
-        const reactionString = item.reactions
-          .map((r) => `${r.content}: ${r.count}`)
-          .join(", ");
+        const reactionString = item.reactions.map((r) => `${r.content}: ${r.count}`).join(", ");
         lines.push(`Reactions: ${reactionString}`);
       }
       lines.push("", "Body:", "---", item.body, "---");

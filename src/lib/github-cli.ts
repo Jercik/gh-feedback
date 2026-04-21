@@ -37,11 +37,9 @@ function formatCommandDescription(arguments_: string[]): string {
   }
 
   // REST calls: find the endpoint path (first arg that's not a flag)
-  const endpoint = restArguments.find(
-    (a) => !a.startsWith("-") && !a.startsWith("="),
-  );
+  const endpoint = restArguments.find((a) => !a.startsWith("-") && !a.startsWith("="));
   if (endpoint) {
-    return endpoint.length > 50 ? endpoint.slice(0, 47) + "..." : endpoint;
+    return endpoint.length > 50 ? `${endpoint.slice(0, 47)}...` : endpoint;
   }
 
   // Fallback: show first two args
@@ -73,9 +71,7 @@ export function ghRaw(...arguments_: string[]): string {
   // When tracking rate limits, inject --include flag to get HTTP headers
   // in the response. We'll parse them out before returning the body.
   const finalArguments =
-    tracking && isApiCall
-      ? ["api", "--include", ...arguments_.slice(1)]
-      : arguments_;
+    tracking && isApiCall ? ["api", "--include", ...arguments_.slice(1)] : arguments_;
 
   const ghPath = getGhBinaryPath();
   const result = spawnSync(ghPath, finalArguments, {

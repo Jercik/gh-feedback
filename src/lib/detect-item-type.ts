@@ -14,7 +14,7 @@ import { tryDetectReview } from "./detect-review.js";
 type ItemType = "thread" | "comment" | "review";
 
 /** Info about a sibling thread under the same review */
-export type SiblingThread = {
+export interface SiblingThread {
   /** Thread's GraphQL ID */
   id: string;
   /** Comment database ID (for display) */
@@ -25,9 +25,9 @@ export type SiblingThread = {
   path: string | null;
   /** Line number (for location display) */
   line: number | null;
-};
+}
 
-export type DetectedItem = {
+export interface DetectedItem {
   type: ItemType;
   id: number;
   nodeId: string;
@@ -44,25 +44,16 @@ export type DetectedItem = {
   line?: number | null;
   /** For reviews: all sibling threads under this review */
   siblingThreads?: SiblingThread[];
-};
+}
 
-function tryDetectThread(
-  owner: string,
-  repo: string,
-  itemId: number,
-): DetectedItem | undefined {
+function tryDetectThread(owner: string, repo: string, itemId: number): DetectedItem | undefined {
   try {
     const comment = ghJson<PullRequestReviewComment>(
       "api",
       `repos/${owner}/${repo}/pulls/comments/${itemId}`,
     );
 
-    const { prNumber, thread } = getThreadForComment(
-      owner,
-      repo,
-      itemId,
-      comment,
-    );
+    const { prNumber, thread } = getThreadForComment(owner, repo, itemId, comment);
 
     return {
       type: "thread",
@@ -76,24 +67,19 @@ function tryDetectThread(
       line: thread.line,
     };
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }
 
-function tryDetectComment(
-  owner: string,
-  repo: string,
-  itemId: number,
-): DetectedItem | undefined {
+function tryDetectComment(owner: string, repo: string, itemId: number): DetectedItem | undefined {
   try {
-    const comment = ghJson<IssueComment>(
-      "api",
-      `repos/${owner}/${repo}/issues/comments/${itemId}`,
-    );
+    const comment = ghJson<IssueComment>("api", `repos/${owner}/${repo}/issues/comments/${itemId}`);
 
     const issueUrl = new URL(comment.issue_url);
-    const prMatch = issueUrl.pathname.match(/\/issues\/(\d+)$/u);
+    const prMatch = /\/issues\/(\d+)$/u.exec(issueUrl.pathname);
     if (!prMatch?.[1]) {
       return undefined;
     }
@@ -107,29 +93,33 @@ function tryDetectComment(
       prNumber,
     };
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }
 
-export function detectItemType(
-  owner: string,
-  repo: string,
-  itemId: number,
-): DetectedItem {
+export function detectItemType(owner: string, repo: string, itemId: number): DetectedItem {
   // Try thread first (most common for PR feedback)
   const thread = tryDetectThread(owner, repo, itemId);
-  if (thread) return thread;
+  if (thread) {
+    return thread;
+  }
 
   // Try issue comment
   const comment = tryDetectComment(owner, repo, itemId);
-  if (comment) return comment;
+  if (comment) {
+    return comment;
+  }
 
   // Try review
   const review = tryDetectReview(owner, repo, itemId);
-  if (review) return review;
+  if (review) {
+    return review;
+  }
 
-  exitWithMessage(
+  return exitWithMessage(
     `Error: Could not find item #${itemId}. Ensure you're on the correct branch for this PR. ` +
       `Note: For reviews, only the 20 most recent PRs are searched.`,
   );

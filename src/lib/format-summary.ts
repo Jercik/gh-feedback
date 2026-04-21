@@ -6,12 +6,13 @@
  * - Pretty: Human-readable for interactive use
  */
 
-import type {
-  FeedbackSummary,
-  FeedbackItem,
-  FeedbackResponse,
+import {
+  isStatusDone,
+  truncateMiddle,
+  type FeedbackItem,
+  type FeedbackResponse,
+  type FeedbackSummary,
 } from "./summary-types.js";
-import { truncateMiddle, isStatusDone } from "./summary-types.js";
 
 const MAX_BODY_LENGTH = 500;
 const RESPONSE_SEPARATOR = "|";
@@ -23,7 +24,7 @@ const RESPONSE_SEPARATOR = "|";
  */
 function escapeTsv(text: string): string {
   return text
-    .replaceAll("\\", "\\\\")
+    .replaceAll("\\", String.raw`\\`)
     .replaceAll("\t", String.raw`\t`)
     .replaceAll("\n", String.raw`\n`)
     .replaceAll("\r", String.raw`\r`)
@@ -36,7 +37,9 @@ function escapeTsv(text: string): string {
  * Separated by |
  */
 function formatResponsesTsv(responses: readonly FeedbackResponse[]): string {
-  if (responses.length === 0) return "";
+  if (responses.length === 0) {
+    return "";
+  }
 
   return responses
     .map((r) => {
@@ -53,15 +56,9 @@ function formatResponsesTsv(responses: readonly FeedbackResponse[]): string {
  */
 function formatSummaryTsv(summary: FeedbackSummary): string {
   // Header row
-  const header = [
-    "ID",
-    "TIMESTAMP",
-    "STATUS",
-    "AUTHOR",
-    "LOCATION",
-    "BODY",
-    "RESPONSES",
-  ].join("\t");
+  const header = ["ID", "TIMESTAMP", "STATUS", "AUTHOR", "LOCATION", "BODY", "RESPONSES"].join(
+    "\t",
+  );
 
   // Data rows
   const rows = summary.items.map((item) => {
@@ -85,9 +82,7 @@ function formatSummaryTsv(summary: FeedbackSummary): string {
 /**
  * Format responses for pretty output.
  */
-function formatResponsesPretty(
-  responses: readonly FeedbackResponse[],
-): string[] {
+function formatResponsesPretty(responses: readonly FeedbackResponse[]): string[] {
   const lines: string[] = [];
   for (const r of responses) {
     lines.push(`  > @${r.author} ${r.timestamp}:`);
@@ -106,9 +101,7 @@ function formatItemPretty(item: FeedbackItem): string[] {
 
   // Item header
   const location = item.location ? `  ${item.location}` : "";
-  lines.push(
-    `#${item.id}  ${item.timestamp}  ${item.status}  @${item.author}${location}`,
-  );
+  lines.push(`#${item.id}  ${item.timestamp}  ${item.status}  @${item.author}${location}`);
 
   // Body (indented)
   const body = truncateMiddle(item.body, MAX_BODY_LENGTH);

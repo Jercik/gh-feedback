@@ -36,11 +36,9 @@ export function minimizeComment(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("must have write access")) {
-      exitWithMessage(
-        "Error: You do not have permission to minimize this comment.",
-      );
+      return exitWithMessage("Error: You do not have permission to minimize this comment.");
     }
-    exitWithMessage(`Error minimizing comment: ${message}`);
+    return exitWithMessage(`Error minimizing comment: ${message}`);
   }
 }
 
@@ -48,10 +46,7 @@ export function minimizeComment(
  * Add a reaction to any Reactable entity via GraphQL.
  * Works for PullRequestReview, PullRequestReviewComment, and IssueComment.
  */
-export function addReaction(
-  subjectId: string,
-  content: ReactionContent,
-): { content: string } {
+export function addReaction(subjectId: string, content: ReactionContent): { content: string } {
   try {
     const graphqlContent = REACTION_TO_GRAPHQL[content];
     const query = `mutation($subjectId: ID!, $content: ReactionContent!) {
@@ -75,7 +70,7 @@ export function addReaction(
     return result.data.addReaction.reaction;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    exitWithMessage(`Error adding reaction: ${message}`);
+    return exitWithMessage(`Error adding reaction: ${message}`);
   }
 }
 
@@ -83,10 +78,7 @@ export function addReaction(
  * Remove a reaction from any Reactable entity via GraphQL.
  * Throws on error - caller can decide how to handle (e.g., ignore if not present).
  */
-export function removeReaction(
-  subjectId: string,
-  content: ReactionContent,
-): { content: string } {
+export function removeReaction(subjectId: string, content: ReactionContent): { content: string } {
   const graphqlContent = REACTION_TO_GRAPHQL[content];
   const query = `mutation($subjectId: ID!, $content: ReactionContent!) {
   removeReaction(input: { subjectId: $subjectId, content: $content }) {
@@ -133,11 +125,9 @@ export function resolveThread(threadId: string): { isResolved: boolean } {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("must have write access")) {
-      exitWithMessage(
-        "Error: You do not have permission to resolve this thread.",
-      );
+      return exitWithMessage("Error: You do not have permission to resolve this thread.");
     }
-    exitWithMessage(`Error resolving thread: ${message}`);
+    return exitWithMessage(`Error resolving thread: ${message}`);
   }
 }
 
@@ -165,11 +155,9 @@ export function unresolveThread(threadId: string): { isResolved: boolean } {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("must have write access")) {
-      exitWithMessage(
-        "Error: You do not have permission to unresolve this thread.",
-      );
+      return exitWithMessage("Error: You do not have permission to unresolve this thread.");
     }
-    exitWithMessage(`Error unresolving thread: ${message}`);
+    return exitWithMessage(`Error unresolving thread: ${message}`);
   }
 }
 
@@ -197,10 +185,8 @@ export function unminimizeComment(subjectId: string): { isMinimized: boolean } {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("must have write access")) {
-      exitWithMessage(
-        "Error: You do not have permission to unminimize this comment.",
-      );
+      return exitWithMessage("Error: You do not have permission to unminimize this comment.");
     }
-    exitWithMessage(`Error unminimizing comment: ${message}`);
+    return exitWithMessage(`Error unminimizing comment: ${message}`);
   }
 }

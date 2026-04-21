@@ -3,20 +3,24 @@
  */
 
 import type { ReviewState } from "./types.js";
-import type { FeedbackItem, FeedbackResponse } from "./summary-types.js";
-import { reactionToStatus, formatLocation } from "./summary-types.js";
+import {
+  formatLocation,
+  reactionToStatus,
+  type FeedbackItem,
+  type FeedbackResponse,
+} from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
 
 // =============================================================================
 // GraphQL Node Types
 // =============================================================================
 
-type ReactionGroup = {
+interface ReactionGroup {
   content: string;
   viewerHasReacted: boolean;
-};
+}
 
-export type SummaryReviewNode = {
+export interface SummaryReviewNode {
   databaseId: number;
   author: { login: string } | null; // null for deleted users (ghost)
   state: ReviewState;
@@ -24,18 +28,18 @@ export type SummaryReviewNode = {
   submittedAt: string;
   isMinimized: boolean;
   reactionGroups: ReactionGroup[];
-};
+}
 
-export type SummaryCommentNode = {
+export interface SummaryCommentNode {
   databaseId: number;
   author: { login: string } | null; // null for deleted users (ghost)
   body: string;
   createdAt: string;
   isMinimized: boolean;
   reactionGroups: ReactionGroup[];
-};
+}
 
-type SummaryThreadCommentNode = {
+interface SummaryThreadCommentNode {
   databaseId: number;
   author: { login: string } | null; // null for deleted users (ghost)
   body: string;
@@ -44,22 +48,19 @@ type SummaryThreadCommentNode = {
   createdAt: string;
   isMinimized: boolean;
   reactionGroups: ReactionGroup[];
-};
+}
 
-export type SummaryThreadNode = {
+export interface SummaryThreadNode {
   isResolved: boolean;
   isOutdated: boolean;
   comments: { nodes: SummaryThreadCommentNode[] };
-};
+}
 
 // =============================================================================
 // Transform Functions
 // =============================================================================
 
-export function transformReviews(
-  nodes: SummaryReviewNode[],
-  hideHidden: boolean,
-): FeedbackItem[] {
+export function transformReviews(nodes: SummaryReviewNode[], hideHidden: boolean): FeedbackItem[] {
   return nodes
     .filter((r) => !hideHidden || !r.isMinimized)
     .filter((r) => r.body && r.body.trim().length > 0)
@@ -102,14 +103,18 @@ export function transformThreads(
   const results: FeedbackItem[] = [];
 
   for (const t of nodes) {
-    if (hideResolved && t.isResolved) continue;
+    if (hideResolved && t.isResolved) {
+      continue;
+    }
 
     const visibleComments = t.comments.nodes
       .filter((c) => !hideHidden || !c.isMinimized)
       .filter((c) => !c.author || !isIgnoredAuthor(c.author.login));
 
     const first = visibleComments[0];
-    if (!first) continue;
+    if (!first) {
+      continue;
+    }
 
     // First comment is the original feedback
     // Subsequent comments are responses

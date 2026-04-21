@@ -32,10 +32,7 @@ export function graphqlPaginate<TNode>(
       "graphql",
       "-f",
       `query=${query}`,
-      ...Object.entries(baseVariables).flatMap(([key, value]) => [
-        "-F",
-        `${key}=${String(value)}`,
-      ]),
+      ...Object.entries(baseVariables).flatMap(([key, value]) => ["-F", `${key}=${String(value)}`]),
     ];
 
     if (cursor) {
@@ -66,10 +63,7 @@ export function graphqlQuery<T>(query: string, variables: GraphQLVariables): T {
     "graphql",
     "-f",
     `query=${query}`,
-    ...Object.entries(variables).flatMap(([key, value]) => [
-      "-F",
-      `${key}=${String(value)}`,
-    ]),
+    ...Object.entries(variables).flatMap(([key, value]) => ["-F", `${key}=${String(value)}`]),
   ];
 
   return ghJson<T>(...arguments_);

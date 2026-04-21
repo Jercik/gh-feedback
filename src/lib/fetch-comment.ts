@@ -5,7 +5,7 @@
 import type { IssueComment, Reaction } from "./types.js";
 import { ghJson, isNotFoundError } from "./github-cli.js";
 
-export type CommentDetail = {
+export interface CommentDetail {
   type: "comment";
   id: number;
   author: string;
@@ -13,7 +13,7 @@ export type CommentDetail = {
   createdAt: string;
   body: string;
   reactions: Reaction[];
-};
+}
 
 export function tryFetchIssueComment(
   owner: string,
@@ -21,10 +21,7 @@ export function tryFetchIssueComment(
   itemId: number,
 ): CommentDetail | undefined {
   try {
-    const comment = ghJson<IssueComment>(
-      "api",
-      `repos/${owner}/${repo}/issues/comments/${itemId}`,
-    );
+    const comment = ghJson<IssueComment>("api", `repos/${owner}/${repo}/issues/comments/${itemId}`);
     return {
       type: "comment",
       id: comment.id,
@@ -36,9 +33,7 @@ export function tryFetchIssueComment(
         ? Object.entries(comment.reactions)
             .filter(
               (entry): entry is [string, number] =>
-                entry[0] !== "total_count" &&
-                typeof entry[1] === "number" &&
-                entry[1] > 0,
+                entry[0] !== "total_count" && typeof entry[1] === "number" && entry[1] > 0,
             )
             .map(([key, value]) => ({
               content: key,
@@ -49,7 +44,9 @@ export function tryFetchIssueComment(
         : [],
     };
   } catch (error) {
-    if (isNotFoundError(error)) return undefined;
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
     throw error;
   }
 }

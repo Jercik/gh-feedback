@@ -6,10 +6,7 @@ import * as fs from "node:fs/promises";
 import * as readline from "node:readline/promises";
 import { exitWithMessage } from "./git-helpers.js";
 
-export async function readMessageFromFile(
-  filePath: string,
-  prompt = "message",
-): Promise<string> {
+export async function readMessageFromFile(filePath: string, prompt = "message"): Promise<string> {
   // Treat "-" as stdin (standard Unix convention)
   if (filePath === "-") {
     return readMessageFromStdin(prompt);
@@ -19,11 +16,11 @@ export async function readMessageFromFile(
     const content = await fs.readFile(filePath, "utf8");
     const message = content.trim();
     if (!message) {
-      exitWithMessage("Error: File is empty.");
+      return exitWithMessage("Error: File is empty.");
     }
     return message;
   } catch (error) {
-    exitWithMessage(
+    return exitWithMessage(
       `Error reading file: ${error instanceof Error ? error.message : String(error)}`,
     );
   }

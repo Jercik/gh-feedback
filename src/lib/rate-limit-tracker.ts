@@ -142,16 +142,14 @@ export function extractRateLimitFromHeaders(
  * @param command - Short description of the API call for the breakdown report
  * @param snapshot - Rate limit state from response headers
  */
-export function recordRateLimit(
-  command: string,
-  snapshot: RateLimitSnapshot,
-): void {
-  if (!enabled) return;
+export function recordRateLimit(command: string, snapshot: RateLimitSnapshot): void {
+  if (!enabled) {
+    return;
+  }
 
   // Only compare with previous snapshot if it's the same resource type
   // (core and graphql have separate quota pools)
-  const before =
-    lastSnapshot?.resource === snapshot.resource ? lastSnapshot : undefined;
+  const before = lastSnapshot?.resource === snapshot.resource ? lastSnapshot : undefined;
 
   // Calculate consumed: difference in "used" count between calls
   // For first call of a resource, default to 1 (standard REST cost)
@@ -182,12 +180,7 @@ export function formatRateLimitSummary(): string {
     return "No API calls recorded.";
   }
 
-  const lines: string[] = [
-    "",
-    "─".repeat(60),
-    "Rate Limit Usage:",
-    "─".repeat(60),
-  ];
+  const lines: string[] = ["", "─".repeat(60), "Rate Limit Usage:", "─".repeat(60)];
 
   // Group by resource
   const byResource = new Map<RateLimitResource, RateLimitCall[]>();
@@ -215,22 +208,14 @@ export function formatRateLimitSummary(): string {
 
     if (reset > 0) {
       const resetDate = new Date(reset * 1000);
-      const minutesUntilReset = Math.max(
-        0,
-        Math.round((reset * 1000 - Date.now()) / 60_000),
-      );
-      lines.push(
-        `    Resets: ${resetDate.toLocaleTimeString()} (${minutesUntilReset}m)`,
-      );
+      const minutesUntilReset = Math.max(0, Math.round((reset * 1000 - Date.now()) / 60_000));
+      lines.push(`    Resets: ${resetDate.toLocaleTimeString()} (${minutesUntilReset}m)`);
     }
 
     // Show individual calls
     lines.push("    Breakdown:");
     for (const call of resourceCalls) {
-      const cmd =
-        call.command.length > 40
-          ? call.command.slice(0, 37) + "..."
-          : call.command;
+      const cmd = call.command.length > 40 ? `${call.command.slice(0, 37)}...` : call.command;
       lines.push(`      ${cmd}: +${call.consumed}`);
     }
   }
