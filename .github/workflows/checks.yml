@@ -22,13 +22,18 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version-file: "package.json"
+          registry-url: https://npm.j4k.dev/
           cache: "pnpm"
 
       - name: Check for dedupe opportunities
         run: pnpm dedupe --check
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Run knip
         run: pnpm knip

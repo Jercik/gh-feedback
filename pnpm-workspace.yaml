@@ -1,2 +1,5 @@
 onlyBuiltDependencies:
   - esbuild
+
+registries:
+  default: https://npm.j4k.dev/

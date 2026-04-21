@@ -42,11 +42,19 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version-file: "package.json"
-          registry-url: https://registry.npmjs.org
+          registry-url: https://npm.j4k.dev/
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Configure npmjs registry for publishing
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          registry-url: https://registry.npmjs.org
 
       - name: Release
         id: release
