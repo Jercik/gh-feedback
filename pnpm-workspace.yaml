@@ -3,3 +3,4 @@ allowBuilds:
 
 registries:
   default: https://npm.j4k.dev/
+enableGlobalVirtualStore: true

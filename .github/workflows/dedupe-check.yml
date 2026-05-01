@@ -1,16 +1,20 @@
 ---
-name: Checks
+name: Dedupe check
 
 on:
   push:
     branches: [main]
+    paths:
+      - pnpm-lock.yaml
   pull_request:
     types: [opened, reopened, synchronize]
+    paths:
+      - pnpm-lock.yaml
 
 jobs:
-  quality-checks:
+  dedupe-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -30,23 +34,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Run knip
-        run: pnpm knip
-
-      - name: Run format check
-        run: pnpm format:check
-
-      - name: Run typecheck
-        run: pnpm typecheck
-
-      - name: Run lint
-        run: pnpm lint
-
-      - name: Run fta
-        run: pnpm fta
-
-      - name: Run tests
-        run: pnpm run test
-
-      - name: Run build
-        run: pnpm build
+      - name: Check for dedupe opportunities
+        run: pnpm dedupe --check
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

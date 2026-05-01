@@ -1,3 +1,3 @@
-import { nodeVitestConfig } from "oxlint-config-j4k";
+import { compose, node, vitest } from "oxlint-config-j4k";
 
-export default nodeVitestConfig;
+export default compose(node, vitest);
