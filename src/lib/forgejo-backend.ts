@@ -4,15 +4,18 @@
  * Forgejo has NO thread RESOLVE and NO comment MINIMIZE/hide, so the
  * resolve/unresolve capabilities DEGRADE to a clear "not supported" result and
  * the hidden axis is dropped — workflow status comes from reactions alone.
+ *
+ * `detectItem` returns the neutral ref but caches the resolved item kind by
+ * `id`, so reply/react re-use it without re-probing the REST endpoints.
  */
 
-import type { DetectedItem } from "./detect-item-type.js";
 import type { ItemDetail } from "./fetch-item-detail.js";
 import type { FeedbackSummary } from "./summary-types.js";
 import type { ReactionContent } from "./types.js";
 import type {
   CapabilityResult,
   FeedbackBackend,
+  FeedbackItemRef,
   ItemStatus,
   ReplyResult,
   SummaryOptions,
@@ -20,6 +23,7 @@ import type {
 import { forgejoFetch } from "./forgejo-cli.js";
 import {
   fetchReactions,
+  reactionsPath,
   normalizeForgejoReactions,
   deriveIsDone,
   viewerReactionStrings,
@@ -28,6 +32,7 @@ import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
+import { forgejoReplyPrefix } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { reactionToStatus, isStatusDone } from "./summary-types.js";
 import { exitWithMessage } from "./git-helpers.js";
@@ -35,16 +40,6 @@ import { REACTION_TO_GRAPHQL } from "./constants.js";
 
 const FORGEJO_UNSUPPORTED_RESOLVE =
   "Forgejo has no thread-resolve or comment-hide API; status is tracked by reaction only.";
-
-function replyPrefix(itemType: DetectedItem["type"], itemId: number): string {
-  if (itemType === "thread") {
-    return `> Replying to review comment #${itemId}\n\n`;
-  }
-  if (itemType === "comment") {
-    return `> Replying to comment #${itemId}\n\n`;
-  }
-  return `> Replying to review #${itemId}\n\n`;
-}
 
 export function createForgejoBackend(slug: string): FeedbackBackend {
   /** Cache the detected meta so reply/react reuse it without re-probing. */
@@ -58,7 +53,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     return pull.number;
   }
 
-  async function detect(itemId: number): Promise<DetectedItem> {
+  async function detect(itemId: number): Promise<FeedbackItemRef> {
     const prNumber = await currentPrNumber();
     const resolved = await resolveItemMeta(slug, prNumber, itemId);
     if (!resolved) {
@@ -77,7 +72,6 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     return {
       type: metaKindToItemType(resolved.meta.kind),
       id: itemId,
-      nodeId: String(itemId),
       author,
       prNumber,
       path: resolved.reviewComment?.path ?? null,
@@ -85,7 +79,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     };
   }
 
-  async function metaFor(item: DetectedItem): Promise<ForgejoItemMeta> {
+  async function metaFor(item: FeedbackItemRef): Promise<ForgejoItemMeta> {
     const cached = metaCache.get(item.id);
     if (cached) {
       return cached;
@@ -110,14 +104,19 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       return buildItemDetail(slug, prNumber, itemId);
     },
 
-    async detectItem(itemId: number): Promise<DetectedItem> {
+    async detectItem(itemId: number): Promise<FeedbackItemRef> {
       return detect(itemId);
     },
 
-    async getItemStatus(item: DetectedItem): Promise<ItemStatus> {
+    async getItemStatus(item: FeedbackItemRef): Promise<ItemStatus> {
       const meta = await metaFor(item);
       if (meta.kind === "review") {
-        return { doneStatus: undefined, viewerReactions: [], isMinimized: false };
+        return {
+          doneStatus: undefined,
+          viewerReactions: [],
+          isMinimized: false,
+          isResolved: false,
+        };
       }
 
       const viewer = await getForgejoViewer();
@@ -131,13 +130,13 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
         ? (status as "agreed" | "disagreed" | "acknowledged")
         : undefined;
 
-      return { doneStatus, viewerReactions, isMinimized: false };
+      return { doneStatus, viewerReactions, isMinimized: false, isResolved: false };
     },
 
-    async reply(item: DetectedItem, message: string): Promise<ReplyResult> {
+    async reply(item: FeedbackItemRef, message: string): Promise<ReplyResult> {
       // Forgejo has no native threaded-reply endpoint for review comments, so
       // replies are posted as issue comments on the PR, referencing the item.
-      const prefix = replyPrefix(item.type, item.id);
+      const prefix = forgejoReplyPrefix(item.type, item.id);
 
       const result = await forgejoFetch<{ id: number; html_url: string }>({
         method: "POST",
@@ -147,32 +146,26 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       return { id: result.id, url: result.html_url };
     },
 
-    async addReaction(item: DetectedItem, reaction: ReactionContent): Promise<void> {
+    async addReaction(item: FeedbackItemRef, reaction: ReactionContent): Promise<void> {
       const meta = await metaFor(item);
-      if (meta.kind === "review") {
+      const path = reactionsPath(slug, meta.kind, item.id);
+      if (!path) {
         // Reviews have no reaction endpoint in Forgejo; nothing to apply.
         return;
       }
-      const path =
-        meta.kind === "issue-comment"
-          ? `repos/${slug}/issues/comments/${item.id}/reactions`
-          : `repos/${slug}/pulls/comments/${item.id}/reactions`;
       await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } });
     },
 
     async removeReactions(
-      item: DetectedItem,
+      item: FeedbackItemRef,
       viewerReactions: ReactionContent[],
       toRemove: ReactionContent[],
     ): Promise<void> {
       const meta = await metaFor(item);
-      if (meta.kind === "review") {
+      const path = reactionsPath(slug, meta.kind, item.id);
+      if (!path) {
         return;
       }
-      const path =
-        meta.kind === "issue-comment"
-          ? `repos/${slug}/issues/comments/${item.id}/reactions`
-          : `repos/${slug}/pulls/comments/${item.id}/reactions`;
 
       const reactionsToRemove = toRemove.filter(
         (r) => viewerReactions.includes(r) && r in REACTION_TO_GRAPHQL,
@@ -182,12 +175,18 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
     },
 
-    resolve(_item: DetectedItem): Promise<CapabilityResult> {
+    resolve(_item: FeedbackItemRef): Promise<CapabilityResult> {
       return Promise.resolve({ supported: false, reason: FORGEJO_UNSUPPORTED_RESOLVE });
     },
 
-    unresolve(_item: DetectedItem, _isMinimized: boolean): Promise<CapabilityResult> {
+    unresolve(_item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
       return Promise.resolve({ supported: false, reason: FORGEJO_UNSUPPORTED_RESOLVE });
+    },
+
+    blockIfUnresolvedSiblings(_item: FeedbackItemRef, _actionVerb: string): Promise<void> {
+      // Forgejo exposes no review-container/sibling-thread grouping, and reviews
+      // aren't resolvable, so there's nothing to guard against.
+      return Promise.resolve();
     },
   };
 }

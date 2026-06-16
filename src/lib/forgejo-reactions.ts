@@ -16,14 +16,16 @@ interface NormalizedReaction {
   viewerHasReacted: boolean;
 }
 
-function reactionsPath(slug: string, kind: ForgejoItemKind, id: number): string | undefined {
-  if (kind === "issue-comment") {
+/**
+ * Reaction endpoint for an item, or undefined where none exists. Inline review
+ * comments and PR issue comments share Forgejo's comment table, so both react
+ * via `issues/comments/{id}/reactions` (verified against Forgejo's API routes —
+ * there is no `pulls/comments/{id}/reactions`). Reviews have no endpoint.
+ */
+export function reactionsPath(slug: string, kind: ForgejoItemKind, id: number): string | undefined {
+  if (kind === "issue-comment" || kind === "review-comment") {
     return `repos/${slug}/issues/comments/${id}/reactions`;
   }
-  if (kind === "review-comment") {
-    return `repos/${slug}/pulls/comments/${id}/reactions`;
-  }
-  // Reviews have no reaction endpoint in Forgejo.
   return undefined;
 }
 

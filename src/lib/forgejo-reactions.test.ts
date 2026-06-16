@@ -1,5 +1,27 @@
 import { describe, it, expect } from "vitest";
-import { normalizeForgejoReactions, viewerReactionStrings } from "./forgejo-reactions.js";
+import {
+  normalizeForgejoReactions,
+  viewerReactionStrings,
+  reactionsPath,
+} from "./forgejo-reactions.js";
+
+describe("reactionsPath", () => {
+  it("routes inline review comments through the shared issue-comments endpoint", () => {
+    expect(reactionsPath("j4k/cluster", "review-comment", 42)).toBe(
+      "repos/j4k/cluster/issues/comments/42/reactions",
+    );
+  });
+
+  it("routes PR issue comments through the issue-comments endpoint", () => {
+    expect(reactionsPath("j4k/cluster", "issue-comment", 7)).toBe(
+      "repos/j4k/cluster/issues/comments/7/reactions",
+    );
+  });
+
+  it("has no reaction endpoint for reviews", () => {
+    expect(reactionsPath("j4k/cluster", "review", 1)).toBeUndefined();
+  });
+});
 
 describe("normalizeForgejoReactions", () => {
   it("maps raw reaction strings to GraphQL enum names", () => {

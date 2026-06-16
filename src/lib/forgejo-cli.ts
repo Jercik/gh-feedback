@@ -3,8 +3,9 @@
  *
  * fgj is the gh-equivalent CLI but has NO `api` passthrough, so for every
  * endpoint we mint a token with `fgj auth token` and call the REST API
- * directly with fetch. The API host is always FORGEJO_API_HOST (the tailnet
- * SSH alias is never an HTTP host).
+ * directly with fetch. The API host defaults to repoq's canonical FORGEJO_API_HOST
+ * (the tailnet SSH alias is never an HTTP host) and can be pointed at another
+ * Forgejo instance with GH_FEEDBACK_FORGEJO_API_HOST.
  */
 
 import { spawnSync } from "node:child_process";
@@ -12,6 +13,15 @@ import { FORGEJO_API_HOST } from "./provider.js";
 import { resolveDependencyPath } from "./resolve-dependency-path.js";
 
 const FGJ_PATH_ENV_VAR = "GH_FEEDBACK_FGJ_PATH";
+const FORGEJO_API_HOST_ENV_VAR = "GH_FEEDBACK_FORGEJO_API_HOST";
+
+function forgejoApiHost(): string {
+  const override = process.env[FORGEJO_API_HOST_ENV_VAR]?.trim();
+  if (override) {
+    return override;
+  }
+  return FORGEJO_API_HOST;
+}
 
 function getFgjBinaryPath(): string {
   return resolveDependencyPath({
@@ -32,7 +42,7 @@ function fgjToken(): string {
   }
 
   const fgjPath = getFgjBinaryPath();
-  const result = spawnSync(fgjPath, ["auth", "token", "--hostname", FORGEJO_API_HOST], {
+  const result = spawnSync(fgjPath, ["auth", "token", "--hostname", forgejoApiHost()], {
     encoding: "utf8",
   });
 
@@ -63,8 +73,6 @@ function fgjToken(): string {
   return token;
 }
 
-const API_BASE = `https://${FORGEJO_API_HOST}/api/v1`;
-
 interface ForgejoRequest {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   /** Path relative to /api/v1, e.g. "repos/owner/repo/pulls". Leading slash optional. */
@@ -77,7 +85,7 @@ interface ForgejoRequest {
 
 function buildUrl(path: string, query?: Record<string, string | number>): string {
   const normalized = path.startsWith("/") ? path.slice(1) : path;
-  const url = new URL(`${API_BASE}/${normalized}`);
+  const url = new URL(`https://${forgejoApiHost()}/api/v1/${normalized}`);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       url.searchParams.set(key, String(value));

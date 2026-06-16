@@ -8,7 +8,6 @@ import type { Command } from "@commander-js/extra-typings";
 import { readMessageFromFile, readMessageFromStdin } from "../lib/message-input.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
-import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -78,7 +77,7 @@ export function registerDisagreeCommand(program: Command): void {
           verboseLog("---");
 
           // Check for unresolved sibling threads in multi-thread reviews
-          blockIfUnresolvedSiblings(item, "disagree with");
+          await backend.blockIfUnresolvedSiblings(item, "disagree with");
 
           verboseLog("");
           verboseLog("Actions: reply + thumbs_down + resolve");

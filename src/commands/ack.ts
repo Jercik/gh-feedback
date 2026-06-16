@@ -8,7 +8,6 @@
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
-import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -46,7 +45,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         // Check for unresolved sibling threads in multi-thread reviews
-        blockIfUnresolvedSiblings(item, "ACK");
+        await backend.blockIfUnresolvedSiblings(item, "ACK");
 
         verboseLog("");
         verboseLog("Actions: rocket + hide (acknowledge noise)");

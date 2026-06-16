@@ -1,6 +1,6 @@
 # gh-feedback
 
-Semantic CLI for GitHub pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on the current branch's PR.
+Semantic CLI for pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on the current branch's PR. The backend is chosen from the `origin` remote: GitHub (`github.com`, via `gh` + GraphQL) or Forgejo (`code.j4k.dev`, via `fgj` + REST).
 
 ## Installation
 
@@ -12,8 +12,13 @@ npm install -g gh-feedback
 
 - Node.js 22.19+
 - Git repository with `origin` remote
-- GitHub CLI (`gh`) authenticated
 - Git installed (`git`)
+- For GitHub repos: GitHub CLI (`gh`) authenticated
+- For Forgejo repos: Forgejo CLI (`fgj`) authenticated
+
+The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
+
+Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing.
 
 ### Custom Paths
 
@@ -22,6 +27,13 @@ To use a specific binary (or one not in `PATH`), set:
 ```bash
 export GH_FEEDBACK_GH_PATH=/path/to/gh
 export GH_FEEDBACK_GIT_PATH=/path/to/git
+export GH_FEEDBACK_FGJ_PATH=/path/to/fgj
+```
+
+To point the Forgejo REST client at a non-default instance, set:
+
+```bash
+export GH_FEEDBACK_FORGEJO_API_HOST=forgejo.example.com
 ```
 
 ## Usage

@@ -28,13 +28,18 @@ function getCurrentBranch(): string {
 }
 
 /**
- * Find the PR for the current branch by matching head.ref. Returns undefined
- * when no open PR has this branch as its head.
+ * Find the PR for the current branch. Forgejo's pulls list filters server-side
+ * by `head` branch name, so only matching PRs come back; the head.ref check
+ * stays as a guard against any fuzzy match. Returns undefined when no open PR
+ * has this branch as its head.
  */
 export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull | undefined> {
   const branch = getCurrentBranch();
 
-  const raw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls`, { state: "open" });
+  const raw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls`, {
+    state: "open",
+    head: branch,
+  });
   for (const item of raw) {
     const pull = ForgejoPull.parse(item);
     if (pull.head?.ref === branch) {

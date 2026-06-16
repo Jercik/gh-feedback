@@ -5,7 +5,7 @@
  * reviews, so probe each endpoint in turn until one matches.
  */
 
-import type { DetectedItem } from "./detect-item-type.js";
+import type { FeedbackItemRef } from "./feedback-backend.js";
 import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoReview, ForgejoReviewComment } from "./forgejo-schemas.js";
 
@@ -23,7 +23,7 @@ interface ResolvedForgejoItem {
   review?: ForgejoReview;
 }
 
-export function metaKindToItemType(kind: ForgejoItemKind): DetectedItem["type"] {
+export function metaKindToItemType(kind: ForgejoItemKind): FeedbackItemRef["type"] {
   if (kind === "review-comment") {
     return "thread";
   }

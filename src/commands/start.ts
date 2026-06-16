@@ -29,10 +29,10 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isMinimized } = await backend.getItemStatus(item);
+        const { viewerReactions, isMinimized, isResolved } = await backend.getItemStatus(item);
 
         // Check if item needs reopening
-        const needsReopen = item.isResolved ?? isMinimized;
+        const needsReopen = isResolved || isMinimized;
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
