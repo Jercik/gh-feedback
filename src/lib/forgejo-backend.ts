@@ -32,6 +32,7 @@ import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
+import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { forgejoReplyPrefix } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { reactionToStatus, isStatusDone } from "./summary-types.js";
@@ -75,7 +76,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       author,
       prNumber,
       path: resolved.reviewComment?.path ?? null,
-      line: resolved.reviewComment?.position ?? null,
+      line: resolved.reviewComment ? reviewCommentLine(resolved.reviewComment) : null,
     };
   }
 
