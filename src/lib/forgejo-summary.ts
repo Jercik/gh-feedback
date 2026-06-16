@@ -12,6 +12,7 @@
  */
 
 import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
+import type { SummaryOptions } from "./feedback-backend.js";
 import { forgejoFetch, forgejoFetchAll } from "./forgejo-cli.js";
 import {
   ForgejoIssueComment,
@@ -21,11 +22,15 @@ import {
 } from "./forgejo-schemas.js";
 import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
-import { formatLocation, reactionToStatus } from "./summary-types.js";
+import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
 import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
 
-export async function buildSummary(slug: string, prNumber: number): Promise<FeedbackSummary> {
+export async function buildSummary(
+  slug: string,
+  prNumber: number,
+  options: SummaryOptions = {},
+): Promise<FeedbackSummary> {
   const viewer = await getForgejoViewer();
 
   const pullRaw = await forgejoFetch<unknown>({ path: `repos/${slug}/pulls/${prNumber}` });
@@ -96,7 +101,13 @@ export async function buildSummary(slug: string, prNumber: number): Promise<Feed
     }),
   );
 
-  const items = [...reviewCommentItems, ...issueCommentItems].toSorted(
+  // hideResolved: Forgejo has no resolved-thread axis, so its reaction-backed
+  // equivalent is a done status (agreed/disagreed/acknowledged). hideHidden has
+  // no Forgejo equivalent — nothing is ever minimized — so it filters nothing.
+  const all = [...reviewCommentItems, ...issueCommentItems];
+  const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
+
+  const items = filtered.toSorted(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 

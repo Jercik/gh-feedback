@@ -95,8 +95,8 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
   return {
     provider: "forgejo",
 
-    fetchSummary(prNumber: number, _options: SummaryOptions): Promise<FeedbackSummary> {
-      return buildSummary(slug, prNumber);
+    fetchSummary(prNumber: number, options: SummaryOptions): Promise<FeedbackSummary> {
+      return buildSummary(slug, prNumber, options);
     },
 
     async fetchItemDetail(itemId: number): Promise<ItemDetail> {

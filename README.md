@@ -10,7 +10,7 @@ npm install -g gh-feedback
 
 ## Prerequisites
 
-- Node.js 22.19+
+- Node.js 24+
 - Git repository with `origin` remote
 - Git installed (`git`)
 - For GitHub repos: GitHub CLI (`gh`) authenticated
@@ -18,7 +18,7 @@ npm install -g gh-feedback
 
 The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
 
-Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing.
+Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing. Forgejo review _bodies_ (the overall review text) are also intentionally excluded from `summary`, because a review entity has no reaction or resolve endpoint and so could never leave `pending`; check the forge UI for that text. Inline review comments and PR conversation comments are surfaced and tracked normally.
 
 ### Custom Paths
 
