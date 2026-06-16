@@ -28,10 +28,11 @@ function getCurrentBranch(): string {
 }
 
 /**
- * Find the PR for the current branch. Forgejo's pulls list filters server-side
- * by `head` branch name, so only matching PRs come back; the head.ref check
- * stays as a guard against any fuzzy match. Returns undefined when no open PR
- * has this branch as its head.
+ * Find the PR for the current branch. The client-side head.ref comparison is
+ * the authoritative filter (and the pagination it walks is required): older
+ * Forgejo ignores the `head` query param, so it must not be removed. `head` is
+ * passed as a best-effort hint that newer Forgejo honors to narrow the list.
+ * Returns undefined when no open PR has this branch as its head.
  */
 export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull | undefined> {
   const branch = getCurrentBranch();

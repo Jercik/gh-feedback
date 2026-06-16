@@ -12,8 +12,8 @@ import { spawnSync } from "node:child_process";
 import { FORGEJO_API_HOST } from "./provider.js";
 import { resolveDependencyPath } from "./resolve-dependency-path.js";
 
-const FGJ_PATH_ENV_VAR = "GH_FEEDBACK_FGJ_PATH";
-const FORGEJO_API_HOST_ENV_VAR = "GH_FEEDBACK_FORGEJO_API_HOST";
+export const FGJ_PATH_ENV_VAR = "GH_FEEDBACK_FGJ_PATH";
+export const FORGEJO_API_HOST_ENV_VAR = "GH_FEEDBACK_FORGEJO_API_HOST";
 
 function forgejoApiHost(): string {
   const override = process.env[FORGEJO_API_HOST_ENV_VAR]?.trim();
