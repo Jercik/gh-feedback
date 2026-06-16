@@ -62,6 +62,14 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
         `Error: Could not find item #${itemId} in the current Forgejo PR #${prNumber}.`,
       );
     }
+    if (resolved.meta.kind === "review") {
+      // A Forgejo review has no reaction or resolve endpoint, so no status
+      // command could leave a marker that summary reads back. Reject it before
+      // any reply/reaction is posted rather than report a hollow success.
+      return exitWithMessage(
+        `Error: Forgejo review #${itemId} can't be tracked — a review has no reaction or resolve endpoint, so start/agree/disagree/ask/ack can't record a status. Act on its inline comments or the PR conversation instead; see the forge UI for the review body.`,
+      );
+    }
     metaCache.set(itemId, resolved.meta);
 
     const author =
