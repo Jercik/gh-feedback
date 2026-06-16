@@ -9,6 +9,7 @@ import * as z from "zod";
 import { git } from "./git-helpers.js";
 import { forgejoFetch, forgejoFetchAll } from "./forgejo-cli.js";
 import { ForgejoPull } from "./forgejo-schemas.js";
+import { selectForgejoPull } from "./select-forgejo-pull.js";
 
 const ForgejoAuthenticatedUser = z.object({ login: z.string() });
 
@@ -28,11 +29,12 @@ function getCurrentBranch(): string {
 }
 
 /**
- * Find the PR for the current branch. The client-side head.ref + state checks
- * are the authoritative filter (and the pagination they walk is required): the
- * `state`/`head` query params are treated as best-effort hints, so both are
- * re-verified client-side to avoid returning a closed PR that reused the branch
- * name. Returns undefined when no open PR has this branch as its head.
+ * Find the PR for the current branch. The client-side selection (head.ref +
+ * state + head-repo) is the authoritative filter, and the pagination it walks is
+ * required: the `state`/`head` query params are best-effort hints, so the match
+ * is re-verified client-side to avoid returning a closed PR or a same-named
+ * branch from a different fork. Returns undefined when no open PR has this branch
+ * as its head. See selectForgejoPull for the disambiguation rationale.
  */
 export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull | undefined> {
   const branch = getCurrentBranch();
@@ -41,11 +43,9 @@ export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull
     state: "open",
     head: branch,
   });
-  for (const item of raw) {
-    const pull = ForgejoPull.parse(item);
-    if (pull.head?.ref === branch && pull.state === "open") {
-      return pull;
-    }
-  }
-  return undefined;
+  return selectForgejoPull(
+    raw.map((item) => ForgejoPull.parse(item)),
+    branch,
+    slug,
+  );
 }

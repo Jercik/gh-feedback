@@ -8,6 +8,7 @@
 import type { ItemDetail } from "./fetch-item-detail.js";
 import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
+import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { exitWithMessage } from "./git-helpers.js";
 
 export async function buildItemDetail(
@@ -27,7 +28,7 @@ export async function buildItemDetail(
       type: "thread",
       id: c.id,
       path: c.path ?? null,
-      line: c.position ?? null,
+      line: reviewCommentLine(c),
       isOutdated: false,
       isResolved: false,
       comments: [

@@ -22,7 +22,13 @@ export const ForgejoPull = z.object({
     .nullish()
     .transform((v) => v ?? ""),
   user: ForgejoUser.nullish(),
-  head: z.object({ ref: z.string(), sha: z.string() }).nullish(),
+  head: z
+    .object({
+      ref: z.string(),
+      sha: z.string(),
+      repo: z.object({ full_name: z.string() }).nullish(),
+    })
+    .nullish(),
   base: z.object({ ref: z.string() }).nullish(),
   draft: z.boolean().nullish(),
 });
@@ -54,6 +60,7 @@ export const ForgejoReviewComment = z.object({
   pull_request_review_id: z.number().nullish(),
   path: z.string().nullish(),
   position: z.number().nullish(),
+  original_position: z.number().nullish(),
   created_at: z
     .string()
     .nullish()

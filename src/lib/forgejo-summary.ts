@@ -21,6 +21,7 @@ import {
   ForgejoReviewComment,
 } from "./forgejo-schemas.js";
 import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
+import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
@@ -67,7 +68,7 @@ export async function buildSummary(
         timestamp: c.created_at,
         status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
         author: c.user?.login ?? "ghost",
-        location: formatLocation(c.path, c.position ?? null),
+        location: formatLocation(c.path, reviewCommentLine(c)),
         body: c.body,
         responses: [],
       };
