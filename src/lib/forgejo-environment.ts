@@ -28,11 +28,11 @@ function getCurrentBranch(): string {
 }
 
 /**
- * Find the PR for the current branch. The client-side head.ref comparison is
- * the authoritative filter (and the pagination it walks is required): older
- * Forgejo ignores the `head` query param, so it must not be removed. `head` is
- * passed as a best-effort hint that newer Forgejo honors to narrow the list.
- * Returns undefined when no open PR has this branch as its head.
+ * Find the PR for the current branch. The client-side head.ref + state checks
+ * are the authoritative filter (and the pagination they walk is required): the
+ * `state`/`head` query params are treated as best-effort hints, so both are
+ * re-verified client-side to avoid returning a closed PR that reused the branch
+ * name. Returns undefined when no open PR has this branch as its head.
  */
 export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull | undefined> {
   const branch = getCurrentBranch();
@@ -43,7 +43,7 @@ export async function findForgejoPullByBranch(slug: string): Promise<ForgejoPull
   });
   for (const item of raw) {
     const pull = ForgejoPull.parse(item);
-    if (pull.head?.ref === branch) {
+    if (pull.head?.ref === branch && pull.state === "open") {
       return pull;
     }
   }

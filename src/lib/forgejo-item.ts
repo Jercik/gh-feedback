@@ -40,10 +40,14 @@ export function metaKindToItemType(kind: ForgejoItemKind): FeedbackItemRef["type
   return "review";
 }
 
-/** True only when the URL clearly points at a different numeric target. */
-function urlTargetsOtherNumber(url: string, target: number): boolean {
+/**
+ * True only when the URL's trailing id is exactly `target` — a confirmed match.
+ * Fails closed: an empty or unparseable URL is not a confirmation, so ownership
+ * is never assumed when it can't be proven.
+ */
+function urlTargetsNumber(url: string, target: number): boolean {
   const match = /\/(\d+)\/?$/u.exec(url);
-  return match !== null && Number(match[1]) !== target;
+  return match !== null && Number(match[1]) === target;
 }
 
 async function findReviewComment(
@@ -79,7 +83,7 @@ export async function resolveItemMeta(
     const raw = await forgejoFetch<unknown>({ path: `repos/${slug}/issues/comments/${itemId}` });
     if (raw !== undefined) {
       const issueComment = ForgejoIssueComment.parse(raw);
-      if (!urlTargetsOtherNumber(issueComment.issue_url, prNumber)) {
+      if (urlTargetsNumber(issueComment.issue_url, prNumber)) {
         return { meta: { kind: "issue-comment", prNumber }, issueComment };
       }
     }
