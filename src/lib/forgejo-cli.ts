@@ -157,9 +157,12 @@ export async function forgejoFetch<T>(request: ForgejoRequest): Promise<T> {
 /**
  * Fetch a Forgejo collection endpoint that returns its whole set in one
  * response and ignores page/limit (e.g. issues/{index}/comments and
- * reviews/{id}/comments, which have no ListOptions). forgejoFetchAll must NOT
- * be used on these: once the set reaches the page size, every page returns
- * everything, so it would loop forever accumulating duplicates.
+ * reviews/{id}/comments, which have no ListOptions). With no ListOptions the
+ * DB query applies no LIMIT and returns every row regardless of count — the
+ * MAX_RESPONSE_ITEMS cap only bounds endpoints that opt into paging, so the
+ * full set comes back even past 50 items. forgejoFetchAll must NOT be used on
+ * these: once the set reaches the page size, every page returns everything, so
+ * it would loop forever accumulating duplicates.
  */
 export async function forgejoFetchList<T>(
   path: string,
