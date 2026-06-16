@@ -31,8 +31,10 @@ export function registerStartCommand(program: Command): void {
         const item = await backend.detectItem(itemId);
         const { viewerReactions, isMinimized, isResolved } = await backend.getItemStatus(item);
 
-        // Check if item needs reopening
-        const needsReopen = isResolved || isMinimized;
+        // Check if item needs reopening. A thread's resolved flag is
+        // authoritative; comments/reviews have no resolve axis, so they reopen
+        // on the hide (minimized) axis instead.
+        const needsReopen = item.type === "thread" ? isResolved : isMinimized;
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
