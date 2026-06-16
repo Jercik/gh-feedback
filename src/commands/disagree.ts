@@ -6,13 +6,8 @@
 
 import type { Command } from "@commander-js/extra-typings";
 import { readMessageFromFile, readMessageFromStdin } from "../lib/message-input.js";
-import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
-import { detectItemType } from "../lib/detect-item-type.js";
-import { getItemStatus } from "../lib/fetch-item-status.js";
-import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
-import { replyToItem } from "../lib/reply-item.js";
-import { resolveItem } from "../lib/resolve-item.js";
+import { resolveBackend } from "../lib/resolve-backend.js";
 import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
@@ -43,7 +38,7 @@ export function registerDisagreeCommand(program: Command): void {
         },
       ) => {
         try {
-          const { owner, repo } = getRepositoryInfo();
+          const { backend } = resolveBackend();
 
           // Get message
           let message: string;
@@ -61,10 +56,10 @@ export function registerDisagreeCommand(program: Command): void {
           }
 
           verboseLog(`Detecting item type for #${itemId}...`);
-          const item = detectItemType(owner, repo, itemId);
+          const item = await backend.detectItem(itemId);
 
           // Check if already in a done status - must use 'start' first
-          const { doneStatus, viewerReactions } = getItemStatus(item);
+          const { doneStatus, viewerReactions } = await backend.getItemStatus(item);
           if (doneStatus) {
             exitWithMessage(
               `Error: Item #${itemId} is already "${doneStatus}". ` +
@@ -95,12 +90,12 @@ export function registerDisagreeCommand(program: Command): void {
 
           // 1. Post reply
           verboseLog("Posting reply...");
-          const reply = replyToItem(item, message);
+          const reply = await backend.reply(item, message);
 
           // 2-4: Status updates (best-effort after reply succeeds)
           try {
             // 2. Remove conflicting status reactions (only those we've added)
-            removeViewerReactions(item, viewerReactions, [
+            await backend.removeReactions(item, viewerReactions, [
               "eyes", // in-progress
               "+1", // agreed
               "rocket", // acknowledged
@@ -109,11 +104,14 @@ export function registerDisagreeCommand(program: Command): void {
 
             // 3. Add thumbs_down
             verboseLog("Adding reaction...");
-            addReactionToItem(item, "-1");
+            await backend.addReaction(item, "-1");
 
-            // 4. Resolve
+            // 4. Resolve (degrades to a no-op where the forge has no resolve API)
             verboseLog("Resolving...");
-            resolveItem(item);
+            const resolveResult = await backend.resolve(item);
+            if (!resolveResult.supported) {
+              console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+            }
           } catch (statusError) {
             console.error(
               `Warning: Reply posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,

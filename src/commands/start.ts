@@ -6,12 +6,8 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
-import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
-import { detectItemType } from "../lib/detect-item-type.js";
-import { getItemStatus } from "../lib/fetch-item-status.js";
-import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
-import { unresolveItem } from "../lib/resolve-item.js";
+import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -27,13 +23,13 @@ export function registerStartCommand(program: Command): void {
       return id;
     })
     .option("-n, --dry-run", "Preview without executing")
-    .action((itemId: number, options: { dryRun?: boolean }) => {
+    .action(async (itemId: number, options: { dryRun?: boolean }) => {
       try {
-        const { owner, repo } = getRepositoryInfo();
+        const { backend } = resolveBackend();
 
         verboseLog(`Detecting item type for #${itemId}...`);
-        const item = detectItemType(owner, repo, itemId);
-        const { viewerReactions, isMinimized } = getItemStatus(item);
+        const item = await backend.detectItem(itemId);
+        const { viewerReactions, isMinimized } = await backend.getItemStatus(item);
 
         // Check if item needs reopening
         const needsReopen = item.isResolved ?? isMinimized;
@@ -57,18 +53,21 @@ export function registerStartCommand(program: Command): void {
         // Reopen the item if it was resolved/hidden
         if (needsReopen) {
           verboseLog("Reopening...");
-          unresolveItem(item, isMinimized);
+          const result = await backend.unresolve(item, isMinimized);
+          if (!result.supported) {
+            console.error(`Note: reopen skipped - ${result.reason}`);
+          }
         }
 
         // Remove conflicting status reactions (only those we've added)
-        removeViewerReactions(item, viewerReactions, [
+        await backend.removeReactions(item, viewerReactions, [
           "+1", // agreed
           "-1", // disagreed
           "rocket", // acknowledged
           "confused", // awaiting-reply
         ]);
 
-        addReactionToItem(item, "eyes");
+        await backend.addReaction(item, "eyes");
         verboseLog(`${SUCCESS} Marked #${itemId} as in-progress.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

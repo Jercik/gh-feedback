@@ -13,9 +13,8 @@
  */
 
 import { createProgram } from "./lib/create-program.js";
-import { getRepositoryInfo, getPullRequestNumber } from "./lib/github-environment.js";
 import { exitWithMessage } from "./lib/git-helpers.js";
-import { fetchSummary } from "./lib/fetch-summary.js";
+import { resolveBackend } from "./lib/resolve-backend.js";
 import { formatSummary } from "./lib/format-summary.js";
 import { registerStartCommand } from "./commands/start.js";
 import { registerAgreeCommand } from "./commands/agree.js";
@@ -73,18 +72,18 @@ program
   .option("-p, --porcelain", "Output as TSV (auto-detected when stdout is not a TTY)")
   .option("-j, --json", "Output as JSON")
   .action(
-    (options: {
+    async (options: {
       hideHidden?: boolean;
       hideResolved?: boolean;
       porcelain?: boolean;
       json?: boolean;
     }) => {
       try {
-        const { owner, repo } = getRepositoryInfo();
-        const prNumber = getPullRequestNumber();
+        const { backend, currentPrNumber } = resolveBackend();
+        const prNumber = await currentPrNumber();
 
         verboseLog(`Fetching feedback for PR #${prNumber}...`);
-        const summary = fetchSummary(owner, repo, prNumber, {
+        const summary = await backend.fetchSummary(prNumber, {
           hideHidden: options.hideHidden,
           hideResolved: options.hideResolved,
         });

@@ -5,9 +5,8 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
-import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
-import { fetchItemDetail } from "../lib/fetch-item-detail.js";
+import { resolveBackend } from "../lib/resolve-backend.js";
 import { formatItemDetail } from "../lib/format-item-detail.js";
 
 export function registerDetailCommand(program: Command): void {
@@ -22,11 +21,11 @@ export function registerDetailCommand(program: Command): void {
       return id;
     })
     .option("-j, --json", "Output as JSON")
-    .action((itemId: number, options: { json?: boolean }) => {
+    .action(async (itemId: number, options: { json?: boolean }) => {
       try {
-        const { owner, repo } = getRepositoryInfo();
+        const { backend } = resolveBackend();
 
-        const item = fetchItemDetail(owner, repo, itemId);
+        const item = await backend.fetchItemDetail(itemId);
 
         if (options.json) {
           console.log(JSON.stringify(item, undefined, 2));

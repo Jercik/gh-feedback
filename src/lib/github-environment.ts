@@ -1,9 +1,11 @@
 import { git, exitWithMessage } from "./git-helpers.js";
 import { ghRaw, ghJson } from "./github-cli.js";
+import { detectProvider } from "./provider.js";
 import type { RepoInfo } from "./types.js";
 
 /**
- * Verify that all prerequisites for GitHub CLI operations are met.
+ * Verify that all prerequisites are met. The forge-specific CLI/auth check is
+ * gated on the detected provider so a Forgejo repo never demands gh auth.
  * Exits with an error message if any check fails.
  */
 export function verifyPrerequisites(): void {
@@ -14,21 +16,16 @@ export function verifyPrerequisites(): void {
   }
 
   try {
-    ghRaw("--version");
-  } catch (error) {
-    exitWithMessage(error instanceof Error ? error.message : String(error));
-  }
-
-  try {
     git("rev-parse", "--is-inside-work-tree");
   } catch {
     exitWithMessage("Error: Not a Git repository.");
   }
 
+  let originUrl: string;
   try {
-    git("remote", "get-url", "origin");
+    originUrl = git("remote", "get-url", "origin");
   } catch {
-    exitWithMessage("Error: Remote 'origin' not configured.");
+    return exitWithMessage("Error: Remote 'origin' not configured.");
   }
 
   try {
@@ -41,6 +38,26 @@ export function verifyPrerequisites(): void {
     exitWithMessage(
       "Error: Git user not configured. Run: git config user.name 'Your Name' && git config user.email 'you@example.com'",
     );
+  }
+
+  const info = detectProvider(originUrl);
+  if (!info) {
+    return exitWithMessage(
+      `Error: Unsupported git host for origin '${originUrl}'. ` +
+        `Supported: github.com, code.j4k.dev, code.tail.j4k.dev.`,
+    );
+  }
+
+  // Forgejo auth is verified lazily when the first token is minted; only the
+  // GitHub path needs an upfront gh CLI + auth check.
+  if (info.provider !== "github") {
+    return;
+  }
+
+  try {
+    ghRaw("--version");
+  } catch (error) {
+    exitWithMessage(error instanceof Error ? error.message : String(error));
   }
 
   try {
