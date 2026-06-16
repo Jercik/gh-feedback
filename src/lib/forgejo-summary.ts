@@ -13,7 +13,7 @@
 
 import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
 import type { SummaryOptions } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchAll } from "./forgejo-cli.js";
+import { forgejoFetch, forgejoFetchAll, forgejoFetchList } from "./forgejo-cli.js";
 import {
   ForgejoIssueComment,
   ForgejoPull,
@@ -39,7 +39,7 @@ export async function buildSummary(
   const reviewsRaw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls/${prNumber}/reviews`);
   const reviews = reviewsRaw.map((r) => ForgejoReview.parse(r));
 
-  const issueCommentsRaw = await forgejoFetchAll<unknown>(
+  const issueCommentsRaw = await forgejoFetchList<unknown>(
     `repos/${slug}/issues/${prNumber}/comments`,
   );
   const issueComments = issueCommentsRaw.map((c) => ForgejoIssueComment.parse(c));
@@ -47,7 +47,7 @@ export async function buildSummary(
   // Fetch every review's inline comments concurrently to avoid an N+1 waterfall.
   const reviewCommentLists = await Promise.all(
     reviews.map((review) =>
-      forgejoFetchAll<unknown>(
+      forgejoFetchList<unknown>(
         `repos/${slug}/pulls/${prNumber}/reviews/${review.id}/comments`,
       ).then((raw) => raw.map((c) => ForgejoReviewComment.parse(c))),
     ),

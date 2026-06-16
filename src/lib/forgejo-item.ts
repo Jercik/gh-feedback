@@ -8,7 +8,12 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchAll, isForgejoNotFound } from "./forgejo-cli.js";
+import {
+  forgejoFetch,
+  forgejoFetchAll,
+  forgejoFetchList,
+  isForgejoNotFound,
+} from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoReview, ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export type ForgejoItemKind = "review-comment" | "issue-comment" | "review";
@@ -51,7 +56,7 @@ async function findReviewComment(
 
   const commentLists = await Promise.all(
     reviews.map((review) =>
-      forgejoFetchAll<unknown>(
+      forgejoFetchList<unknown>(
         `repos/${slug}/pulls/${prNumber}/reviews/${review.id}/comments`,
       ).then((raw) => raw.map((c) => ForgejoReviewComment.parse(c))),
     ),

@@ -155,8 +155,25 @@ export async function forgejoFetch<T>(request: ForgejoRequest): Promise<T> {
 }
 
 /**
- * Fetch every page of a Forgejo collection endpoint using page/limit
- * pagination. Stops when a page returns fewer than `limit` items.
+ * Fetch a Forgejo collection endpoint that returns its whole set in one
+ * response and ignores page/limit (e.g. issues/{index}/comments and
+ * reviews/{id}/comments, which have no ListOptions). forgejoFetchAll must NOT
+ * be used on these: once the set reaches the page size, every page returns
+ * everything, so it would loop forever accumulating duplicates.
+ */
+export async function forgejoFetchList<T>(
+  path: string,
+  query: Record<string, string | number> = {},
+): Promise<T[]> {
+  const items = await forgejoFetch<T[]>({ path, query });
+  return Array.isArray(items) ? items : [];
+}
+
+/**
+ * Fetch every page of a genuinely paginated Forgejo collection endpoint (one
+ * that honors page/limit, e.g. pulls and pulls/{index}/reviews). Stops when a
+ * page returns fewer than `limit` items. For full-set endpoints that ignore
+ * pagination, use forgejoFetchList instead.
  */
 export async function forgejoFetchAll<T>(
   path: string,

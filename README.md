@@ -30,11 +30,13 @@ export GH_FEEDBACK_GIT_PATH=/path/to/git
 export GH_FEEDBACK_FGJ_PATH=/path/to/fgj
 ```
 
-To point the Forgejo REST client at a non-default instance, set:
+For an origin that is already detected as Forgejo, override the REST API host — useful when the origin uses an SSH alias (e.g. a tailnet host) that differs from the HTTP API host:
 
 ```bash
-export GH_FEEDBACK_FORGEJO_API_HOST=forgejo.example.com
+export GH_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 ```
+
+This overrides only the API hostname. Whether an origin is treated as Forgejo is decided by `repoq`'s host classification, so this variable does not, on its own, enable an instance whose origin host `repoq` doesn't recognize.
 
 ## Usage
 
