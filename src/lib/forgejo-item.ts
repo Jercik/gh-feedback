@@ -66,12 +66,17 @@ export async function resolveItemMeta(
   itemId: number,
 ): Promise<ResolvedForgejoItem | undefined> {
   // Issue comment: repo-scoped, so confirm it belongs to this PR before
-  // accepting; otherwise fall through to the PR-scoped probes below.
+  // accepting; otherwise fall through to the PR-scoped probes below. Forgejo
+  // returns 204 (-> undefined) when the id is a comment but NOT a plain issue
+  // comment (e.g. an inline review comment), so skip parsing in that case
+  // rather than letting Zod throw on undefined.
   try {
     const raw = await forgejoFetch<unknown>({ path: `repos/${slug}/issues/comments/${itemId}` });
-    const issueComment = ForgejoIssueComment.parse(raw);
-    if (!urlTargetsOtherNumber(issueComment.issue_url, prNumber)) {
-      return { meta: { kind: "issue-comment", prNumber }, issueComment };
+    if (raw !== undefined) {
+      const issueComment = ForgejoIssueComment.parse(raw);
+      if (!urlTargetsOtherNumber(issueComment.issue_url, prNumber)) {
+        return { meta: { kind: "issue-comment", prNumber }, issueComment };
+      }
     }
   } catch (error) {
     if (!isForgejoNotFound(error)) {

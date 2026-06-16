@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * gh-feedback - Semantic CLI for GitHub PR feedback workflow.
+ * gh-feedback - Semantic CLI for PR feedback workflow (GitHub or Forgejo).
  *
  * Commands:
  *   summary    - Get all feedback context (TSV or pretty)
