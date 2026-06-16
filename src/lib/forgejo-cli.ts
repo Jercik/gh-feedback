@@ -10,6 +10,7 @@
 
 import { spawnSync } from "node:child_process";
 import { FORGEJO_API_HOST } from "./provider.js";
+import { normalizeForgejoApiHost } from "./normalize-forgejo-api-host.js";
 import { resolveDependencyPath } from "./resolve-dependency-path.js";
 
 export const FGJ_PATH_ENV_VAR = "GH_FEEDBACK_FGJ_PATH";
@@ -17,10 +18,10 @@ export const FORGEJO_API_HOST_ENV_VAR = "GH_FEEDBACK_FORGEJO_API_HOST";
 
 function forgejoApiHost(): string {
   const override = process.env[FORGEJO_API_HOST_ENV_VAR]?.trim();
-  if (override) {
-    return override;
+  if (!override) {
+    return FORGEJO_API_HOST;
   }
-  return FORGEJO_API_HOST;
+  return normalizeForgejoApiHost(override);
 }
 
 function getFgjBinaryPath(): string {
