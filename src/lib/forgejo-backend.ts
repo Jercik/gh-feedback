@@ -6,7 +6,10 @@
  * the hidden axis is dropped — workflow status comes from reactions alone.
  *
  * `detectItem` returns the neutral ref but caches the resolved item kind by
- * `id`, so reply/react re-use it without re-probing the REST endpoints.
+ * `id`, so reply/react re-use it without re-probing the REST endpoints. For an
+ * inline review comment it also canonicalizes the id to the conversation root,
+ * so a reply id the user targets resolves to the finding and every reaction read
+ * and write lands on the one comment that carries the thread's status.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
@@ -22,6 +25,7 @@ import type {
 } from "./feedback-backend.js";
 import { forgejoFetch } from "./forgejo-cli.js";
 import {
+  fetchReactions,
   reactionsPath,
   normalizeForgejoReactions,
   deriveIsDone,
@@ -29,7 +33,7 @@ import {
 } from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
-import { fetchStatusReactions } from "./forgejo-status-reactions.js";
+import { resolveConversationRoot } from "./forgejo-conversation-root.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
@@ -70,21 +74,33 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
         `Error: Forgejo review #${itemId} can't be tracked — a review has no reaction or resolve endpoint, so start/agree/disagree/ask/ack can't record a status. Act on its inline comments or the PR conversation instead; see the forge UI for the review body.`,
       );
     }
+
+    // Canonicalize a review comment to its conversation root, so a reply id the
+    // user may have targeted resolves to the finding — every later reaction read
+    // and write then lands on the same comment summary reports.
+    if (resolved.meta.kind === "review-comment" && resolved.reviewComment) {
+      const viewer = await getForgejoViewer();
+      const root =
+        (await resolveConversationRoot(slug, prNumber, itemId, viewer)) ?? resolved.reviewComment;
+      metaCache.set(root.id, { kind: "review-comment", prNumber, reviewComment: root });
+      return {
+        type: "thread",
+        id: root.id,
+        author: root.user?.login ?? "ghost",
+        prNumber,
+        path: root.path ?? null,
+        line: reviewCommentLine(root),
+      };
+    }
+
     metaCache.set(itemId, resolved.meta);
-
-    const author =
-      resolved.reviewComment?.user?.login ??
-      resolved.issueComment?.user?.login ??
-      resolved.review?.user?.login ??
-      "ghost";
-
     return {
       type: metaKindToItemType(resolved.meta.kind),
       id: itemId,
-      author,
+      author: resolved.issueComment?.user?.login ?? resolved.review?.user?.login ?? "ghost",
       prNumber,
-      path: resolved.reviewComment?.path ?? null,
-      line: resolved.reviewComment ? reviewCommentLine(resolved.reviewComment) : null,
+      path: null,
+      line: null,
     };
   }
 
@@ -129,7 +145,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
 
       const viewer = await getForgejoViewer();
-      const reactions = await fetchStatusReactions(slug, item, meta, viewer);
+      const reactions = await fetchReactions(slug, meta.kind, item.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       const isDone = deriveIsDone(reactions, viewer);
       const status = reactionToStatus(normalized, isDone);

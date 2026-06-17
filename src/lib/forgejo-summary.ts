@@ -17,12 +17,7 @@ import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
 import type { SummaryOptions } from "./feedback-backend.js";
 import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoPull } from "./forgejo-schemas.js";
-import {
-  normalizeForgejoReactions,
-  fetchReactions,
-  fetchConversationReactions,
-  deriveIsDone,
-} from "./forgejo-reactions.js";
+import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
@@ -53,17 +48,13 @@ export async function buildSummary(
   );
 
   // Nest each marked reply under the comment it answered, so a reply never
-  // resurfaces as its own item. A status reaction can land on the root or on a
-  // reply (a command can target a reply id from a printed reply URL), so status
-  // is derived from every comment in the conversation.
+  // resurfaces as its own item. Status lives on the conversation root: commands
+  // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
   const reviewCommentItems = await Promise.all(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
-      const reactions = await fetchConversationReactions(slug, [
-        root.id,
-        ...replies.map((r) => r.id),
-      ]);
+      const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       return {
         id: root.id,

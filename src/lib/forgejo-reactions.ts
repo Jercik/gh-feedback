@@ -53,21 +53,6 @@ export async function fetchReactions(
   }
 }
 
-/**
- * Reactions across a whole line conversation. A status reaction can land on the
- * root or on any nested reply, so summary and the command preflight derive a
- * thread's status from this combined set rather than the root alone.
- */
-export async function fetchConversationReactions(
-  slug: string,
-  commentIds: readonly number[],
-): Promise<ForgejoReaction[]> {
-  const lists = await Promise.all(
-    commentIds.map((id) => fetchReactions(slug, "review-comment", id)),
-  );
-  return lists.flat();
-}
-
 function isFinalStatusReaction(content: string): boolean {
   return content === "+1" || content === "-1" || content === "rocket";
 }
