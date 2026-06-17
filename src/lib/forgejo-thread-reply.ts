@@ -15,14 +15,16 @@
  * Matching anchors on the marker comment alone, ignoring the trailing
  * whitespace, so re-attachment survives Forgejo normalizing the stored body's
  * line endings (e.g. `\n\n` → `\r\n\r\n`) rather than hinging on a byte-exact
- * round-trip.
+ * round-trip. Stripping removes only the marker and its blank-line separator, so
+ * a reply message that intentionally begins with whitespace (e.g. an indented
+ * code block) keeps its leading indentation.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 const REPLY_PARENT_PREFIX = "<!-- gh-feedback:reply-to:";
 const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(\d+) -->/u;
-const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->\s*/u;
+const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->[ \t]*\r?\n\r?\n?/u;
 
 export function forgejoThreadReplyBody(
   comment: ForgejoReviewComment,

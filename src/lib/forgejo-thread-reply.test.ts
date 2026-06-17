@@ -71,6 +71,12 @@ describe("stripThreadReplyMarker", () => {
     );
   });
 
+  it("preserves leading whitespace in the reply message", () => {
+    expect(stripThreadReplyMarker("<!-- gh-feedback:reply-to:11 -->\n\n    indented code")).toBe(
+      "    indented code",
+    );
+  });
+
   it("leaves an unmarked comment unchanged", () => {
     expect(stripThreadReplyMarker("A regular review finding.")).toBe("A regular review finding.");
   });
