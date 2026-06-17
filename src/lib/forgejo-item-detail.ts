@@ -10,7 +10,7 @@ import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
-import { groupReviewCommentConversations } from "./forgejo-conversations.js";
+import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
@@ -35,9 +35,7 @@ export async function buildItemDetail(
       await fetchPullReviewComments(slug, prNumber),
       viewer,
     );
-    const conversation = conversations.find(
-      (c) => c.root.id === target.id || c.replies.some((r) => r.id === target.id),
-    );
+    const conversation = findConversationFor(conversations, target.id);
     const members = conversation ? [conversation.root, ...conversation.replies] : [target];
     const root = conversation?.root ?? target;
 

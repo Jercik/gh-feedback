@@ -22,7 +22,6 @@ import type {
 } from "./feedback-backend.js";
 import { forgejoFetch } from "./forgejo-cli.js";
 import {
-  fetchReactions,
   reactionsPath,
   normalizeForgejoReactions,
   deriveIsDone,
@@ -30,6 +29,7 @@ import {
 } from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
+import { fetchStatusReactions } from "./forgejo-status-reactions.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
@@ -129,7 +129,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
 
       const viewer = await getForgejoViewer();
-      const reactions = await fetchReactions(slug, meta.kind, item.id);
+      const reactions = await fetchStatusReactions(slug, item, meta, viewer);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       const isDone = deriveIsDone(reactions, viewer);
       const status = reactionToStatus(normalized, isDone);

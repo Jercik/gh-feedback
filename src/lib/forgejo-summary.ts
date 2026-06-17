@@ -17,7 +17,12 @@ import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
 import type { SummaryOptions } from "./feedback-backend.js";
 import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoPull } from "./forgejo-schemas.js";
-import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
+import {
+  normalizeForgejoReactions,
+  fetchReactions,
+  fetchConversationReactions,
+  deriveIsDone,
+} from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
@@ -55,10 +60,10 @@ export async function buildSummary(
 
   const reviewCommentItems = await Promise.all(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
-      const reactionLists = await Promise.all(
-        [root, ...replies].map((c) => fetchReactions(slug, "review-comment", c.id)),
-      );
-      const reactions = reactionLists.flat();
+      const reactions = await fetchConversationReactions(slug, [
+        root.id,
+        ...replies.map((r) => r.id),
+      ]);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       return {
         id: root.id,

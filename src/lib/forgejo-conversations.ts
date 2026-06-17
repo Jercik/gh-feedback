@@ -47,3 +47,11 @@ export function groupReviewCommentConversations(
 
   return conversations;
 }
+
+/** The conversation a comment id belongs to, whether it is the root or a reply. */
+export function findConversationFor(
+  conversations: readonly Conversation[],
+  itemId: number,
+): Conversation | undefined {
+  return conversations.find((c) => c.root.id === itemId || c.replies.some((r) => r.id === itemId));
+}
