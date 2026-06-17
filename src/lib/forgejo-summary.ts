@@ -51,7 +51,7 @@ export async function buildSummary(
   // resurfaces as its own item. A status reaction can land on the root or on a
   // reply (a command can target a reply id from a printed reply URL), so status
   // is derived from every comment in the conversation.
-  const conversations = groupReviewCommentConversations(visibleReviewComments);
+  const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
   const reviewCommentItems = await Promise.all(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {

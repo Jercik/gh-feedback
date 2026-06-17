@@ -12,6 +12,7 @@ import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
+import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 
 export async function buildItemDetail(
@@ -29,8 +30,10 @@ export async function buildItemDetail(
     // Group the whole PR's review comments so detail returns every comment in the
     // conversation — matching summary's grouping and the GitHub thread path —
     // rather than just the root. The id may be a reply, so match it on either side.
+    const viewer = await getForgejoViewer();
     const conversations = groupReviewCommentConversations(
       await fetchPullReviewComments(slug, prNumber),
+      viewer,
     );
     const conversation = conversations.find(
       (c) => c.root.id === target.id || c.replies.some((r) => r.id === target.id),
