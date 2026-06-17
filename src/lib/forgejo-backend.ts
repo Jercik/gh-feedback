@@ -33,7 +33,7 @@ import type { ForgejoItemMeta } from "./forgejo-item.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
-import { forgejoReplyPrefix } from "./forgejo-reply.js";
+import { postForgejoReply } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { reactionToStatus, isStatusDone } from "./summary-types.js";
 import { exitWithMessage } from "./git-helpers.js";
@@ -143,16 +143,13 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     },
 
     async reply(item: FeedbackItemRef, message: string): Promise<ReplyResult> {
-      // Forgejo has no native threaded-reply endpoint for review comments, so
-      // replies are posted as issue comments on the PR, referencing the item.
-      const prefix = forgejoReplyPrefix(item.type, item.id);
-
-      const result = await forgejoFetch<{ id: number; html_url: string }>({
-        method: "POST",
-        path: `repos/${slug}/issues/${item.prNumber}/comments`,
-        body: { body: prefix + message },
-      });
-      return { id: result.id, url: result.html_url };
+      // A thread reply nests under its parent review comment, so it needs that
+      // comment's review id + line; other item types have no thread to nest in.
+      if (item.type === "thread") {
+        const meta = await metaFor(item);
+        return postForgejoReply(slug, item, message, meta.reviewComment);
+      }
+      return postForgejoReply(slug, item, message, undefined);
     },
 
     async addReaction(item: FeedbackItemRef, reaction: ReactionContent): Promise<void> {

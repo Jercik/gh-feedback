@@ -2,13 +2,15 @@
  * Forgejo summary aggregation.
  *
  * Forgejo has no GraphQL, so the summary is assembled from separate endpoints
- * (PR + reviews + review-comments + issue-comments + reactions). Each inline
- * review comment and each PR issue comment becomes its own feedback item.
+ * (PR + reviews + review-comments + issue-comments + reactions). Each PR issue
+ * comment and each inline-comment line conversation becomes one feedback item;
+ * later comments in a conversation (our threaded replies) nest as responses.
  *
  * Two surfaces are deliberately dropped: review *bodies* (the review entity has
  * no reaction/resolve endpoint, so an item from it could never leave "pending")
- * and the tool's own generated reply comments (identified by the reply marker),
- * which would otherwise reappear as fresh feedback after every agree/disagree.
+ * and the tool's own generated reply *issue* comments (identified by the reply
+ * marker), which would otherwise reappear as fresh feedback after every
+ * agree/disagree on a top-level comment.
  */
 
 import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
@@ -22,6 +24,7 @@ import {
 } from "./forgejo-schemas.js";
 import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
+import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
@@ -56,21 +59,29 @@ export async function buildSummary(
 
   const visibleReviewComments = reviewCommentLists
     .flat()
-    .filter((c) => !c.user || !isIgnoredAuthor(c.user.login))
-    .toSorted((a, b) => a.id - b.id);
+    .filter((c) => !c.user || !isIgnoredAuthor(c.user.login));
+
+  // Nest each line conversation's later comments (our threaded replies) under
+  // its root, so a reply never resurfaces as its own item. The root's reactions
+  // carry the workflow status.
+  const conversations = groupReviewCommentConversations(visibleReviewComments);
 
   const reviewCommentItems = await Promise.all(
-    visibleReviewComments.map(async (c): Promise<FeedbackItem> => {
-      const reactions = await fetchReactions(slug, "review-comment", c.id);
+    conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+      const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       return {
-        id: c.id,
-        timestamp: c.created_at,
+        id: root.id,
+        timestamp: root.created_at,
         status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
-        author: c.user?.login ?? "ghost",
-        location: formatLocation(c.path, reviewCommentLine(c)),
-        body: c.body,
-        responses: [],
+        author: root.user?.login ?? "ghost",
+        location: formatLocation(root.path, reviewCommentLine(root)),
+        body: root.body,
+        responses: replies.map((reply) => ({
+          author: reply.user?.login ?? "ghost",
+          timestamp: reply.created_at,
+          body: reply.body,
+        })),
       };
     }),
   );

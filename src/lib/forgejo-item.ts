@@ -21,6 +21,8 @@ export type ForgejoItemKind = "review-comment" | "issue-comment" | "review";
 export interface ForgejoItemMeta {
   kind: ForgejoItemKind;
   prNumber: number;
+  /** Present for review-comment kind; carries the review id + line a threaded reply targets. */
+  reviewComment?: ForgejoReviewComment;
 }
 
 interface ResolvedForgejoItem {
@@ -113,7 +115,7 @@ export async function resolveItemMeta(
 
   const reviewComment = await findReviewComment(slug, prNumber, itemId);
   if (reviewComment) {
-    return { meta: { kind: "review-comment", prNumber }, reviewComment };
+    return { meta: { kind: "review-comment", prNumber, reviewComment }, reviewComment };
   }
 
   return undefined;
