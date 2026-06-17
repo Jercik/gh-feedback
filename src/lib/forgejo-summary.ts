@@ -25,6 +25,7 @@ import {
 import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
+import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
@@ -61,11 +62,11 @@ export async function buildSummary(
     .flat()
     .filter((c) => !c.user || !isIgnoredAuthor(c.user.login));
 
-  // Nest each line conversation's own threaded replies under its root, so a
-  // reply never resurfaces as its own item. A status reaction can land on the
-  // root or on a reply (a command can target a reply id from a printed reply
-  // URL), so status is derived from every comment in the conversation.
-  const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
+  // Nest each marked reply under the comment it answered, so a reply never
+  // resurfaces as its own item. A status reaction can land on the root or on a
+  // reply (a command can target a reply id from a printed reply URL), so status
+  // is derived from every comment in the conversation.
+  const conversations = groupReviewCommentConversations(visibleReviewComments);
 
   const reviewCommentItems = await Promise.all(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
@@ -84,7 +85,7 @@ export async function buildSummary(
         responses: replies.map((reply) => ({
           author: reply.user?.login ?? "ghost",
           timestamp: reply.created_at,
-          body: reply.body,
+          body: stripThreadReplyMarker(reply.body),
         })),
       };
     }),

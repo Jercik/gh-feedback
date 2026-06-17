@@ -1,53 +1,44 @@
 /**
  * Group flat Forgejo review comments into line conversations.
  *
- * Forgejo exposes no per-comment parent link, so the only reply the tool can
- * reliably re-attach is its own: a reply it posts via reviews/{id}/comments
- * inherits the parent's review id and lands on the same line. Two comments
- * therefore share a conversation only when they sit on the same
- * (reviewId, path, position, originalPosition) AND the later one is the viewer's
- * own reply. Every other comment is its own root — including a second distinct
- * finding a single review left on the same line, which must keep its own
- * reaction-backed status rather than collapse into the first. A comment missing
- * a review id or path can't be threaded, so it keys to itself and stands alone.
+ * Forgejo exposes no per-comment parent link, so threading is reconstructed from
+ * the parent-id marker the tool stamps on every reply it posts (see
+ * forgejo-thread-reply): a marked comment nests under the conversation of the
+ * exact comment it answered, while every unmarked comment is its own root — so
+ * two distinct findings a single review left on the same line stay separate
+ * items, each keeping its own reaction-backed status. A marked reply whose
+ * parent isn't present (its root was filtered out) is dropped rather than
+ * resurfacing as fresh feedback. Comments are walked oldest-first so a reply's
+ * parent — always created earlier, hence a lower id — is grouped before it.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+import { threadReplyParentId } from "./forgejo-thread-reply.js";
 
 interface Conversation {
   root: ForgejoReviewComment;
   replies: ForgejoReviewComment[];
 }
 
-function conversationKey(comment: ForgejoReviewComment): string {
-  if (typeof comment.pull_request_review_id !== "number" || typeof comment.path !== "string") {
-    return `solo:${comment.id}`;
-  }
-  return [
-    comment.pull_request_review_id,
-    comment.path,
-    comment.position ?? 0,
-    comment.original_position ?? 0,
-  ].join("\n");
-}
-
 export function groupReviewCommentConversations(
   comments: readonly ForgejoReviewComment[],
-  viewer: string,
 ): Conversation[] {
   const conversations: Conversation[] = [];
-  const rootByKey = new Map<string, Conversation>();
+  const conversationByCommentId = new Map<number, Conversation>();
 
   for (const comment of [...comments].toSorted((a, b) => a.id - b.id)) {
-    const key = conversationKey(comment);
-    const current = rootByKey.get(key);
-    if (current && comment.user?.login === viewer) {
-      current.replies.push(comment);
+    const parentId = threadReplyParentId(comment.body);
+    if (parentId !== undefined) {
+      const parent = conversationByCommentId.get(parentId);
+      if (parent) {
+        parent.replies.push(comment);
+        conversationByCommentId.set(comment.id, parent);
+      }
       continue;
     }
     const conversation: Conversation = { root: comment, replies: [] };
     conversations.push(conversation);
-    rootByKey.set(key, conversation);
+    conversationByCommentId.set(comment.id, conversation);
   }
 
   return conversations;
