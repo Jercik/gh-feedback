@@ -9,8 +9,9 @@
  * inferring the parent from the line position, which can't tell two distinct
  * findings on one line apart. Positions are still sent so Forgejo threads the
  * reply in its own UI: the new-side line goes in `new_position`, the old-side in
- * `old_position`, and a comment with neither set carries only the path so
- * Forgejo attaches it to the file-level conversation.
+ * `old_position`. This endpoint is a code-comment endpoint that always blames a
+ * line, so a parent with neither side set has no line to thread under — callers
+ * gate on `hasThreadablePosition` and fall back to a top-level reply instead.
  *
  * Matching anchors on the marker comment alone, ignoring the trailing
  * whitespace, so re-attachment survives Forgejo normalizing the stored body's
@@ -25,6 +26,15 @@ import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 const REPLY_PARENT_PREFIX = "<!-- gh-feedback:reply-to:";
 const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(\d+) -->/u;
 const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->[ \t]*\r?\n\r?\n?/u;
+
+/**
+ * Whether a parent comment has a diff line a threaded reply can attach to.
+ * Forgejo's create endpoint blames the line, erroring on a zero position, so a
+ * positionless (file-level) parent must take the top-level reply path instead.
+ */
+export function hasThreadablePosition(comment: ForgejoReviewComment): boolean {
+  return (comment.position ?? 0) > 0 || (comment.original_position ?? 0) > 0;
+}
 
 export function forgejoThreadReplyBody(
   comment: ForgejoReviewComment,

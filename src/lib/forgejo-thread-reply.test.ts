@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   forgejoThreadReplyBody,
+  hasThreadablePosition,
   threadReplyParentId,
   stripThreadReplyMarker,
 } from "./forgejo-thread-reply.js";
@@ -34,13 +35,16 @@ describe("forgejoThreadReplyBody", () => {
       old_position: 87,
     });
   });
+});
 
-  it("omits the line for a file-level comment with neither side set", () => {
-    const comment = ForgejoReviewComment.parse({ id: 13, path: "README.md" });
-    expect(forgejoThreadReplyBody(comment, "thanks")).toEqual({
-      body: "<!-- gh-feedback:reply-to:13 -->\n\nthanks",
-      path: "README.md",
-    });
+describe("hasThreadablePosition", () => {
+  it("is true with a diff position and false for a file-level comment", () => {
+    const results = {
+      newSide: hasThreadablePosition(ForgejoReviewComment.parse({ id: 11, position: 141 })),
+      oldSide: hasThreadablePosition(ForgejoReviewComment.parse({ id: 12, original_position: 87 })),
+      fileLevel: hasThreadablePosition(ForgejoReviewComment.parse({ id: 13, path: "README.md" })),
+    };
+    expect(results).toStrictEqual({ newSide: true, oldSide: true, fileLevel: false });
   });
 });
 

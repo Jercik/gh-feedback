@@ -4,16 +4,18 @@
  * Inline review comments thread natively: a reply POSTs into the parent's
  * review on the same line (reviews/{id}/comments) and nests under the original,
  * carrying an invisible parent-id marker (see forgejo-thread-reply) so the
- * summary re-attaches it to the exact comment it answered. Top-level PR comments
- * and review bodies have no thread to nest under, so replies to those post as PR
- * issue comments prefixed with FORGEJO_REPLY_MARKER, which the summary filters so
- * a user's own reply never reappears as fresh feedback.
+ * summary re-attaches it to the exact comment it answered. Top-level PR comments,
+ * review bodies, and inline comments with no diff position (the create endpoint
+ * blames a line and rejects a zero position) have no line to thread under, so
+ * replies to those post as PR issue comments prefixed with FORGEJO_REPLY_MARKER,
+ * which the summary filters so a user's own reply never reappears as fresh
+ * feedback.
  */
 
 import type { FeedbackItemRef, ReplyResult } from "./feedback-backend.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { forgejoFetch } from "./forgejo-cli.js";
-import { forgejoThreadReplyBody } from "./forgejo-thread-reply.js";
+import { forgejoThreadReplyBody, hasThreadablePosition } from "./forgejo-thread-reply.js";
 
 export const FORGEJO_REPLY_MARKER = "> Replying to ";
 
@@ -34,7 +36,12 @@ export async function postForgejoReply(
   reviewComment: ForgejoReviewComment | undefined,
 ): Promise<ReplyResult> {
   const reviewId = reviewComment?.pull_request_review_id;
-  if (item.type === "thread" && reviewComment && typeof reviewId === "number") {
+  if (
+    item.type === "thread" &&
+    reviewComment &&
+    typeof reviewId === "number" &&
+    hasThreadablePosition(reviewComment)
+  ) {
     const threaded = await forgejoFetch<{ id: number; html_url: string }>({
       method: "POST",
       path: `repos/${slug}/pulls/${item.prNumber}/reviews/${reviewId}/comments`,
