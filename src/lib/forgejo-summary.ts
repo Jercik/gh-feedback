@@ -61,14 +61,18 @@ export async function buildSummary(
     .flat()
     .filter((c) => !c.user || !isIgnoredAuthor(c.user.login));
 
-  // Nest each line conversation's later comments (our threaded replies) under
-  // its root, so a reply never resurfaces as its own item. The root's reactions
-  // carry the workflow status.
-  const conversations = groupReviewCommentConversations(visibleReviewComments);
+  // Nest each line conversation's own threaded replies under its root, so a
+  // reply never resurfaces as its own item. A status reaction can land on the
+  // root or on a reply (a command can target a reply id from a printed reply
+  // URL), so status is derived from every comment in the conversation.
+  const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
   const reviewCommentItems = await Promise.all(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
-      const reactions = await fetchReactions(slug, "review-comment", root.id);
+      const reactionLists = await Promise.all(
+        [root, ...replies].map((c) => fetchReactions(slug, "review-comment", c.id)),
+      );
+      const reactions = reactionLists.flat();
       const normalized = normalizeForgejoReactions(reactions, viewer);
       return {
         id: root.id,

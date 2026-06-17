@@ -1,17 +1,23 @@
 /**
  * Group flat Forgejo review comments into line conversations.
  *
- * Forgejo exposes no per-comment parent link and threads inline comments by
- * line, yet two independent reviews can comment on the SAME line. A reply
- * posted via reviews/{id}/comments inherits its parent's review id, so the
- * conversation key is (reviewId, path, position, originalPosition): co-located
- * comments from different reviews stay distinct findings, while a reply nests
- * under the comment it answered. The earliest comment by id is the root; later
- * ones are replies. A comment missing a review id or path can't be threaded, so
- * it keys to itself and stands alone.
+ * Forgejo exposes no per-comment parent link, so the only reply the tool can
+ * reliably re-attach is its own: a reply it posts via reviews/{id}/comments
+ * inherits the parent's review id and lands on the same line. Two comments
+ * therefore share a conversation only when they sit on the same
+ * (reviewId, path, position, originalPosition) AND the later one is the viewer's
+ * own reply. Every other comment is its own root — including a second distinct
+ * finding a single review left on the same line, which must keep its own
+ * reaction-backed status rather than collapse into the first. A comment missing
+ * a review id or path can't be threaded, so it keys to itself and stands alone.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+
+interface Conversation {
+  root: ForgejoReviewComment;
+  replies: ForgejoReviewComment[];
+}
 
 function conversationKey(comment: ForgejoReviewComment): string {
   if (typeof comment.pull_request_review_id !== "number" || typeof comment.path !== "string") {
@@ -27,24 +33,22 @@ function conversationKey(comment: ForgejoReviewComment): string {
 
 export function groupReviewCommentConversations(
   comments: readonly ForgejoReviewComment[],
-): { root: ForgejoReviewComment; replies: ForgejoReviewComment[] }[] {
-  const groups = new Map<string, ForgejoReviewComment[]>();
-  const order: string[] = [];
+  viewer: string,
+): Conversation[] {
+  const conversations: Conversation[] = [];
+  const rootByKey = new Map<string, Conversation>();
 
   for (const comment of [...comments].toSorted((a, b) => a.id - b.id)) {
     const key = conversationKey(comment);
-    const existing = groups.get(key);
-    if (existing) {
-      existing.push(comment);
+    const current = rootByKey.get(key);
+    if (current && comment.user?.login === viewer) {
+      current.replies.push(comment);
       continue;
     }
-    groups.set(key, [comment]);
-    order.push(key);
+    const conversation: Conversation = { root: comment, replies: [] };
+    conversations.push(conversation);
+    rootByKey.set(key, conversation);
   }
 
-  return order.flatMap((key) => {
-    const members = groups.get(key) ?? [];
-    const root = members[0];
-    return root ? [{ root, replies: members.slice(1) }] : [];
-  });
+  return conversations;
 }

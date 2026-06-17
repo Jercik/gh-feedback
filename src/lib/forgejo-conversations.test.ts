@@ -7,7 +7,7 @@ function comment(fields: Record<string, unknown>): ForgejoReviewComment {
 }
 
 describe("groupReviewCommentConversations", () => {
-  it("nests a same-review reply under its root, earliest id first", () => {
+  it("nests the viewer's own reply under its root, earliest id first", () => {
     const root = comment({
       id: 11,
       pull_request_review_id: 2,
@@ -23,7 +23,7 @@ describe("groupReviewCommentConversations", () => {
       user: { login: "jercik" },
     });
 
-    const result = groupReviewCommentConversations([reply, root]);
+    const result = groupReviewCommentConversations([reply, root], "jercik");
 
     expect(result.length).toBe(1);
     expect(result[0]?.root.id).toBe(11);
@@ -31,11 +31,36 @@ describe("groupReviewCommentConversations", () => {
     expect(result[0]?.replies[0]?.id).toBe(24);
   });
 
+  it("keeps two distinct findings from one review on the same line apart", () => {
+    const first = comment({
+      id: 11,
+      pull_request_review_id: 2,
+      path: "vault.yml",
+      position: 141,
+      user: { login: "forgejo-actions" },
+    });
+    const second = comment({
+      id: 15,
+      pull_request_review_id: 2,
+      path: "vault.yml",
+      position: 141,
+      user: { login: "forgejo-actions" },
+    });
+
+    const result = groupReviewCommentConversations([first, second], "jercik");
+
+    expect(result.length).toBe(2);
+    expect(result[0]?.root.id).toBe(11);
+    expect(result[1]?.root.id).toBe(15);
+    expect(result[0]?.replies.length).toBe(0);
+    expect(result[1]?.replies.length).toBe(0);
+  });
+
   it("keeps co-located comments from different reviews as distinct findings", () => {
     const first = comment({ id: 11, pull_request_review_id: 2, path: "vault.yml", position: 141 });
     const second = comment({ id: 15, pull_request_review_id: 3, path: "vault.yml", position: 141 });
 
-    const result = groupReviewCommentConversations([first, second]);
+    const result = groupReviewCommentConversations([first, second], "jercik");
 
     expect(result.length).toBe(2);
     expect(result[0]?.root.id).toBe(11);
@@ -48,7 +73,7 @@ describe("groupReviewCommentConversations", () => {
     const first = comment({ id: 30, path: "vault.yml", position: 141 });
     const second = comment({ id: 31, path: "vault.yml", position: 141 });
 
-    const result = groupReviewCommentConversations([first, second]);
+    const result = groupReviewCommentConversations([first, second], "jercik");
 
     expect(result.length).toBe(2);
     expect(result[0]?.root.id).toBe(30);
