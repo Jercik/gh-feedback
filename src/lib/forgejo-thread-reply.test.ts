@@ -49,6 +49,10 @@ describe("threadReplyParentId", () => {
     expect(threadReplyParentId("<!-- gh-feedback:reply-to:11 -->\n\nFixed in abc123")).toBe(11);
   });
 
+  it("reads the parent id when the body is stored with CRLF newlines", () => {
+    expect(threadReplyParentId("<!-- gh-feedback:reply-to:11 -->\r\n\r\nFixed in abc123")).toBe(11);
+  });
+
   it("returns undefined for an unmarked comment", () => {
     expect(threadReplyParentId("A regular review finding.")).toBe(undefined);
   });
@@ -57,6 +61,12 @@ describe("threadReplyParentId", () => {
 describe("stripThreadReplyMarker", () => {
   it("removes the marker for display", () => {
     expect(stripThreadReplyMarker("<!-- gh-feedback:reply-to:11 -->\n\nFixed in abc123")).toBe(
+      "Fixed in abc123",
+    );
+  });
+
+  it("removes the marker when the body is stored with CRLF newlines", () => {
+    expect(stripThreadReplyMarker("<!-- gh-feedback:reply-to:11 -->\r\n\r\nFixed in abc123")).toBe(
       "Fixed in abc123",
     );
   });

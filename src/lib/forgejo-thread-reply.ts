@@ -11,12 +11,18 @@
  * reply in its own UI: the new-side line goes in `new_position`, the old-side in
  * `old_position`, and a comment with neither set carries only the path so
  * Forgejo attaches it to the file-level conversation.
+ *
+ * Matching anchors on the marker comment alone, ignoring the trailing
+ * whitespace, so re-attachment survives Forgejo normalizing the stored body's
+ * line endings (e.g. `\n\n` → `\r\n\r\n`) rather than hinging on a byte-exact
+ * round-trip.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 const REPLY_PARENT_PREFIX = "<!-- gh-feedback:reply-to:";
-const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(\d+) -->\n\n/u;
+const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(\d+) -->/u;
+const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->\s*/u;
 
 export function forgejoThreadReplyBody(
   comment: ForgejoReviewComment,
@@ -43,5 +49,5 @@ export function threadReplyParentId(body: string): number | undefined {
 }
 
 export function stripThreadReplyMarker(body: string): string {
-  return body.replace(REPLY_PARENT_PATTERN, "");
+  return body.replace(REPLY_PARENT_WITH_GAP, "");
 }

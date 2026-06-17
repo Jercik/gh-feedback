@@ -15,16 +15,12 @@
 
 import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
 import type { SummaryOptions } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchAll, forgejoFetchList } from "./forgejo-cli.js";
-import {
-  ForgejoIssueComment,
-  ForgejoPull,
-  ForgejoReview,
-  ForgejoReviewComment,
-} from "./forgejo-schemas.js";
+import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
+import { ForgejoIssueComment, ForgejoPull } from "./forgejo-schemas.js";
 import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
+import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
@@ -41,26 +37,15 @@ export async function buildSummary(
   const pullRaw = await forgejoFetch<unknown>({ path: `repos/${slug}/pulls/${prNumber}` });
   const pull = ForgejoPull.parse(pullRaw);
 
-  const reviewsRaw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls/${prNumber}/reviews`);
-  const reviews = reviewsRaw.map((r) => ForgejoReview.parse(r));
-
   const issueCommentsRaw = await forgejoFetchList<unknown>(
     `repos/${slug}/issues/${prNumber}/comments`,
   );
   const issueComments = issueCommentsRaw.map((c) => ForgejoIssueComment.parse(c));
 
-  // Fetch every review's inline comments concurrently to avoid an N+1 waterfall.
-  const reviewCommentLists = await Promise.all(
-    reviews.map((review) =>
-      forgejoFetchList<unknown>(
-        `repos/${slug}/pulls/${prNumber}/reviews/${review.id}/comments`,
-      ).then((raw) => raw.map((c) => ForgejoReviewComment.parse(c))),
-    ),
+  const reviewComments = await fetchPullReviewComments(slug, prNumber);
+  const visibleReviewComments = reviewComments.filter(
+    (c) => !c.user || !isIgnoredAuthor(c.user.login),
   );
-
-  const visibleReviewComments = reviewCommentLists
-    .flat()
-    .filter((c) => !c.user || !isIgnoredAuthor(c.user.login));
 
   // Nest each marked reply under the comment it answered, so a reply never
   // resurfaces as its own item. A status reaction can land on the root or on a

@@ -3,10 +3,11 @@
  *
  * Inline review comments thread natively: a reply POSTs into the parent's
  * review on the same line (reviews/{id}/comments) and nests under the original,
- * so it carries no marker — the summary nests it structurally. Top-level PR
- * comments and review bodies have no thread to nest under, so replies to those
- * post as PR issue comments prefixed with FORGEJO_REPLY_MARKER, which the
- * summary filters so a user's own reply never reappears as fresh feedback.
+ * carrying an invisible parent-id marker (see forgejo-thread-reply) so the
+ * summary re-attaches it to the exact comment it answered. Top-level PR comments
+ * and review bodies have no thread to nest under, so replies to those post as PR
+ * issue comments prefixed with FORGEJO_REPLY_MARKER, which the summary filters so
+ * a user's own reply never reappears as fresh feedback.
  */
 
 import type { FeedbackItemRef, ReplyResult } from "./feedback-backend.js";
