@@ -6,13 +6,8 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
-import { getRepositoryInfo } from "../lib/github-environment.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
-import { detectItemType } from "../lib/detect-item-type.js";
-import { getItemStatus } from "../lib/fetch-item-status.js";
-import { addReactionToItem, removeViewerReactions } from "../lib/react-item.js";
-import { resolveItem } from "../lib/resolve-item.js";
-import { blockIfUnresolvedSiblings } from "../lib/check-sibling-threads.js";
+import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -28,15 +23,15 @@ export function registerAckCommand(program: Command): void {
       return id;
     })
     .option("-n, --dry-run", "Preview without executing")
-    .action((itemId: number, options: { dryRun?: boolean }) => {
+    .action(async (itemId: number, options: { dryRun?: boolean }) => {
       try {
-        const { owner, repo } = getRepositoryInfo();
+        const { backend } = resolveBackend();
 
         verboseLog(`Detecting item type for #${itemId}...`);
-        const item = detectItemType(owner, repo, itemId);
+        const item = await backend.detectItem(itemId);
 
         // Check if already in a done status - must use 'start' first
-        const { doneStatus, viewerReactions } = getItemStatus(item);
+        const { doneStatus, viewerReactions } = await backend.getItemStatus(item);
         if (doneStatus) {
           exitWithMessage(
             `Error: Item #${itemId} is already "${doneStatus}". ` +
@@ -50,7 +45,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         // Check for unresolved sibling threads in multi-thread reviews
-        blockIfUnresolvedSiblings(item, "ACK");
+        await backend.blockIfUnresolvedSiblings(item, "ACK");
 
         verboseLog("");
         verboseLog("Actions: rocket + hide (acknowledge noise)");
@@ -61,7 +56,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         // 1. Remove conflicting status reactions (only those we've added)
-        removeViewerReactions(item, viewerReactions, [
+        await backend.removeReactions(item, viewerReactions, [
           "eyes", // in-progress
           "+1", // agreed
           "-1", // disagreed
@@ -70,11 +65,14 @@ export function registerAckCommand(program: Command): void {
 
         // 2. Add rocket
         verboseLog("Adding reaction...");
-        addReactionToItem(item, "rocket");
+        await backend.addReaction(item, "rocket");
 
-        // 3. Hide/resolve
+        // 3. Hide/resolve (degrades to a no-op where the forge has no hide API)
         verboseLog("Hiding...");
-        resolveItem(item);
+        const hideResult = await backend.resolve(item);
+        if (!hideResult.supported) {
+          console.error(`Note: hide skipped - ${hideResult.reason}`);
+        }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);
       } catch (error) {

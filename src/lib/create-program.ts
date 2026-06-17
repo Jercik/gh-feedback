@@ -9,6 +9,7 @@ import {
 import { enableVerboseMode } from "./verbose-mode.js";
 import { GH_PATH_ENV_VAR } from "./github-cli.js";
 import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
+import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-cli.js";
 
 /**
  * Create a Commander program with common configuration and preAction hooks.
@@ -19,7 +20,7 @@ import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
  * - --debug-rate-limit: Track and display GitHub API rate limit consumption
  *
  * Hooks:
- * - preAction: Verify gh CLI is authenticated, enable verbose/rate-limit modes
+ * - preAction: Verify the forge prerequisites for origin, enable verbose/rate-limit modes
  * - postAction: Display rate limit summary if tracking was enabled
  */
 export function createProgram(): Command {
@@ -35,13 +36,14 @@ export function createProgram(): Command {
 
   program.addHelpText(
     "before",
-    `Requires: git, gh (GitHub CLI)\n` +
-      `Override paths: ${GIT_PATH_ENV_VAR}, ${GH_PATH_ENV_VAR}\n\n`,
+    `Requires: git, plus gh (GitHub CLI) or fgj (Forgejo CLI) for the forge backing origin\n` +
+      `Override paths: ${GIT_PATH_ENV_VAR}, ${GH_PATH_ENV_VAR}, ${FGJ_PATH_ENV_VAR}\n` +
+      `Forgejo API host: ${FORGEJO_API_HOST_ENV_VAR}\n\n`,
   );
 
   // preAction: runs before every subcommand
   program.hook("preAction", (thisCommand) => {
-    // Ensure gh CLI is installed and authenticated
+    // Verify git plus the forge CLI/auth for the provider backing origin
     verifyPrerequisites();
 
     const options = thisCommand.opts() as {
