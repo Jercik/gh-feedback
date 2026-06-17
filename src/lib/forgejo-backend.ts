@@ -33,7 +33,7 @@ import {
 } from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
-import { resolveConversationRoot } from "./forgejo-conversation-root.js";
+import { conversationRootOf } from "./forgejo-conversation-root.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
@@ -81,7 +81,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     if (resolved.meta.kind === "review-comment" && resolved.reviewComment) {
       const viewer = await getForgejoViewer();
       const root =
-        (await resolveConversationRoot(slug, prNumber, itemId, viewer)) ?? resolved.reviewComment;
+        conversationRootOf(resolved.reviewComments ?? [], itemId, viewer) ?? resolved.reviewComment;
       metaCache.set(root.id, { kind: "review-comment", prNumber, reviewComment: root });
       return {
         type: "thread",

@@ -25,6 +25,9 @@ export interface ForgejoItemMeta {
 interface ResolvedForgejoItem {
   meta: ForgejoItemMeta;
   reviewComment?: ForgejoReviewComment;
+  /** Every review comment on the PR, fetched while finding a review-comment id, so
+   * callers can group the conversation without a second fan-out. */
+  reviewComments?: ForgejoReviewComment[];
   issueComment?: ForgejoIssueComment;
   review?: ForgejoReview;
 }
@@ -47,15 +50,6 @@ export function metaKindToItemType(kind: ForgejoItemKind): FeedbackItemRef["type
 function urlTargetsNumber(url: string, target: number): boolean {
   const match = /\/(\d+)\/?$/u.exec(url);
   return match !== null && Number(match[1]) === target;
-}
-
-async function findReviewComment(
-  slug: string,
-  prNumber: number,
-  itemId: number,
-): Promise<ForgejoReviewComment | undefined> {
-  const comments = await fetchPullReviewComments(slug, prNumber);
-  return comments.find((c) => c.id === itemId);
 }
 
 export async function resolveItemMeta(
@@ -100,9 +94,14 @@ export async function resolveItemMeta(
     }
   }
 
-  const reviewComment = await findReviewComment(slug, prNumber, itemId);
+  const reviewComments = await fetchPullReviewComments(slug, prNumber);
+  const reviewComment = reviewComments.find((c) => c.id === itemId);
   if (reviewComment) {
-    return { meta: { kind: "review-comment", prNumber, reviewComment }, reviewComment };
+    return {
+      meta: { kind: "review-comment", prNumber, reviewComment },
+      reviewComment,
+      reviewComments,
+    };
   }
 
   return undefined;

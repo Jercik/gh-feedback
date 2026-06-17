@@ -9,7 +9,6 @@ import type { ItemDetail } from "./fetch-item-detail.js";
 import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
-import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
@@ -27,14 +26,12 @@ export async function buildItemDetail(
 
   if (resolved.reviewComment) {
     const target = resolved.reviewComment;
-    // Group the whole PR's review comments so detail returns every comment in the
-    // conversation — matching summary's grouping and the GitHub thread path —
-    // rather than just the root. The id may be a reply, so match it on either side.
+    // Group the whole PR's review comments (already fetched while resolving the
+    // id) so detail returns every comment in the conversation — matching summary's
+    // grouping and the GitHub thread path — rather than just the root. The id may
+    // be a reply, so match it on either side.
     const viewer = await getForgejoViewer();
-    const conversations = groupReviewCommentConversations(
-      await fetchPullReviewComments(slug, prNumber),
-      viewer,
-    );
+    const conversations = groupReviewCommentConversations(resolved.reviewComments ?? [], viewer);
     const conversation = findConversationFor(conversations, target.id);
     const members = conversation ? [conversation.root, ...conversation.replies] : [target];
     const root = conversation?.root ?? target;
