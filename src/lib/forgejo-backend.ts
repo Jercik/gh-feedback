@@ -1,13 +1,14 @@
 /**
  * Forgejo backend: REST /api/v1 implementation of the FeedbackBackend seam.
  *
- * An inline review thread DOES resolve — not through the REST API (it has no
- * resolve endpoint) but through the web handler the "Resolve conversation" button
- * drives (see forgejo-resolve-conversation). So agree/disagree/ack resolve the
- * conversation like GitHub, and a thread's done axis is its resolve flag. A
- * PR-level issue comment has no resolve or hide on Forgejo, so its resolve
- * DEGRADES to "not supported" and its done axis stays reaction-only. The minimize
- * axis has no Forgejo equivalent, so isMinimized is always false.
+ * Forgejo can't resolve a thread or hide a comment through anything a token can
+ * reach, so resolve/unresolve DEGRADE to a clear "not supported" result and
+ * workflow status comes from reactions alone (a +1/-1/rocket is the done axis).
+ * This is a hard limit, verified against 15.0.3: there is no REST resolve endpoint,
+ * and the only mechanism — the web route behind the "Resolve conversation" button
+ * — accepts a browser SESSION cookie only (OAuth2.Verify and Basic.Verify both
+ * path-guard token/basic auth to API/git paths, so a token POST there 303s to
+ * /user/login). Reactions are a sufficient done axis; don't re-attempt resolve.
  *
  * `detectItem` returns the neutral ref but caches the resolved item kind by
  * `id`, so reply/react re-use it without re-probing the REST endpoints. For an
@@ -28,19 +29,27 @@ import type {
   SummaryOptions,
 } from "./feedback-backend.js";
 import { forgejoFetch } from "./forgejo-cli.js";
-import { reactionsPath } from "./forgejo-reactions.js";
+import {
+  fetchReactions,
+  reactionsPath,
+  normalizeForgejoReactions,
+  deriveIsDone,
+  viewerReactionStrings,
+} from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
 import { conversationRootOf } from "./forgejo-conversation-root.js";
-import { resolveThreadCapability } from "./forgejo-resolve-conversation.js";
-import { computeForgejoItemStatus } from "./forgejo-item-status.js";
 import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
+import { reactionToStatus, isStatusDone } from "./summary-types.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { REACTION_TO_GRAPHQL } from "./constants.js";
+
+const FORGEJO_UNSUPPORTED_RESOLVE =
+  "Forgejo has no resolve API and its resolve button is a session-only web route; status is tracked by reaction only.";
 
 export function createForgejoBackend(slug: string): FeedbackBackend {
   /** Cache the detected meta so reply/react reuse it without re-probing. */
@@ -131,7 +140,27 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
 
     async getItemStatus(item: FeedbackItemRef): Promise<ItemStatus> {
       const meta = await metaFor(item);
-      return computeForgejoItemStatus(slug, item, meta);
+      if (meta.kind === "review") {
+        return {
+          doneStatus: undefined,
+          viewerReactions: [],
+          isMinimized: false,
+          isResolved: false,
+        };
+      }
+
+      const viewer = await getForgejoViewer();
+      const reactions = await fetchReactions(slug, meta.kind, item.id);
+      const normalized = normalizeForgejoReactions(reactions, viewer);
+      const isDone = deriveIsDone(reactions, viewer);
+      const status = reactionToStatus(normalized, isDone);
+      const viewerReactions = viewerReactionStrings(reactions, viewer);
+
+      const doneStatus = isStatusDone(status)
+        ? (status as "agreed" | "disagreed" | "acknowledged")
+        : undefined;
+
+      return { doneStatus, viewerReactions, isMinimized: false, isResolved: false };
     },
 
     async reply(item: FeedbackItemRef, message: string): Promise<ReplyResult> {
@@ -173,12 +202,12 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
     },
 
-    resolve(item: FeedbackItemRef): Promise<CapabilityResult> {
-      return resolveThreadCapability(slug, item, "Resolve");
+    resolve(_item: FeedbackItemRef): Promise<CapabilityResult> {
+      return Promise.resolve({ supported: false, reason: FORGEJO_UNSUPPORTED_RESOLVE });
     },
 
-    unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
-      return resolveThreadCapability(slug, item, "UnResolve");
+    unresolve(_item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
+      return Promise.resolve({ supported: false, reason: FORGEJO_UNSUPPORTED_RESOLVE });
     },
 
     blockIfUnresolvedSiblings(_item: FeedbackItemRef, _actionVerb: string): Promise<void> {
