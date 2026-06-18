@@ -1,13 +1,15 @@
 /**
  * Forgejo item detail: full untruncated content for a single feedback item.
  *
- * Forgejo has no thread-resolve or outdated axis, so threads always report
- * isResolved/isOutdated false and reviews report a fixed COMMENTED state.
+ * Forgejo has no outdated axis, so threads always report isOutdated false and
+ * reviews report a fixed COMMENTED state. A thread's isResolved reflects its
+ * root comment's resolve flag.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
 import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
+import { reviewCommentIsResolved } from "./forgejo-resolve-conversation.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
@@ -52,7 +54,7 @@ export async function buildItemDetail(
       path: root.path ?? null,
       line: reviewCommentLine(root),
       isOutdated: false,
-      isResolved: false,
+      isResolved: reviewCommentIsResolved(root),
       comments,
     };
   }

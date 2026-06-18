@@ -21,6 +21,7 @@ import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forge
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
+import { reviewCommentIsResolved } from "./forgejo-resolve-conversation.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
@@ -56,10 +57,13 @@ export async function buildSummary(
     conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
+      // A thread is done when its conversation is resolved, not when it carries a
+      // reaction — the reaction only says which done status. (Issue comments below
+      // keep deriveIsDone: Forgejo can't resolve a PR-level comment.)
       return {
         id: root.id,
         timestamp: root.created_at,
-        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
+        status: reactionToStatus(normalized, reviewCommentIsResolved(root)),
         author: root.user?.login ?? "ghost",
         location: formatLocation(root.path, reviewCommentLine(root)),
         body: root.body,
@@ -99,9 +103,9 @@ export async function buildSummary(
     }),
   );
 
-  // hideResolved: Forgejo has no resolved-thread axis, so its reaction-backed
-  // equivalent is a done status (agreed/disagreed/acknowledged). hideHidden has
-  // no Forgejo equivalent — nothing is ever minimized — so it filters nothing.
+  // hideResolved drops items in a done status: a resolved thread, or a reacted
+  // issue comment (which Forgejo can't resolve). hideHidden has no Forgejo
+  // equivalent — nothing is ever minimized — so it filters nothing.
   const all = [...reviewCommentItems, ...issueCommentItems];
   const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
 
