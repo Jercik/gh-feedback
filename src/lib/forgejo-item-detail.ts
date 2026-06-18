@@ -9,6 +9,9 @@ import type { ItemDetail } from "./fetch-item-detail.js";
 import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
+import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
+import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
+import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 
 export async function buildItemDetail(
@@ -22,24 +25,35 @@ export async function buildItemDetail(
   }
 
   if (resolved.reviewComment) {
-    const c = resolved.reviewComment;
-    const reactions = await fetchReactions(slug, "review-comment", c.id);
+    const target = resolved.reviewComment;
+    // Group the whole PR's review comments (already fetched while resolving the
+    // id) so detail returns every comment in the conversation — matching summary's
+    // grouping and the GitHub thread path — rather than just the root. The id may
+    // be a reply, so match it on either side.
+    const viewer = await getForgejoViewer();
+    const conversations = groupReviewCommentConversations(resolved.reviewComments ?? [], viewer);
+    const conversation = findConversationFor(conversations, target.id);
+    const members = conversation ? [conversation.root, ...conversation.replies] : [target];
+    const root = conversation?.root ?? target;
+
+    const comments = await Promise.all(
+      members.map(async (m) => ({
+        id: m.id,
+        author: m.user?.login ?? "ghost",
+        body: stripThreadReplyMarker(m.body),
+        createdAt: m.created_at,
+        reactions: toReactionSummary(await fetchReactions(slug, "review-comment", m.id)),
+      })),
+    );
+
     return {
       type: "thread",
-      id: c.id,
-      path: c.path ?? null,
-      line: reviewCommentLine(c),
+      id: root.id,
+      path: root.path ?? null,
+      line: reviewCommentLine(root),
       isOutdated: false,
       isResolved: false,
-      comments: [
-        {
-          id: c.id,
-          author: c.user?.login ?? "ghost",
-          body: c.body,
-          createdAt: c.created_at,
-          reactions: toReactionSummary(reactions),
-        },
-      ],
+      comments,
     };
   }
 

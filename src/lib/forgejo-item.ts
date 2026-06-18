@@ -8,24 +8,26 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import {
-  forgejoFetch,
-  forgejoFetchAll,
-  forgejoFetchList,
-  isForgejoNotFound,
-} from "./forgejo-cli.js";
-import { ForgejoIssueComment, ForgejoReview, ForgejoReviewComment } from "./forgejo-schemas.js";
+import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
+import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
+import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 
 export type ForgejoItemKind = "review-comment" | "issue-comment" | "review";
 
 export interface ForgejoItemMeta {
   kind: ForgejoItemKind;
   prNumber: number;
+  /** Present for review-comment kind; carries the review id + line a threaded reply targets. */
+  reviewComment?: ForgejoReviewComment;
 }
 
 interface ResolvedForgejoItem {
   meta: ForgejoItemMeta;
   reviewComment?: ForgejoReviewComment;
+  /** Every review comment on the PR, fetched while finding a review-comment id, so
+   * callers can group the conversation without a second fan-out. */
+  reviewComments?: ForgejoReviewComment[];
   issueComment?: ForgejoIssueComment;
   review?: ForgejoReview;
 }
@@ -48,25 +50,6 @@ export function metaKindToItemType(kind: ForgejoItemKind): FeedbackItemRef["type
 function urlTargetsNumber(url: string, target: number): boolean {
   const match = /\/(\d+)\/?$/u.exec(url);
   return match !== null && Number(match[1]) === target;
-}
-
-async function findReviewComment(
-  slug: string,
-  prNumber: number,
-  itemId: number,
-): Promise<ForgejoReviewComment | undefined> {
-  const reviewsRaw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls/${prNumber}/reviews`);
-  const reviews = reviewsRaw.map((r) => ForgejoReview.parse(r));
-
-  const commentLists = await Promise.all(
-    reviews.map((review) =>
-      forgejoFetchList<unknown>(
-        `repos/${slug}/pulls/${prNumber}/reviews/${review.id}/comments`,
-      ).then((raw) => raw.map((c) => ForgejoReviewComment.parse(c))),
-    ),
-  );
-
-  return commentLists.flat().find((c) => c.id === itemId);
 }
 
 export async function resolveItemMeta(
@@ -111,9 +94,14 @@ export async function resolveItemMeta(
     }
   }
 
-  const reviewComment = await findReviewComment(slug, prNumber, itemId);
+  const reviewComments = await fetchPullReviewComments(slug, prNumber);
+  const reviewComment = reviewComments.find((c) => c.id === itemId);
   if (reviewComment) {
-    return { meta: { kind: "review-comment", prNumber }, reviewComment };
+    return {
+      meta: { kind: "review-comment", prNumber, reviewComment },
+      reviewComment,
+      reviewComments,
+    };
   }
 
   return undefined;
