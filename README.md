@@ -18,7 +18,7 @@ npm install -g gh-feedback
 
 The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
 
-On Forgejo, `agree`/`disagree`/`ack` resolve an **inline review thread** the same way they do on GitHub: Forgejo's REST API has no resolve endpoint, so the tool drives the same web handler the "Resolve conversation" button hits, and a thread's done state reflects that resolved flag. A **PR-level conversation comment** has no resolve or hide equivalent on Forgejo, so there the resolve/hide step is reported as skipped and status is tracked by reaction alone. Comment minimize/hide has no Forgejo equivalent either, so nothing is ever hidden. Forgejo review _bodies_ (the overall review text) are intentionally excluded from `summary`, because a review entity has no reaction or resolve endpoint and so could never leave `pending`; check the forge UI for that text. Inline review comments and PR conversation comments are surfaced and tracked normally.
+Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing. Forgejo review _bodies_ (the overall review text) are also intentionally excluded from `summary`, because a review entity has no reaction or resolve endpoint and so could never leave `pending`; check the forge UI for that text. Inline review comments and PR conversation comments are surfaced and tracked normally.
 
 ### Custom Paths
 
