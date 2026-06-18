@@ -19,7 +19,7 @@
 
 import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
-import { forgejoWebForm } from "./forgejo-cli.js";
+import { forgejoWebForm } from "./forgejo-web-form.js";
 
 type ResolveAction = "Resolve" | "UnResolve";
 

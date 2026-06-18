@@ -9,7 +9,7 @@ import {
 import { enableVerboseMode } from "./verbose-mode.js";
 import { GH_PATH_ENV_VAR } from "./github-cli.js";
 import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
-import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-cli.js";
+import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-http.js";
 
 /**
  * Create a Commander program with common configuration and preAction hooks.

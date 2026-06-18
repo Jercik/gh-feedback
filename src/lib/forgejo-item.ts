@@ -8,7 +8,8 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-cli.js";
+import { isForgejoNotFound } from "./forgejo-http.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
