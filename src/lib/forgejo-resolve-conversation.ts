@@ -9,8 +9,12 @@
  * (Forgejo's diff/conversation template keys the button off `(index .comments 0)`)
  * and the API surfaces it back as that comment's `resolver`. The backend
  * canonicalizes a thread to that same root id, so resolve, status, and summary all
- * read the one comment. Forgejo's MarkConversation is idempotent (it no-ops when
- * the flag already matches), so re-resolving is safe.
+ * read the one comment — internally consistent regardless. That root equals the
+ * web UI's index-0 comment only on a single-finding line; two distinct findings on
+ * one line are separate threads here, and resolving the later one marks a
+ * non-index-0 comment that the UI's line indicator won't reflect. Forgejo's
+ * MarkConversation is idempotent (it no-ops when the flag already matches), so
+ * re-resolving is safe.
  */
 
 import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
