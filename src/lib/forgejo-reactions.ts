@@ -8,7 +8,8 @@
 import { REACTION_TO_GRAPHQL } from "./constants.js";
 import type { ReactionContent, Reaction } from "./types.js";
 import { ForgejoReaction } from "./forgejo-schemas.js";
-import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-cli.js";
+import { isForgejoNotFound } from "./forgejo-http.js";
 import type { ForgejoItemKind } from "./forgejo-item.js";
 
 interface NormalizedReaction {

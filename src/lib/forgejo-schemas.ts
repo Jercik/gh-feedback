@@ -61,6 +61,10 @@ export const ForgejoReviewComment = z.object({
   path: z.string().nullish(),
   position: z.number().nullish(),
   original_position: z.number().nullish(),
+  // Set on the conversation's root comment once resolved (Forgejo's ResolveDoer);
+  // absent/null on unresolved findings and on replies. This is the only resolve
+  // signal the API exposes — there is no resolved boolean.
+  resolver: ForgejoUser.nullish(),
   created_at: z
     .string()
     .nullish()

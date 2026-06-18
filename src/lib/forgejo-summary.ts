@@ -21,6 +21,7 @@ import { normalizeForgejoReactions, fetchReactions, deriveIsDone } from "./forge
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
+import { reviewCommentIsResolved } from "./forgejo-resolve-conversation.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
@@ -52,14 +53,24 @@ export async function buildSummary(
   // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
+  // Match GitHub: filter threads by the raw resolve flag before status derivation,
+  // so a conversation resolved outside our workflow (no reaction → "in-progress")
+  // is still dropped. isStatusDone alone would miss it.
+  const visibleConversations = options.hideResolved
+    ? conversations.filter(({ root }) => !reviewCommentIsResolved(root))
+    : conversations;
+
   const reviewCommentItems = await Promise.all(
-    conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+    visibleConversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
+      // A thread is done when its conversation is resolved, not when it carries a
+      // reaction — the reaction only says which done status. (Issue comments below
+      // keep deriveIsDone: Forgejo can't resolve a PR-level comment.)
       return {
         id: root.id,
         timestamp: root.created_at,
-        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
+        status: reactionToStatus(normalized, reviewCommentIsResolved(root)),
         author: root.user?.login ?? "ghost",
         location: formatLocation(root.path, reviewCommentLine(root)),
         body: root.body,
@@ -99,13 +110,14 @@ export async function buildSummary(
     }),
   );
 
-  // hideResolved: Forgejo has no resolved-thread axis, so its reaction-backed
-  // equivalent is a done status (agreed/disagreed/acknowledged). hideHidden has
-  // no Forgejo equivalent — nothing is ever minimized — so it filters nothing.
-  const all = [...reviewCommentItems, ...issueCommentItems];
-  const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
+  // Threads are already dropped above by their resolve flag. Issue comments have
+  // no resolve axis on Forgejo, so hideResolved drops them by their reaction-backed
+  // done status. hideHidden has no Forgejo equivalent — nothing is ever minimized.
+  const visibleIssueCommentItems = options.hideResolved
+    ? issueCommentItems.filter((i) => !isStatusDone(i.status))
+    : issueCommentItems;
 
-  const items = filtered.toSorted(
+  const items = [...reviewCommentItems, ...visibleIssueCommentItems].toSorted(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 

@@ -7,8 +7,9 @@
  * its provider-specific handle (GraphQL node/thread IDs, Forgejo item kind)
  * private and re-associates it by `id`.
  *
- * Capabilities that one forge lacks (thread resolve, comment hide) are modeled
- * as explicit results so callers can DEGRADE gracefully instead of crashing.
+ * Capabilities a forge lacks for a given item (Forgejo can't resolve or hide a
+ * PR-level comment) are modeled as explicit results so callers DEGRADE gracefully
+ * instead of crashing.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
@@ -38,7 +39,7 @@ export interface ItemStatus {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
-  /** Thread/PR-level resolved state; always false where the forge lacks resolve. */
+  /** Thread resolved state; false for items the forge can't resolve. */
   isResolved: boolean;
 }
 
@@ -48,9 +49,9 @@ export interface ReplyResult {
 }
 
 /**
- * Outcome of a resolve/hide attempt. `supported: false` means the forge has no
- * equivalent API (Forgejo lacks thread RESOLVE and comment MINIMIZE), so the
- * caller should treat the workflow marker as the reaction alone.
+ * Outcome of a resolve/hide attempt. `supported: false` means the forge can't
+ * resolve or hide this item (Forgejo has no resolve or minimize for a PR-level
+ * comment), so the caller should treat the workflow marker as the reaction alone.
  */
 export type CapabilityResult =
   | { supported: true; applied: boolean }
