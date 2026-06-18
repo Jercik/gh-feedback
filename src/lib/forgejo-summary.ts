@@ -53,8 +53,15 @@ export async function buildSummary(
   // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
+  // Match GitHub: filter threads by the raw resolve flag before status derivation,
+  // so a conversation resolved outside our workflow (no reaction → "in-progress")
+  // is still dropped. isStatusDone alone would miss it.
+  const visibleConversations = options.hideResolved
+    ? conversations.filter(({ root }) => !reviewCommentIsResolved(root))
+    : conversations;
+
   const reviewCommentItems = await Promise.all(
-    conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+    visibleConversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       // A thread is done when its conversation is resolved, not when it carries a
@@ -103,13 +110,14 @@ export async function buildSummary(
     }),
   );
 
-  // hideResolved drops items in a done status: a resolved thread, or a reacted
-  // issue comment (which Forgejo can't resolve). hideHidden has no Forgejo
-  // equivalent — nothing is ever minimized — so it filters nothing.
-  const all = [...reviewCommentItems, ...issueCommentItems];
-  const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
+  // Threads are already dropped above by their resolve flag. Issue comments have
+  // no resolve axis on Forgejo, so hideResolved drops them by their reaction-backed
+  // done status. hideHidden has no Forgejo equivalent — nothing is ever minimized.
+  const visibleIssueCommentItems = options.hideResolved
+    ? issueCommentItems.filter((i) => !isStatusDone(i.status))
+    : issueCommentItems;
 
-  const items = filtered.toSorted(
+  const items = [...reviewCommentItems, ...visibleIssueCommentItems].toSorted(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 
