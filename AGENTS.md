@@ -1,6 +1,6 @@
 # Rule: Mandatory Startup Reads
 
-Before taking any action, read @README.md for project context. If it does not exist, skip silently and continue.
+Before taking any action, read @README.md for project context.
 
 # Rule: `askpplx` CLI Usage
 
