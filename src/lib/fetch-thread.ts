@@ -114,11 +114,11 @@ interface CommentWithPrUrl {
  * Extract PR number from a pull request comment.
  */
 function extractPrNumber(comment: CommentWithPrUrl, commentDatabaseId: number): number {
-  const prMatch = /\/pulls\/(\d+)$/u.exec(comment.pull_request_url);
+  const prMatch = /\/pulls\/(?<pr>\d+)$/u.exec(comment.pull_request_url);
   if (!prMatch?.[1]) {
     throw new Error(`Could not determine PR for review comment #${commentDatabaseId}.`);
   }
-  return Number.parseInt(prMatch[1], 10);
+  return Math.trunc(Number(prMatch[1]));
 }
 
 /**

@@ -79,11 +79,11 @@ function tryDetectComment(owner: string, repo: string, itemId: number): Detected
     const comment = ghJson<IssueComment>("api", `repos/${owner}/${repo}/issues/comments/${itemId}`);
 
     const issueUrl = new URL(comment.issue_url);
-    const prMatch = /\/issues\/(\d+)$/u.exec(issueUrl.pathname);
+    const prMatch = /\/issues\/(?<pr>\d+)$/u.exec(issueUrl.pathname);
     if (!prMatch?.[1]) {
       return undefined;
     }
-    const prNumber = Number.parseInt(prMatch[1], 10);
+    const prNumber = Math.trunc(Number(prMatch[1]));
 
     return {
       type: "comment",

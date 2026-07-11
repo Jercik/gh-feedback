@@ -3,7 +3,7 @@ import { detectProvider } from "./provider.js";
 
 describe("detectProvider", () => {
   it("detects github from an https origin", () => {
-    expect(detectProvider("https://github.com/Jercik/gh-feedback.git")).toEqual({
+    expect(detectProvider("https://github.com/Jercik/gh-feedback.git")).toStrictEqual({
       provider: "github",
       host: "github.com",
       owner: "Jercik",
@@ -13,7 +13,7 @@ describe("detectProvider", () => {
   });
 
   it("detects github from an scp-style origin", () => {
-    expect(detectProvider("git@github.com:Jercik/gh-feedback.git")).toEqual({
+    expect(detectProvider("git@github.com:Jercik/gh-feedback.git")).toStrictEqual({
       provider: "github",
       host: "github.com",
       owner: "Jercik",
@@ -23,7 +23,7 @@ describe("detectProvider", () => {
   });
 
   it("detects forgejo from the canonical host", () => {
-    expect(detectProvider("https://code.j4k.dev/j4k/cluster.git")).toEqual({
+    expect(detectProvider("https://code.j4k.dev/j4k/cluster.git")).toStrictEqual({
       provider: "forgejo",
       host: "code.j4k.dev",
       owner: "j4k",
@@ -33,7 +33,7 @@ describe("detectProvider", () => {
   });
 
   it("detects forgejo from the tailnet SSH origin", () => {
-    expect(detectProvider("ssh://forgejo@code.tail.j4k.dev:2222/j4k/cluster.git")).toEqual({
+    expect(detectProvider("ssh://forgejo@code.tail.j4k.dev:2222/j4k/cluster.git")).toStrictEqual({
       provider: "forgejo",
       host: "code.tail.j4k.dev",
       owner: "j4k",
@@ -43,7 +43,7 @@ describe("detectProvider", () => {
   });
 
   it("strips a trailing .git only at the end of the slug", () => {
-    expect(detectProvider("https://github.com/owner/repo")).toEqual({
+    expect(detectProvider("https://github.com/owner/repo")).toStrictEqual({
       provider: "github",
       host: "github.com",
       owner: "owner",

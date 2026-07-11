@@ -16,7 +16,7 @@ export function registerAckCommand(program: Command): void {
     .command("ack")
     .description("Acknowledge informational item (rocket + hide)")
     .argument("<id>", "The feedback item ID", (value) => {
-      const id = Number.parseInt(value, 10);
+      const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
         exitWithMessage(`Error: Invalid ID "${value}".`);
       }

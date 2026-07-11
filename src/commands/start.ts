@@ -16,7 +16,7 @@ export function registerStartCommand(program: Command): void {
     .command("start")
     .description("Mark a feedback item as work-in-progress (adds eyes reaction)")
     .argument("<id>", "The feedback item ID", (value) => {
-      const id = Number.parseInt(value, 10);
+      const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
         exitWithMessage(`Error: Invalid ID "${value}".`);
       }
