@@ -19,7 +19,7 @@ describe("groupReviewCommentConversations", () => {
 
     const result = groupReviewCommentConversations([reply, root], "jercik");
 
-    expect(result.length).toBe(1);
+    expect(result).toHaveLength(1);
     expect(result[0]?.root.id).toBe(11);
     expect(result[0]?.replies.length).toBe(1);
     expect(result[0]?.replies[0]?.id).toBe(24);
@@ -31,7 +31,7 @@ describe("groupReviewCommentConversations", () => {
 
     const result = groupReviewCommentConversations([first, second], "jercik");
 
-    expect(result.length).toBe(2);
+    expect(result).toHaveLength(2);
     expect(result[0]?.root.id).toBe(11);
     expect(result[1]?.root.id).toBe(15);
     expect(result[0]?.replies.length).toBe(0);
@@ -51,7 +51,7 @@ describe("groupReviewCommentConversations", () => {
 
     const result = groupReviewCommentConversations([first, second, reply], "jercik");
 
-    expect(result.length).toBe(2);
+    expect(result).toHaveLength(2);
     expect(result[0]?.root.id).toBe(11);
     expect(result[0]?.replies[0]?.id).toBe(24);
     expect(result[1]?.root.id).toBe(15);
@@ -69,7 +69,7 @@ describe("groupReviewCommentConversations", () => {
 
     const result = groupReviewCommentConversations([orphan], "jercik");
 
-    expect(result.length).toBe(0);
+    expect(result).toHaveLength(0);
   });
 
   it("keeps a non-viewer comment that looks like a reply as its own root", () => {
@@ -83,7 +83,7 @@ describe("groupReviewCommentConversations", () => {
 
     const result = groupReviewCommentConversations([lookalike], "jercik");
 
-    expect(result.length).toBe(1);
+    expect(result).toHaveLength(1);
     expect(result[0]?.root.id).toBe(40);
   });
 });

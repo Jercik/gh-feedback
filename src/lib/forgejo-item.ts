@@ -48,7 +48,7 @@ export function metaKindToItemType(kind: ForgejoItemKind): FeedbackItemRef["type
  * is never assumed when it can't be proven.
  */
 function urlTargetsNumber(url: string, target: number): boolean {
-  const match = /\/(\d+)\/?$/u.exec(url);
+  const match = /\/(?<id>\d+)\/?$/u.exec(url);
   return match !== null && Number(match[1]) === target;
 }
 

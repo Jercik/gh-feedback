@@ -16,7 +16,7 @@ export function registerDisagreeCommand(program: Command): void {
     .command("disagree")
     .description("Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve)")
     .argument("<id>", "The feedback item ID", (value) => {
-      const id = Number.parseInt(value, 10);
+      const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
         exitWithMessage(`Error: Invalid ID "${value}".`);
       }

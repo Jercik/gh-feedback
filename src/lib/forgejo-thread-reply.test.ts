@@ -15,7 +15,7 @@ describe("forgejoThreadReplyBody", () => {
       position: 141,
       original_position: 0,
     });
-    expect(forgejoThreadReplyBody(comment, "Fixed in abc123")).toEqual({
+    expect(forgejoThreadReplyBody(comment, "Fixed in abc123")).toStrictEqual({
       body: "<!-- gh-feedback:reply-to:11 -->\n\nFixed in abc123",
       path: "group_vars/all/vault.yml.example",
       new_position: 141,
@@ -29,7 +29,7 @@ describe("forgejoThreadReplyBody", () => {
       position: 0,
       original_position: 87,
     });
-    expect(forgejoThreadReplyBody(comment, "noted")).toEqual({
+    expect(forgejoThreadReplyBody(comment, "noted")).toStrictEqual({
       body: "<!-- gh-feedback:reply-to:12 -->\n\nnoted",
       path: "src/app.ts",
       old_position: 87,
@@ -58,7 +58,7 @@ describe("threadReplyParentId", () => {
   });
 
   it("returns undefined for an unmarked comment", () => {
-    expect(threadReplyParentId("A regular review finding.")).toBe(undefined);
+    expect(threadReplyParentId("A regular review finding.")).toBeUndefined();
   });
 });
 

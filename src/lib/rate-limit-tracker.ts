@@ -125,10 +125,10 @@ export function extractRateLimitFromHeaders(
 
   return {
     resource: (resource ?? "other") as RateLimitResource,
-    limit: Number.parseInt(limit, 10),
-    used: Number.parseInt(used, 10),
-    remaining: Number.parseInt(remaining, 10),
-    reset: Number.parseInt(reset, 10),
+    limit: Math.trunc(Number(limit)),
+    used: Math.trunc(Number(used)),
+    remaining: Math.trunc(Number(remaining)),
+    reset: Math.trunc(Number(reset)),
   };
 }
 

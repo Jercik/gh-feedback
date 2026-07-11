@@ -32,7 +32,7 @@ describe("normalizeForgejoReactions", () => {
       ],
       "carol",
     );
-    expect(result).toEqual([
+    expect(result).toStrictEqual([
       { content: "THUMBS_UP", viewerHasReacted: false },
       { content: "ROCKET", viewerHasReacted: false },
     ]);
@@ -43,7 +43,7 @@ describe("normalizeForgejoReactions", () => {
       [{ content: "+1", user: { login: "alice" } }],
       "alice",
     );
-    expect(result).toEqual([{ content: "THUMBS_UP", viewerHasReacted: true }]);
+    expect(result).toStrictEqual([{ content: "THUMBS_UP", viewerHasReacted: true }]);
   });
 
   it("drops reactions outside the known set", () => {
@@ -51,7 +51,7 @@ describe("normalizeForgejoReactions", () => {
       [{ content: "fire", user: { login: "alice" } }],
       "alice",
     );
-    expect(result).toEqual([]);
+    expect(result).toStrictEqual([]);
   });
 });
 
@@ -65,6 +65,6 @@ describe("viewerReactionStrings", () => {
       ],
       "alice",
     );
-    expect(result).toEqual(["+1", "eyes"]);
+    expect(result).toStrictEqual(["+1", "eyes"]);
   });
 });

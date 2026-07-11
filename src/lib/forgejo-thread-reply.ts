@@ -24,7 +24,7 @@
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 const REPLY_PARENT_PREFIX = "<!-- gh-feedback:reply-to:";
-const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(\d+) -->/u;
+const REPLY_PARENT_PATTERN = /^<!-- gh-feedback:reply-to:(?<parentId>\d+) -->/u;
 const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->[ \t]*\r?\n\r?\n?/u;
 
 /**
@@ -57,7 +57,7 @@ export function threadReplyParentId(body: string): number | undefined {
   if (!match?.[1]) {
     return undefined;
   }
-  return Number.parseInt(match[1], 10);
+  return Math.trunc(Number(match[1]));
 }
 
 export function stripThreadReplyMarker(body: string): string {
