@@ -39,7 +39,7 @@ export interface ItemStatus {
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
   /** Whether `start` may reopen this item under the provider's ownership policy. */
-  isResolved: boolean;
+  viewerMayReopen: boolean;
 }
 
 export interface ReplyResult {

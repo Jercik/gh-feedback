@@ -29,13 +29,13 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isMinimized, isResolved } = await backend.getItemStatus(item);
+        const { viewerReactions, isMinimized, viewerMayReopen } = await backend.getItemStatus(item);
 
         // Reopen if resolved, or (for comments and review containers, which can
         // carry a thread's resolved flag) if hidden. A thread's minimized flag is
         // independent of its resolved state, so for threads the resolved flag
         // alone is authoritative and minimizing must not force a reopen.
-        const needsReopen = isResolved || (item.type !== "thread" && isMinimized);
+        const needsReopen = viewerMayReopen || (item.type !== "thread" && isMinimized);
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {

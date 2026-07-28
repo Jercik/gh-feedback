@@ -17,7 +17,16 @@ export function sameForgejoNativeConversation(
 ): boolean {
   const leftLine = reviewCommentDisplayLine(left);
   const rightLine = reviewCommentDisplayLine(right);
-  if (leftLine === null || rightLine === null || !left.path || !right.path) {
+  if (
+    leftLine === null ||
+    rightLine === null ||
+    left.pull_request_review_id === null ||
+    left.pull_request_review_id === undefined ||
+    right.pull_request_review_id === null ||
+    right.pull_request_review_id === undefined ||
+    !left.path ||
+    !right.path
+  ) {
     return false;
   }
   return (

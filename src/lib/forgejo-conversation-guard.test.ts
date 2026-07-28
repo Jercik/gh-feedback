@@ -48,6 +48,19 @@ describe("sameForgejoNativeConversation", () => {
       sameForgejoNativeConversation(comment(), comment({ position: 0, original_position: 20 })),
     ).toBe(false);
   });
+
+  it("fails closed when a native grouping key is unavailable", () => {
+    expect(
+      sameForgejoNativeConversation(comment(), comment({ pull_request_review_id: null })),
+    ).toBe(false);
+    expect(sameForgejoNativeConversation(comment(), comment({ path: null }))).toBe(false);
+    expect(
+      sameForgejoNativeConversation(
+        comment(),
+        comment({ position: null, original_position: null }),
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("forgejoNativeConversationAnchor", () => {

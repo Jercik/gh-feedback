@@ -73,7 +73,7 @@ export function createGithubBackend(owner: string, repo: string): FeedbackBacken
     getItemStatus(ref: FeedbackItemRef): Promise<ItemStatus> {
       const item = rich(ref);
       const status = getItemStatus(item);
-      return Promise.resolve({ ...status, isResolved: item.isResolved ?? false });
+      return Promise.resolve({ ...status, viewerMayReopen: item.isResolved ?? false });
     },
 
     reply(ref: FeedbackItemRef, message: string): Promise<ReplyResult> {

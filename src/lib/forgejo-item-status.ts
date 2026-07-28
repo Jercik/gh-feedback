@@ -21,7 +21,7 @@ export async function getForgejoItemStatus(
       doneStatus: undefined,
       viewerReactions: [],
       isMinimized: false,
-      isResolved: false,
+      viewerMayReopen: false,
     };
   }
 
@@ -39,7 +39,7 @@ export async function getForgejoItemStatus(
     doneStatus,
     viewerReactions: viewerReactionStrings(reactions, viewer),
     isMinimized: false,
-    isResolved: isForgejoConversationResolvedBy(
+    viewerMayReopen: isForgejoConversationResolvedBy(
       forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
       viewer,
     ),
