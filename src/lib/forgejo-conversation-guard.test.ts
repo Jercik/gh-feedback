@@ -38,6 +38,12 @@ describe("sameForgejoNativeConversation", () => {
         comment({ id: 2 }),
       ),
     ).toBe(true);
+    expect(
+      sameForgejoNativeConversation(
+        comment({ position: 0, original_position: 0 }),
+        comment({ id: 2, position: 0, original_position: 0 }),
+      ),
+    ).toBe(true);
   });
 
   it("keeps different reviews and old/new sides separate", () => {
