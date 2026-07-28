@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ForgejoReviewComment } from "./forgejo-schemas.js";
 import {
   isForgejoSiblingSettledForResolution,
+  forgejoNativeConversationAnchor,
   sameForgejoNativeConversation,
 } from "./forgejo-conversation-guard.js";
 
@@ -46,5 +47,14 @@ describe("sameForgejoNativeConversation", () => {
     expect(
       sameForgejoNativeConversation(comment(), comment({ position: 0, original_position: 20 })),
     ).toBe(false);
+  });
+});
+
+describe("forgejoNativeConversationAnchor", () => {
+  it("returns the created-earliest comment and uses id as the tie breaker", () => {
+    const target = comment({ id: 30, created_at: "2026-07-28T10:00:01Z" });
+    const tiedEarlier = comment({ id: 10, created_at: "2026-07-28T10:00:00Z" });
+    const tiedLater = comment({ id: 20, created_at: "2026-07-28T10:00:00Z" });
+    expect(forgejoNativeConversationAnchor([target, tiedLater, tiedEarlier], target)?.id).toBe(10);
   });
 });

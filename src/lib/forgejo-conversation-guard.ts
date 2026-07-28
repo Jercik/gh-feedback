@@ -22,6 +22,23 @@ export function sameForgejoNativeConversation(
   );
 }
 
+export function forgejoNativeConversationAnchor(
+  comments: readonly ForgejoReviewComment[],
+  target: ForgejoReviewComment | undefined,
+): ForgejoReviewComment | undefined {
+  if (!target) {
+    return undefined;
+  }
+  return (
+    comments
+      .filter((comment) => sameForgejoNativeConversation(comment, target))
+      .toSorted((left, right) => {
+        const createdOrder = left.created_at.localeCompare(right.created_at);
+        return createdOrder === 0 ? left.id - right.id : createdOrder;
+      })[0] ?? target
+  );
+}
+
 export async function blockForgejoUnsettledConversationSiblings(
   slug: string,
   item: FeedbackItemRef,

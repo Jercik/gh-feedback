@@ -8,6 +8,7 @@ import {
   viewerReactionStrings,
 } from "./forgejo-reactions.js";
 import { isForgejoConversationResolvedBy } from "./forgejo-resolution.js";
+import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 import { isStatusDone, reactionToStatus } from "./summary-types.js";
 
 export async function getForgejoItemStatus(
@@ -38,6 +39,9 @@ export async function getForgejoItemStatus(
     doneStatus,
     viewerReactions: viewerReactionStrings(reactions, viewer),
     isMinimized: false,
-    isResolved: isForgejoConversationResolvedBy(meta.reviewComment?.resolver, viewer),
+    isResolved: isForgejoConversationResolvedBy(
+      forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
+      viewer,
+    ),
   };
 }

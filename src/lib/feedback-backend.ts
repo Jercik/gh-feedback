@@ -49,8 +49,8 @@ export interface ReplyResult {
 
 /**
  * Outcome of a resolve/hide attempt. `supported: false` means the forge has no
- * equivalent API (Forgejo lacks thread RESOLVE and comment MINIMIZE), so the
- * caller should treat the workflow marker as the reaction alone.
+ * equivalent API or the attempted transition was refused, so the caller should
+ * treat the workflow marker as the reaction alone and report the reason.
  */
 export type CapabilityResult =
   | { supported: true; applied: boolean }

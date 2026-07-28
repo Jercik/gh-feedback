@@ -40,7 +40,10 @@ import {
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
-import { blockForgejoUnsettledConversationSiblings } from "./forgejo-conversation-guard.js";
+import {
+  blockForgejoUnsettledConversationSiblings,
+  forgejoNativeConversationAnchor,
+} from "./forgejo-conversation-guard.js";
 
 export function createForgejoBackend(slug: string): FeedbackBackend {
   /** Cache the detected meta so reply/react reuse it without re-probing. */
@@ -78,7 +81,12 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       const viewer = await getForgejoViewer();
       const root =
         conversationRootOf(resolved.reviewComments ?? [], itemId, viewer) ?? resolved.reviewComment;
-      metaCache.set(root.id, { kind: "review-comment", prNumber, reviewComment: root });
+      metaCache.set(root.id, {
+        kind: "review-comment",
+        prNumber,
+        reviewComment: root,
+        reviewComments: resolved.reviewComments,
+      });
       return {
         type: "thread",
         id: root.id,
@@ -177,7 +185,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       const meta = await metaFor(item);
       const viewer = await getForgejoViewer();
       const resolvedByViewer = isForgejoConversationResolvedBy(
-        meta.reviewComment?.resolver,
+        forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
         viewer,
       );
       return completeForgejoOutcome(slug, item, outcome, resolvedByViewer);

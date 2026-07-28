@@ -64,7 +64,15 @@ export function changeForgejoConversationResolution(
 
   if (result.status !== 0) {
     const message = result.stderr.trim() || result.stdout.trim() || `fgj exited ${result.status}`;
-    if (message.includes("no conversation resolution API")) {
+    if (
+      [
+        "no conversation-resolution API",
+        "no conversation resolution API",
+        "not allowed to mark this conversation",
+        "authentication required",
+        "repository is archived",
+      ].some((expected) => message.includes(expected))
+    ) {
       return { supported: false, reason: message };
     }
     throw new Error(message);
