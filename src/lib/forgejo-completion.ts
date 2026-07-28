@@ -17,7 +17,8 @@ export async function completeForgejoItem(
   const viewer = await getForgejoViewer();
   const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const readyToResolve =
-    outcome !== "disagreed" && (await forgejoConversationReadyToResolve(slug, item));
+    outcome !== "disagreed" &&
+    (await forgejoConversationReadyToResolve(slug, item, reviewComments));
   return completeForgejoOutcome(
     slug,
     item,

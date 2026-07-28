@@ -17,6 +17,7 @@ export function isForgejoResolutionUnsupported(message: string): boolean {
     return (
       /^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line) ||
       /^(?:unknown command|unrecognized subcommand)\b/u.test(line) ||
+      /^unknown flag:\s*--json$/u.test(line) ||
       /^accepts 1 arg\(s\), received 3$/u.test(line)
     );
   });

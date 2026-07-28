@@ -18,6 +18,12 @@ describe("reviewCommentLine", () => {
     expect(reviewCommentLine(comment)).toBeNull();
   });
 
+  it("keeps stored line zero for grouping but omits it from user-facing locations", () => {
+    const comment = ForgejoReviewComment.parse({ id: 1, position: 0, original_position: 0 });
+    expect(reviewCommentDisplayLine(comment)).toBe(0);
+    expect(reviewCommentLine(comment)).toBeNull();
+  });
+
   it("uses the final display line and preserves the old-side sign for grouping", () => {
     const newSide = ForgejoReviewComment.parse({
       id: 1,

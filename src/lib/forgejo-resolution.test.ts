@@ -65,6 +65,7 @@ describe("isForgejoResolutionUnsupported", () => {
   it.each([
     "this Forgejo instance has no conversation-resolution API",
     'unknown command "resolve"',
+    "Error: unknown flag: --json",
     "accepts 1 arg(s), received 3",
   ])("recognizes a graceful-degrade failure: %s", (message) => {
     expect(isForgejoResolutionUnsupported(message)).toBe(true);

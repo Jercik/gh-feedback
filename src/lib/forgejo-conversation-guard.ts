@@ -64,13 +64,14 @@ export function forgejoNativeConversationResolver(
 export async function forgejoConversationReadyToResolve(
   slug: string,
   item: FeedbackItemRef,
+  availableComments?: readonly ForgejoReviewComment[],
 ): Promise<boolean> {
   if (item.type !== "thread") {
     return true;
   }
 
   const viewer = await getForgejoViewer();
-  const reviewComments = await fetchPullReviewComments(slug, item.prNumber);
+  const reviewComments = availableComments ?? (await fetchPullReviewComments(slug, item.prNumber));
   const comments = reviewComments.filter(
     (comment) => !comment.user || !isIgnoredAuthor(comment.user.login),
   );

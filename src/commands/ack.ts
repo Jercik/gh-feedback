@@ -69,7 +69,18 @@ export function registerAckCommand(program: Command): void {
         try {
           hideResult = await backend.complete(item, "acknowledged");
         } catch (completionError) {
-          await backend.removeReactions(item, ["rocket"], ["rocket"]);
+          try {
+            await backend.removeReactions(item, ["rocket"], ["rocket"]);
+            for (const reaction of viewerReactions.filter((value) =>
+              ["eyes", "+1", "-1", "confused"].includes(value),
+            )) {
+              await backend.addReaction(item, reaction);
+            }
+          } catch (rollbackError) {
+            console.error(
+              `Warning: Could not restore prior reactions after completion failed: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+            );
+          }
           throw completionError;
         }
         if (!hideResult.supported) {

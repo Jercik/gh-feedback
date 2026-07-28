@@ -11,7 +11,7 @@ import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
   const displayLine = reviewCommentDisplayLine(comment);
-  return displayLine === null ? null : Math.abs(displayLine);
+  return displayLine === null || displayLine === 0 ? null : Math.abs(displayLine);
 }
 
 /** Signed display line used by Forgejo's native conversation grouping. */
