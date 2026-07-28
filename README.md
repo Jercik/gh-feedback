@@ -109,7 +109,7 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `in-progress`    | Being worked on (not yet resolved)      |
 | `awaiting-reply` | Asked question, waiting for answer      |
 | `agreed`         | Fixed (👍 + resolved)                   |
-| `disagreed`      | Won't fix (👎 + resolved)               |
+| `disagreed`      | Won't fix (👎; Forgejo stays open)      |
 | `acknowledged`   | Noted, no action (🚀 + hidden)          |
 
 ### Output Formats

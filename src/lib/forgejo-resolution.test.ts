@@ -56,12 +56,14 @@ describe("isForgejoResolutionUnsupported", () => {
     "this Forgejo instance has no conversation-resolution API",
     'unknown command "resolve"',
     "accepts 1 arg(s), received 3",
-    "not allowed to mark this conversation",
   ])("recognizes a graceful-degrade failure: %s", (message) => {
     expect(isForgejoResolutionUnsupported(message)).toBe(true);
   });
 
-  it("does not hide an unrelated operational failure", () => {
-    expect(isForgejoResolutionUnsupported("connection reset by peer")).toBe(false);
-  });
+  it.each(["connection reset by peer", "not allowed to mark this conversation"])(
+    "does not hide an operational failure: %s",
+    (message) => {
+      expect(isForgejoResolutionUnsupported(message)).toBe(false);
+    },
+  );
 });

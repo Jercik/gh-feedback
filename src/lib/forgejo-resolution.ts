@@ -11,7 +11,6 @@ type ForgejoResolutionAction = "resolve" | "unresolve";
 const UNSUPPORTED_RESOLUTION_MESSAGES = [
   "no conversation-resolution API",
   "no conversation resolution API",
-  "not allowed to mark this conversation",
   "unknown command",
   "unrecognized subcommand",
   "accepts 1 arg(s), received 3",

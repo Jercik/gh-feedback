@@ -53,16 +53,11 @@ export async function buildSummary(
   // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
-  const visibleConversations = options.hideResolved
-    ? conversations.filter(
-        ({ root }) => !forgejoNativeConversationAnchor(reviewComments, root)?.resolver,
-      )
-    : conversations;
-  const reviewCommentItems = await Promise.all(
-    visibleConversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+  const reviewCommentRecords = await Promise.all(
+    conversations.map(async ({ root, replies }) => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
-      return {
+      const item: FeedbackItem = {
         id: root.id,
         timestamp: root.created_at,
         status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
@@ -75,8 +70,19 @@ export async function buildSummary(
           body: stripThreadReplyMarker(reply.body),
         })),
       };
+      return {
+        item,
+        isResolved: Boolean(forgejoNativeConversationAnchor(reviewComments, root)?.resolver),
+      };
     }),
   );
+  const reviewCommentItems = reviewCommentRecords
+    .filter(
+      ({ item, isResolved }) =>
+        !options.hideResolved ||
+        (!isResolved && item.status !== "agreed" && item.status !== "acknowledged"),
+    )
+    .map(({ item }) => item);
 
   const visibleIssueComments = issueComments.filter((c) => {
     if (c.body.trim().length === 0) {

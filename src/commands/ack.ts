@@ -55,17 +55,16 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
+        await backend.removeReactions(item, viewerReactions, [
+          "eyes", // in-progress
+          "+1", // agreed
+          "-1", // disagreed
+          "confused", // awaiting-reply
+        ]);
+        verboseLog("Adding reaction...");
+        await backend.addReaction(item, "rocket");
+
         try {
-          await backend.removeReactions(item, viewerReactions, [
-            "eyes", // in-progress
-            "+1", // agreed
-            "-1", // disagreed
-            "confused", // awaiting-reply
-          ]);
-
-          verboseLog("Adding reaction...");
-          await backend.addReaction(item, "rocket");
-
           verboseLog("Hiding...");
           const hideResult = await backend.complete(item, "acknowledged");
           if (!hideResult.supported) {
@@ -73,7 +72,7 @@ export function registerAckCommand(program: Command): void {
           }
         } catch (statusError) {
           console.error(
-            `Warning: Acknowledgement status update was only partially applied: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+            `Warning: Rocket reaction applied, but hide/resolve failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
           );
         }
 
