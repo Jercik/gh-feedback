@@ -78,7 +78,10 @@ export function changeForgejoConversationResolution(
   }
 
   if (result.status !== 0) {
-    const message = result.stderr.trim() || result.stdout.trim() || `fgj exited ${result.status}`;
+    const fallback = result.signal
+      ? `fgj exited on signal ${result.signal}`
+      : `fgj exited ${result.status}`;
+    const message = result.stderr.trim() || result.stdout.trim() || fallback;
     if (isForgejoResolutionUnsupported(message)) {
       return { supported: false, reason: message };
     }
@@ -111,15 +114,15 @@ export function completeForgejoOutcome(
         }
       : { supported: true, applied: false, reason: "conversation was already open" };
   }
+  if (resolvedByAnyone) {
+    return { supported: true, applied: false, reason: "conversation was already resolved" };
+  }
   if (!readyToResolve) {
     return {
       supported: true,
       applied: false,
       reason: "conversation resolution deferred until its other findings settle",
     };
-  }
-  if (resolvedByAnyone) {
-    return { supported: true, applied: false, reason: "conversation was already resolved" };
   }
   return changeForgejoConversationResolution(slug, item, "resolve");
 }

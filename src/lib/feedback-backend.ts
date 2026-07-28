@@ -49,8 +49,8 @@ export interface ReplyResult {
 
 /**
  * Outcome of a resolve/hide attempt. `supported: false` means the forge has no
- * equivalent API or the attempted transition was refused, so the caller should
- * treat the workflow marker as the reaction alone and report the reason.
+ * equivalent API. A supported no-op carries its reason separately so callers
+ * can distinguish policy decisions from capability gaps.
  */
 export type CapabilityResult =
   | { supported: true; applied: true }

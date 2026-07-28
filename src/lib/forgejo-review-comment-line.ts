@@ -26,7 +26,7 @@ export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number 
     return -(oldSide + extraLines);
   }
   if (comment.position === 0 && comment.original_position === 0) {
-    return 0;
+    return extraLines;
   }
   return null;
 }

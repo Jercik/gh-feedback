@@ -55,6 +55,10 @@ export GH_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 
 This overrides only the API hostname. Whether an origin is treated as Forgejo is decided by `repoq`'s host classification, so this variable does not, on its own, enable an instance whose origin host `repoq` doesn't recognize.
 
+`repoq` is intentionally pinned to 1.2.0: later fallback classification treats
+unknown origin hosts as Forgejo. Keep the pin until provider detection is made
+explicit for unknown hosts.
+
 ## Usage
 
 ```bash
