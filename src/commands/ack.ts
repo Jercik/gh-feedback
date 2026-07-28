@@ -55,22 +55,26 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
-        // 1. Remove conflicting status reactions (only those we've added)
-        await backend.removeReactions(item, viewerReactions, [
-          "eyes", // in-progress
-          "+1", // agreed
-          "-1", // disagreed
-          "confused", // awaiting-reply
-        ]);
+        try {
+          await backend.removeReactions(item, viewerReactions, [
+            "eyes", // in-progress
+            "+1", // agreed
+            "-1", // disagreed
+            "confused", // awaiting-reply
+          ]);
 
-        // 2. Add rocket
-        verboseLog("Adding reaction...");
-        await backend.addReaction(item, "rocket");
+          verboseLog("Adding reaction...");
+          await backend.addReaction(item, "rocket");
 
-        verboseLog("Hiding...");
-        const hideResult = await backend.complete(item, "acknowledged");
-        if (!hideResult.supported) {
-          console.error(`Note: hide skipped - ${hideResult.reason}`);
+          verboseLog("Hiding...");
+          const hideResult = await backend.complete(item, "acknowledged");
+          if (!hideResult.supported) {
+            console.error(`Note: hide skipped - ${hideResult.reason}`);
+          }
+        } catch (statusError) {
+          console.error(
+            `Warning: Acknowledgement status update was only partially applied: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+          );
         }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);

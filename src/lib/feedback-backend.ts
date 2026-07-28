@@ -7,8 +7,8 @@
  * its provider-specific handle (GraphQL node/thread IDs, Forgejo item kind)
  * private and re-associates it by `id`.
  *
- * Capabilities that one forge lacks (thread resolve, comment hide) are modeled
- * as explicit results so callers can DEGRADE gracefully instead of crashing.
+ * Provider capability gaps and refused transitions are modeled as explicit
+ * results so callers can DEGRADE gracefully instead of crashing.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
@@ -38,7 +38,7 @@ export interface ItemStatus {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
-  /** Thread/PR-level resolved state; always false where the forge lacks resolve. */
+  /** Whether `start` may reopen this item under the provider's ownership policy. */
   isResolved: boolean;
 }
 

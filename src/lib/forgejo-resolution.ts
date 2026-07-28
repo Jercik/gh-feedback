@@ -8,6 +8,21 @@ const FORGEJO_UNSUPPORTED_HIDE =
 
 type ForgejoResolutionAction = "resolve" | "unresolve";
 
+const UNSUPPORTED_RESOLUTION_MESSAGES = [
+  "no conversation-resolution API",
+  "no conversation resolution API",
+  "not allowed to mark this conversation",
+  "authentication required",
+  "repository is archived",
+  "unknown command",
+  "unrecognized subcommand",
+  "accepts 1 arg(s), received 3",
+];
+
+export function isForgejoResolutionUnsupported(message: string): boolean {
+  return UNSUPPORTED_RESOLUTION_MESSAGES.some((expected) => message.includes(expected));
+}
+
 export function isForgejoConversationResolvedBy(
   resolver: { login: string } | null | undefined,
   viewer: string,
@@ -64,15 +79,7 @@ export function changeForgejoConversationResolution(
 
   if (result.status !== 0) {
     const message = result.stderr.trim() || result.stdout.trim() || `fgj exited ${result.status}`;
-    if (
-      [
-        "no conversation-resolution API",
-        "no conversation resolution API",
-        "not allowed to mark this conversation",
-        "authentication required",
-        "repository is archived",
-      ].some((expected) => message.includes(expected))
-    ) {
+    if (isForgejoResolutionUnsupported(message)) {
       return { supported: false, reason: message };
     }
     throw new Error(message);

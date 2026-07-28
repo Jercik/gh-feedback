@@ -14,7 +14,7 @@ npm install -g gh-feedback
 - Git repository with `origin` remote
 - Git installed (`git`)
 - For GitHub repos: GitHub CLI (`gh`) authenticated
-- For Forgejo repos: Forgejo CLI (`fgj`) authenticated
+- For Forgejo repos: the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
 
 The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
 
@@ -26,6 +26,8 @@ review _bodies_ (the overall review text) are also intentionally excluded from
 `summary`, because a review entity has no reaction or resolve endpoint and so
 could never leave `pending`; check the forge UI for that text. Inline review
 comments and PR conversation comments are surfaced and tracked normally.
+`start` reopens only conversations resolved by the authenticated account; a
+reviewer's resolution remains visible in `detail` and is deliberately preserved.
 
 ### Custom Paths
 

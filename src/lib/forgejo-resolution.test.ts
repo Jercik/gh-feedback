@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { forgejoResolutionArgs, isForgejoConversationResolvedBy } from "./forgejo-resolution.js";
+import {
+  forgejoResolutionArgs,
+  isForgejoConversationResolvedBy,
+  isForgejoResolutionUnsupported,
+} from "./forgejo-resolution.js";
 
 describe("forgejoResolutionArgs", () => {
   it("builds the native resolve command", () => {
@@ -44,5 +48,20 @@ describe("isForgejoConversationResolvedBy", () => {
 
   it("preserves a conversation another user resolved", () => {
     expect(isForgejoConversationResolvedBy({ login: "reviewer" }, "codex")).toBe(false);
+  });
+});
+
+describe("isForgejoResolutionUnsupported", () => {
+  it.each([
+    "this Forgejo instance has no conversation-resolution API",
+    'unknown command "resolve"',
+    "accepts 1 arg(s), received 3",
+    "not allowed to mark this conversation",
+  ])("recognizes a graceful-degrade failure: %s", (message) => {
+    expect(isForgejoResolutionUnsupported(message)).toBe(true);
+  });
+
+  it("does not hide an unrelated operational failure", () => {
+    expect(isForgejoResolutionUnsupported("connection reset by peer")).toBe(false);
   });
 });
