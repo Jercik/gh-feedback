@@ -62,6 +62,7 @@ export const ForgejoReviewComment = z.object({
   path: z.string().nullish(),
   position: z.number().nullish(),
   original_position: z.number().nullish(),
+  extra_lines_count: z.number().nullish(),
   created_at: z
     .string()
     .nullish()

@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
+import type { FeedbackOutcome } from "./feedback-backend.js";
 import { forgejoApiHost, getFgjBinaryPath } from "./forgejo-cli.js";
 
 const FORGEJO_UNSUPPORTED_HIDE =
@@ -45,6 +46,8 @@ export function changeForgejoConversationResolution(
   }
 
   const binary = getFgjBinaryPath();
+  // fgj owns fork capability detection and the display-line anchor derivation;
+  // duplicating those rules around a raw REST call would create two clients.
   const result = spawnSync(
     binary,
     forgejoResolutionArgs(action, forgejoApiHost(), slug, item.prNumber, item.id),
@@ -68,4 +71,18 @@ export function changeForgejoConversationResolution(
   }
 
   return { supported: true, applied: true };
+}
+
+export function completeForgejoOutcome(
+  slug: string,
+  item: FeedbackItemRef,
+  outcome: FeedbackOutcome,
+  resolvedByViewer: boolean,
+): CapabilityResult {
+  if (outcome === "disagreed") {
+    return resolvedByViewer
+      ? changeForgejoConversationResolution(slug, item, "unresolve")
+      : { supported: true, applied: false };
+  }
+  return changeForgejoConversationResolution(slug, item, "resolve");
 }

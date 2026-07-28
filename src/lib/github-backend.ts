@@ -94,7 +94,7 @@ export function createGithubBackend(owner: string, repo: string): FeedbackBacken
       return Promise.resolve();
     },
 
-    resolve(ref: FeedbackItemRef): Promise<CapabilityResult> {
+    complete(ref: FeedbackItemRef, _outcome): Promise<CapabilityResult> {
       const result = resolveItem(rich(ref));
       return Promise.resolve({ supported: true, applied: result.resolved });
     },
@@ -104,7 +104,7 @@ export function createGithubBackend(owner: string, repo: string): FeedbackBacken
       return Promise.resolve({ supported: true, applied: result.unresolved });
     },
 
-    blockIfUnresolvedSiblings(ref: FeedbackItemRef, actionVerb: string): Promise<void> {
+    blockIfUnresolvedSiblings(ref: FeedbackItemRef, _outcome, actionVerb: string): Promise<void> {
       guardSiblingThreads(rich(ref), actionVerb);
       return Promise.resolve();
     },

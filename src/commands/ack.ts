@@ -45,7 +45,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         // Check for unresolved sibling threads in multi-thread reviews
-        await backend.blockIfUnresolvedSiblings(item, "ACK");
+        await backend.blockIfUnresolvedSiblings(item, "acknowledged", "ACK");
 
         verboseLog("");
         verboseLog("Actions: rocket + hide (acknowledge noise)");
@@ -67,9 +67,8 @@ export function registerAckCommand(program: Command): void {
         verboseLog("Adding reaction...");
         await backend.addReaction(item, "rocket");
 
-        // 3. Hide on GitHub or resolve an inline Forgejo conversation.
         verboseLog("Hiding...");
-        const hideResult = await backend.resolve(item);
+        const hideResult = await backend.complete(item, "acknowledged");
         if (!hideResult.supported) {
           console.error(`Note: hide skipped - ${hideResult.reason}`);
         }

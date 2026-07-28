@@ -52,8 +52,11 @@ export async function buildSummary(
   // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
+  const visibleConversations = options.hideResolved
+    ? conversations.filter(({ root }) => !root.resolver)
+    : conversations;
   const reviewCommentItems = await Promise.all(
-    conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+    visibleConversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
       return {
@@ -99,10 +102,12 @@ export async function buildSummary(
     }),
   );
 
-  // Status remains reaction-backed so an intentionally unresolved disagreement
-  // is still reported as disagreed. hideHidden has no Forgejo equivalent.
-  const all = [...reviewCommentItems, ...issueCommentItems];
-  const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
+  // Inline conversations use native resolver state. Plain issue comments have
+  // no such axis, so their reaction-backed final status remains the equivalent.
+  const visibleIssueCommentItems = options.hideResolved
+    ? issueCommentItems.filter((item) => !isStatusDone(item.status))
+    : issueCommentItems;
+  const filtered = [...reviewCommentItems, ...visibleIssueCommentItems];
 
   const items = filtered.toSorted(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),

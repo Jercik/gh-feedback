@@ -9,13 +9,20 @@
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
+  const displayLine = reviewCommentDisplayLine(comment);
+  return displayLine === null ? null : Math.abs(displayLine);
+}
+
+/** Signed display line used by Forgejo's native conversation grouping. */
+export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number | null {
   const newSide = comment.position ?? 0;
   const oldSide = comment.original_position ?? 0;
+  const extraLines = comment.extra_lines_count ?? 0;
   if (newSide > 0) {
-    return newSide;
+    return newSide + extraLines;
   }
   if (oldSide > 0) {
-    return oldSide;
+    return -(oldSide + extraLines);
   }
   return null;
 }

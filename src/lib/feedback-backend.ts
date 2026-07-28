@@ -56,6 +56,8 @@ export type CapabilityResult =
   | { supported: true; applied: boolean }
   | { supported: false; reason: string };
 
+export type FeedbackOutcome = "agreed" | "disagreed" | "acknowledged";
+
 export interface FeedbackBackend {
   readonly provider: "github" | "forgejo";
 
@@ -72,8 +74,8 @@ export interface FeedbackBackend {
     toRemove: ReactionContent[],
   ) => Promise<void>;
 
-  /** Mark an item done (resolve thread / hide comment). May be unsupported. */
-  resolve: (item: FeedbackItemRef) => Promise<CapabilityResult>;
+  /** Apply the forge's conversation policy for a completed outcome. */
+  complete: (item: FeedbackItemRef, outcome: FeedbackOutcome) => Promise<CapabilityResult>;
   /** Re-open an item. `isMinimized` only matters for the GitHub hide axis. */
   unresolve: (item: FeedbackItemRef, isMinimized: boolean) => Promise<CapabilityResult>;
 
@@ -82,5 +84,9 @@ export interface FeedbackBackend {
    * sibling threads. Exits with an error when blocked. No-op where the forge
    * has no review-container/sibling-thread concept.
    */
-  blockIfUnresolvedSiblings: (item: FeedbackItemRef, actionVerb: string) => Promise<void>;
+  blockIfUnresolvedSiblings: (
+    item: FeedbackItemRef,
+    outcome: FeedbackOutcome,
+    actionVerb: string,
+  ) => Promise<void>;
 }

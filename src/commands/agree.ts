@@ -76,7 +76,7 @@ export function registerAgreeCommand(program: Command): void {
           verboseLog(message);
           verboseLog("---");
           // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "agree with");
+          await backend.blockIfUnresolvedSiblings(item, "agreed", "agree with");
 
           verboseLog("");
           verboseLog("Actions: reply + thumbs_up + resolve");
@@ -106,7 +106,7 @@ export function registerAgreeCommand(program: Command): void {
 
             // 4. Resolve the inline conversation, or report unsupported item types.
             verboseLog("Resolving...");
-            const resolveResult = await backend.resolve(item);
+            const resolveResult = await backend.complete(item, "agreed");
             if (!resolveResult.supported) {
               console.error(`Note: resolve skipped - ${resolveResult.reason}`);
             }

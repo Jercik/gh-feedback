@@ -34,8 +34,13 @@ import { postForgejoReply } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { REACTION_TO_GRAPHQL } from "./constants.js";
-import { changeForgejoConversationResolution } from "./forgejo-resolution.js";
+import {
+  changeForgejoConversationResolution,
+  completeForgejoOutcome,
+  isForgejoConversationResolvedBy,
+} from "./forgejo-resolution.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
+import { blockForgejoUnsettledConversationSiblings } from "./forgejo-conversation-guard.js";
 
 export function createForgejoBackend(slug: string): FeedbackBackend {
   /** Cache the detected meta so reply/react reuse it without re-probing. */
@@ -168,18 +173,22 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
     },
 
-    resolve(item: FeedbackItemRef): Promise<CapabilityResult> {
-      return Promise.resolve(changeForgejoConversationResolution(slug, item, "resolve"));
+    async complete(item, outcome): Promise<CapabilityResult> {
+      const meta = await metaFor(item);
+      const viewer = await getForgejoViewer();
+      const resolvedByViewer = isForgejoConversationResolvedBy(
+        meta.reviewComment?.resolver,
+        viewer,
+      );
+      return completeForgejoOutcome(slug, item, outcome, resolvedByViewer);
     },
 
     unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
       return Promise.resolve(changeForgejoConversationResolution(slug, item, "unresolve"));
     },
 
-    blockIfUnresolvedSiblings(_item: FeedbackItemRef, _actionVerb: string): Promise<void> {
-      // Forgejo exposes no review-container/sibling-thread grouping, and reviews
-      // aren't resolvable, so there's nothing to guard against.
-      return Promise.resolve();
+    blockIfUnresolvedSiblings(item, outcome, actionVerb): Promise<void> {
+      return blockForgejoUnsettledConversationSiblings(slug, item, outcome, actionVerb);
     },
   };
 }

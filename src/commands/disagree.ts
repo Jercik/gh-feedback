@@ -77,14 +77,10 @@ export function registerDisagreeCommand(program: Command): void {
           verboseLog("---");
 
           // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "disagree with");
+          await backend.blockIfUnresolvedSiblings(item, "disagreed", "disagree with");
 
           verboseLog("");
-          verboseLog(
-            backend.provider === "github"
-              ? "Actions: reply + thumbs_down + resolve"
-              : "Actions: reply + thumbs_down (conversation remains open for reviewer)",
-          );
+          verboseLog("Actions: reply + thumbs_down + apply conversation policy");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -109,13 +105,10 @@ export function registerDisagreeCommand(program: Command): void {
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "-1");
 
-            // A Forgejo disagreement leaves settlement to the reviewer.
-            if (backend.provider === "github") {
-              verboseLog("Resolving...");
-              const resolveResult = await backend.resolve(item);
-              if (!resolveResult.supported) {
-                console.error(`Note: resolve skipped - ${resolveResult.reason}`);
-              }
+            verboseLog("Applying conversation policy...");
+            const completionResult = await backend.complete(item, "disagreed");
+            if (!completionResult.supported) {
+              console.error(`Note: completion skipped - ${completionResult.reason}`);
             }
           } catch (statusError) {
             console.error(
