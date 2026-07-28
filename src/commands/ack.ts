@@ -65,7 +65,13 @@ export function registerAckCommand(program: Command): void {
         await backend.addReaction(item, "rocket");
 
         verboseLog("Hiding...");
-        const hideResult = await backend.complete(item, "acknowledged");
+        let hideResult;
+        try {
+          hideResult = await backend.complete(item, "acknowledged");
+        } catch (completionError) {
+          await backend.removeReactions(item, ["rocket"], ["rocket"]);
+          throw completionError;
+        }
         if (!hideResult.supported) {
           console.error(`Note: hide skipped - ${hideResult.reason}`);
         } else if (!hideResult.applied) {
