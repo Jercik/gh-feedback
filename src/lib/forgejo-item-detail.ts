@@ -13,6 +13,7 @@ import { groupReviewCommentConversations, findConversationFor } from "./forgejo-
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
+import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 
 export async function buildItemDetail(
   slug: string,
@@ -52,7 +53,9 @@ export async function buildItemDetail(
       path: root.path ?? null,
       line: reviewCommentLine(root),
       isOutdated: false,
-      isResolved: Boolean(root.resolver),
+      isResolved: Boolean(
+        forgejoNativeConversationAnchor(resolved.reviewComments ?? [], root)?.resolver,
+      ),
       comments,
     };
   }

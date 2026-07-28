@@ -3,7 +3,8 @@
  *
  * Forgejo reports the new-side line in `position` and the old-side line in
  * `original_position`; the unused side is 0. Prefer whichever is set so a
- * comment on a removed line shows its real line instead of 0.
+ * comment on a removed line shows its real line instead of 0. Multi-line
+ * comments display the end of their range, matching Forgejo's conversation UI.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";

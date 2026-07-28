@@ -80,7 +80,7 @@ gh-feedback disagree 123456 -m 'Intentional, see docs'
 # Request clarification
 gh-feedback ask 123456 -m 'Could you clarify the expected behavior?'
 
-# Acknowledge noise (hide)
+# Acknowledge noise (hide/resolve)
 gh-feedback ack 123456
 
 # Preview any action without executing
@@ -97,7 +97,7 @@ gh-feedback agree 123456 -m 'Fixed' --dry-run
 | `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                 |
 | `disagree <id> -m "..."` | Won't fix (reply + thumbs_down; Forgejo stays open) |
 | `ask <id> -m "..."`      | Need clarification (reply + confused)               |
-| `ack <id>`               | Acknowledge noise (rocket + hide)                   |
+| `ack <id>`               | Acknowledge noise (rocket + hide/resolve)           |
 
 ### Summary Output
 

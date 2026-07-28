@@ -26,6 +26,7 @@ import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
 import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
+import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 
 export async function buildSummary(
   slug: string,
@@ -53,7 +54,9 @@ export async function buildSummary(
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
   const visibleConversations = options.hideResolved
-    ? conversations.filter(({ root }) => !root.resolver)
+    ? conversations.filter(
+        ({ root }) => !forgejoNativeConversationAnchor(reviewComments, root)?.resolver,
+      )
     : conversations;
   const reviewCommentItems = await Promise.all(
     visibleConversations.map(async ({ root, replies }): Promise<FeedbackItem> => {

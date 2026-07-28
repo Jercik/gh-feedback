@@ -12,8 +12,6 @@ const UNSUPPORTED_RESOLUTION_MESSAGES = [
   "no conversation-resolution API",
   "no conversation resolution API",
   "not allowed to mark this conversation",
-  "authentication required",
-  "repository is archived",
   "unknown command",
   "unrecognized subcommand",
   "accepts 1 arg(s), received 3",
@@ -93,11 +91,15 @@ export function completeForgejoOutcome(
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
   resolvedByViewer: boolean,
+  readyToResolve: boolean,
 ): CapabilityResult {
   if (outcome === "disagreed") {
     return resolvedByViewer
       ? changeForgejoConversationResolution(slug, item, "unresolve")
       : { supported: true, applied: false };
+  }
+  if (!readyToResolve) {
+    return { supported: true, applied: false };
   }
   return changeForgejoConversationResolution(slug, item, "resolve");
 }

@@ -1,7 +1,7 @@
 /**
  * Ack command - acknowledge informational item
  *
- * Performs: 🚀 (rocket) + hide
+ * Performs: 🚀 (rocket) + hide/resolve
  * Used for bot summaries, status updates, or noise.
  */
 
@@ -14,7 +14,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description("Acknowledge informational item (rocket + hide)")
+    .description("Acknowledge informational item (rocket + hide/resolve)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
@@ -48,7 +48,7 @@ export function registerAckCommand(program: Command): void {
         await backend.blockIfUnresolvedSiblings(item, "acknowledged", "ACK");
 
         verboseLog("");
-        verboseLog("Actions: rocket + hide (acknowledge noise)");
+        verboseLog("Actions: rocket + hide/resolve (acknowledge noise)");
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");

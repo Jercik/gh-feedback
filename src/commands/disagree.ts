@@ -14,7 +14,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerDisagreeCommand(program: Command): void {
   program
     .command("disagree")
-    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down)")
+    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down; Forgejo stays open)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {

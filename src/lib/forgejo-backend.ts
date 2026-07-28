@@ -41,7 +41,7 @@ import {
 } from "./forgejo-resolution.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
 import {
-  blockForgejoUnsettledConversationSiblings,
+  forgejoConversationReadyToResolve,
   forgejoNativeConversationAnchor,
 } from "./forgejo-conversation-guard.js";
 
@@ -188,15 +188,17 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
         forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
         viewer,
       );
-      return completeForgejoOutcome(slug, item, outcome, resolvedByViewer);
+      const readyToResolve =
+        outcome !== "disagreed" && (await forgejoConversationReadyToResolve(slug, item));
+      return completeForgejoOutcome(slug, item, outcome, resolvedByViewer, readyToResolve);
     },
 
     unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
       return Promise.resolve(changeForgejoConversationResolution(slug, item, "unresolve"));
     },
 
-    blockIfUnresolvedSiblings(item, outcome, actionVerb): Promise<void> {
-      return blockForgejoUnsettledConversationSiblings(slug, item, outcome, actionVerb);
+    blockIfUnresolvedSiblings(_item, _outcome, _actionVerb): Promise<void> {
+      return Promise.resolve();
     },
   };
 }

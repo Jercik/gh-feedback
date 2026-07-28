@@ -1,4 +1,4 @@
-import type { FeedbackItemRef, FeedbackOutcome } from "./feedback-backend.js";
+import type { FeedbackItemRef } from "./feedback-backend.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
@@ -15,10 +15,15 @@ export function sameForgejoNativeConversation(
   left: ForgejoReviewComment,
   right: ForgejoReviewComment,
 ): boolean {
+  const leftLine = reviewCommentDisplayLine(left);
+  const rightLine = reviewCommentDisplayLine(right);
+  if (leftLine === null || rightLine === null || !left.path || !right.path) {
+    return false;
+  }
   return (
     left.pull_request_review_id === right.pull_request_review_id &&
     left.path === right.path &&
-    reviewCommentDisplayLine(left) === reviewCommentDisplayLine(right)
+    leftLine === rightLine
   );
 }
 
@@ -39,14 +44,12 @@ export function forgejoNativeConversationAnchor(
   );
 }
 
-export async function blockForgejoUnsettledConversationSiblings(
+export async function forgejoConversationReadyToResolve(
   slug: string,
   item: FeedbackItemRef,
-  outcome: FeedbackOutcome,
-  actionVerb: string,
-): Promise<void> {
-  if (item.type !== "thread" || outcome === "disagreed") {
-    return;
+): Promise<boolean> {
+  if (item.type !== "thread") {
+    return true;
   }
 
   const viewer = await getForgejoViewer();
@@ -56,23 +59,17 @@ export async function blockForgejoUnsettledConversationSiblings(
     ({ root, replies }) => root.id === item.id || replies.some((reply) => reply.id === item.id),
   );
   if (!target) {
-    return;
+    return true;
   }
 
   const siblings = conversations.filter(
     ({ root }) => root.id !== target.root.id && sameForgejoNativeConversation(root, target.root),
   );
-  const unsettled: number[] = [];
   for (const { root } of siblings) {
     const reactions = await fetchReactions(slug, "review-comment", root.id);
     if (!isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer))) {
-      unsettled.push(root.id);
+      return false;
     }
   }
-
-  if (unsettled.length > 0) {
-    throw new Error(
-      `Error: Cannot ${actionVerb} #${item.id} while its Forgejo conversation has unsettled sibling feedback: ${unsettled.map((id) => `#${id}`).join(", ")}.`,
-    );
-  }
+  return true;
 }
