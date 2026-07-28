@@ -18,7 +18,14 @@ npm install -g gh-feedback
 
 The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
 
-Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing. Forgejo review _bodies_ (the overall review text) are also intentionally excluded from `summary`, because a review entity has no reaction or resolve endpoint and so could never leave `pending`; check the forge UI for that text. Inline review comments and PR conversation comments are surfaced and tracked normally.
+The j4k Forgejo fork resolves inline review conversations through the local
+`fgj` CLI. `agree` and `ack` resolve settled inline conversations, while
+`disagree` deliberately leaves them open for the reviewer to settle. Plain PR
+comments have no hide API, so their status remains reaction-backed. Forgejo
+review _bodies_ (the overall review text) are also intentionally excluded from
+`summary`, because a review entity has no reaction or resolve endpoint and so
+could never leave `pending`; check the forge UI for that text. Inline review
+comments and PR conversation comments are surfaced and tracked normally.
 
 ### Custom Paths
 
@@ -80,15 +87,15 @@ gh-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                  | Description                                   |
-| ------------------------ | --------------------------------------------- |
-| `summary`                | Get all PR feedback with semantic status      |
-| `detail <id>`            | Fetch full untruncated content                |
-| `start <id>`             | Mark as work-in-progress (adds eyes reaction) |
-| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)           |
-| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down + resolve)     |
-| `ask <id> -m "..."`      | Need clarification (reply + confused)         |
-| `ack <id>`               | Acknowledge noise (rocket + hide)             |
+| Command                  | Description                                         |
+| ------------------------ | --------------------------------------------------- |
+| `summary`                | Get all PR feedback with semantic status            |
+| `detail <id>`            | Fetch full untruncated content                      |
+| `start <id>`             | Mark as work-in-progress (adds eyes reaction)       |
+| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                 |
+| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down; Forgejo stays open) |
+| `ask <id> -m "..."`      | Need clarification (reply + confused)               |
+| `ack <id>`               | Acknowledge noise (rocket + hide)                   |
 
 ### Summary Output
 

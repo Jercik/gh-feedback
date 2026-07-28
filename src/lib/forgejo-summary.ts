@@ -99,9 +99,8 @@ export async function buildSummary(
     }),
   );
 
-  // hideResolved: Forgejo has no resolved-thread axis, so its reaction-backed
-  // equivalent is a done status (agreed/disagreed/acknowledged). hideHidden has
-  // no Forgejo equivalent — nothing is ever minimized — so it filters nothing.
+  // Status remains reaction-backed so an intentionally unresolved disagreement
+  // is still reported as disagreed. hideHidden has no Forgejo equivalent.
   const all = [...reviewCommentItems, ...issueCommentItems];
   const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
 

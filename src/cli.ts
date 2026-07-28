@@ -7,7 +7,7 @@
  *   detail     - Get full content of a single item
  *   start      - Mark item as work-in-progress
  *   agree      - Mark as agreed/fixed (reply + resolve)
- *   disagree   - Mark as disagreed/won't fix (reply + resolve)
+ *   disagree   - Mark as disagreed/won't fix (reply; Forgejo stays open)
  *   ask        - Request clarification (reply, stays open)
  *   ack        - Acknowledge noise (hide)
  */

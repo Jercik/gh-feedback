@@ -104,7 +104,7 @@ export function registerAgreeCommand(program: Command): void {
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "+1");
 
-            // 4. Resolve (degrades to a no-op where the forge has no resolve API)
+            // 4. Resolve the inline conversation, or report unsupported item types.
             verboseLog("Resolving...");
             const resolveResult = await backend.resolve(item);
             if (!resolveResult.supported) {

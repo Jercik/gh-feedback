@@ -58,6 +58,7 @@ export const ForgejoReviewComment = z.object({
     .transform((v) => v ?? ""),
   user: ForgejoUser.nullish(),
   pull_request_review_id: z.number().nullish(),
+  resolver: ForgejoUser.nullish(),
   path: z.string().nullish(),
   position: z.number().nullish(),
   original_position: z.number().nullish(),

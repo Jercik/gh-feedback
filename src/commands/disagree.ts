@@ -1,7 +1,7 @@
 /**
  * Disagree command - mark item as "won't fix"
  *
- * Performs: reply + 👎 (thumbs_down) + resolve
+ * Performs: reply + 👎 (thumbs_down), then resolves on GitHub only
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -14,7 +14,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerDisagreeCommand(program: Command): void {
   program
     .command("disagree")
-    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve)")
+    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
@@ -80,7 +80,11 @@ export function registerDisagreeCommand(program: Command): void {
           await backend.blockIfUnresolvedSiblings(item, "disagree with");
 
           verboseLog("");
-          verboseLog("Actions: reply + thumbs_down + resolve");
+          verboseLog(
+            backend.provider === "github"
+              ? "Actions: reply + thumbs_down + resolve"
+              : "Actions: reply + thumbs_down (conversation remains open for reviewer)",
+          );
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -105,11 +109,13 @@ export function registerDisagreeCommand(program: Command): void {
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "-1");
 
-            // 4. Resolve (degrades to a no-op where the forge has no resolve API)
-            verboseLog("Resolving...");
-            const resolveResult = await backend.resolve(item);
-            if (!resolveResult.supported) {
-              console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+            // A Forgejo disagreement leaves settlement to the reviewer.
+            if (backend.provider === "github") {
+              verboseLog("Resolving...");
+              const resolveResult = await backend.resolve(item);
+              if (!resolveResult.supported) {
+                console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+              }
             }
           } catch (statusError) {
             console.error(

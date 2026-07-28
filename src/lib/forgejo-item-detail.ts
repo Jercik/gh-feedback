@@ -1,8 +1,8 @@
 /**
  * Forgejo item detail: full untruncated content for a single feedback item.
  *
- * Forgejo has no thread-resolve or outdated axis, so threads always report
- * isResolved/isOutdated false and reviews report a fixed COMMENTED state.
+ * The j4k Forgejo fork exposes the inline conversation resolver. Forgejo still
+ * has no outdated axis, and reviews report a fixed COMMENTED state.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
@@ -52,7 +52,7 @@ export async function buildItemDetail(
       path: root.path ?? null,
       line: reviewCommentLine(root),
       isOutdated: false,
-      isResolved: false,
+      isResolved: Boolean(root.resolver),
       comments,
     };
   }

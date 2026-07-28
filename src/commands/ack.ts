@@ -67,7 +67,7 @@ export function registerAckCommand(program: Command): void {
         verboseLog("Adding reaction...");
         await backend.addReaction(item, "rocket");
 
-        // 3. Hide/resolve (degrades to a no-op where the forge has no hide API)
+        // 3. Hide on GitHub or resolve an inline Forgejo conversation.
         verboseLog("Hiding...");
         const hideResult = await backend.resolve(item);
         if (!hideResult.supported) {
