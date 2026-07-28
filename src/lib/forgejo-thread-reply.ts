@@ -49,6 +49,9 @@ export function forgejoThreadReplyBody(
   } else if (oldSide > 0) {
     body.old_position = oldSide;
   }
+  if ((comment.extra_lines_count ?? 0) > 0) {
+    body.extra_lines_count = comment.extra_lines_count ?? 0;
+  }
   return body;
 }
 

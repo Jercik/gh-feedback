@@ -59,6 +59,8 @@ export function registerStartCommand(program: Command): void {
           const result = await backend.unresolve(item, isMinimized);
           if (!result.supported) {
             console.error(`Note: reopen skipped - ${result.reason}`);
+          } else if (!result.applied) {
+            console.error(`Note: ${result.reason}.`);
           }
         }
 

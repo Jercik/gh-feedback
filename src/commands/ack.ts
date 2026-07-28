@@ -69,7 +69,7 @@ export function registerAckCommand(program: Command): void {
         if (!hideResult.supported) {
           console.error(`Note: hide skipped - ${hideResult.reason}`);
         } else if (!hideResult.applied) {
-          console.error("Note: conversation resolution deferred until its other findings settle.");
+          console.error(`Note: ${hideResult.reason}.`);
         }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);

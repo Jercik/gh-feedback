@@ -110,9 +110,7 @@ export function registerAgreeCommand(program: Command): void {
             if (!resolveResult.supported) {
               console.error(`Note: resolve skipped - ${resolveResult.reason}`);
             } else if (!resolveResult.applied) {
-              console.error(
-                "Note: conversation resolution deferred until its other findings settle.",
-              );
+              console.error(`Note: ${resolveResult.reason}.`);
             }
           } catch (statusError) {
             console.error(

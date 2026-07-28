@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  completeForgejoOutcome,
   forgejoResolutionArgs,
   isForgejoConversationResolvedBy,
   isForgejoResolutionUnsupported,
 } from "./forgejo-resolution.js";
+
+const thread = {
+  type: "thread" as const,
+  id: 25_226,
+  author: "reviewer",
+  prNumber: 160,
+  path: "src/a.ts",
+  line: 20,
+};
 
 describe("forgejoResolutionArgs", () => {
   it("builds the native resolve command", () => {
@@ -66,5 +76,43 @@ describe("isForgejoResolutionUnsupported", () => {
     'request failed after remote said unknown command "resolve"',
   ])("does not hide an operational failure: %s", (message) => {
     expect(isForgejoResolutionUnsupported(message)).toBe(false);
+  });
+});
+
+describe("completeForgejoOutcome", () => {
+  it("reports the reason when shared resolution is deferred", () => {
+    expect(
+      completeForgejoOutcome("j4k/cluster", thread, "agreed", false, false, false),
+    ).toStrictEqual({
+      supported: true,
+      applied: false,
+      reason: "conversation resolution deferred until its other findings settle",
+    });
+  });
+
+  it("preserves another user's resolution on disagreement", () => {
+    expect(
+      completeForgejoOutcome("j4k/cluster", thread, "disagreed", false, true, true),
+    ).toStrictEqual({
+      supported: true,
+      applied: false,
+      reason: "conversation resolution belongs to another user and was preserved",
+    });
+  });
+
+  it("reports non-thread completion as unsupported", () => {
+    expect(
+      completeForgejoOutcome(
+        "j4k/cluster",
+        { ...thread, type: "comment" },
+        "disagreed",
+        false,
+        false,
+        true,
+      ),
+    ).toStrictEqual({
+      supported: false,
+      reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
+    });
   });
 });

@@ -5,6 +5,7 @@ import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
 import { reviewCommentDisplayLine } from "./forgejo-review-comment-line.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+import { isIgnoredAuthor } from "./github-environment.js";
 
 export function isForgejoSiblingSettledForResolution(reactions: readonly string[]): boolean {
   const finals = reactions.filter((reaction) => ["+1", "-1", "rocket"].includes(reaction));
@@ -53,6 +54,13 @@ export function forgejoNativeConversationAnchor(
   );
 }
 
+export function forgejoNativeConversationResolver(
+  comments: readonly ForgejoReviewComment[],
+  target: ForgejoReviewComment | undefined,
+) {
+  return forgejoNativeConversationAnchor(comments, target)?.resolver;
+}
+
 export async function forgejoConversationReadyToResolve(
   slug: string,
   item: FeedbackItemRef,
@@ -62,7 +70,10 @@ export async function forgejoConversationReadyToResolve(
   }
 
   const viewer = await getForgejoViewer();
-  const comments = await fetchPullReviewComments(slug, item.prNumber);
+  const reviewComments = await fetchPullReviewComments(slug, item.prNumber);
+  const comments = reviewComments.filter(
+    (comment) => !comment.user || !isIgnoredAuthor(comment.user.login),
+  );
   const conversations = groupReviewCommentConversations(comments, viewer);
   const target = conversations.find(
     ({ root, replies }) => root.id === item.id || replies.some((reply) => reply.id === item.id),

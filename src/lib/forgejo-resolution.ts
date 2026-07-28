@@ -92,15 +92,33 @@ export function completeForgejoOutcome(
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
   resolvedByViewer: boolean,
+  resolvedByAnyone: boolean,
   readyToResolve: boolean,
 ): CapabilityResult {
+  if (item.type !== "thread") {
+    return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
+  }
   if (outcome === "disagreed") {
-    return resolvedByViewer
-      ? changeForgejoConversationResolution(slug, item, "unresolve")
-      : { supported: true, applied: false };
+    if (resolvedByViewer) {
+      return changeForgejoConversationResolution(slug, item, "unresolve");
+    }
+    return resolvedByAnyone
+      ? {
+          supported: true,
+          applied: false,
+          reason: "conversation resolution belongs to another user and was preserved",
+        }
+      : { supported: true, applied: false, reason: "conversation was already open" };
   }
   if (!readyToResolve) {
-    return { supported: true, applied: false };
+    return {
+      supported: true,
+      applied: false,
+      reason: "conversation resolution deferred until its other findings settle",
+    };
+  }
+  if (resolvedByAnyone) {
+    return { supported: true, applied: false, reason: "conversation was already resolved" };
   }
   return changeForgejoConversationResolution(slug, item, "resolve");
 }

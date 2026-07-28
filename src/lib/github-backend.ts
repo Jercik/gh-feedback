@@ -96,12 +96,20 @@ export function createGithubBackend(owner: string, repo: string): FeedbackBacken
 
     complete(ref: FeedbackItemRef, _outcome): Promise<CapabilityResult> {
       const result = resolveItem(rich(ref));
-      return Promise.resolve({ supported: true, applied: result.resolved });
+      return Promise.resolve(
+        result.resolved
+          ? { supported: true, applied: true }
+          : { supported: true, applied: false, reason: "conversation transition did not apply" },
+      );
     },
 
     unresolve(ref: FeedbackItemRef, isMinimized: boolean): Promise<CapabilityResult> {
       const result = unresolveItem(rich(ref), isMinimized);
-      return Promise.resolve({ supported: true, applied: result.unresolved });
+      return Promise.resolve(
+        result.unresolved
+          ? { supported: true, applied: true }
+          : { supported: true, applied: false, reason: "conversation reopen did not apply" },
+      );
     },
 
     blockIfUnresolvedSiblings(ref: FeedbackItemRef, actionVerb: string): Promise<void> {

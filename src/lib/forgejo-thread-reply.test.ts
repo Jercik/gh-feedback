@@ -35,6 +35,22 @@ describe("forgejoThreadReplyBody", () => {
       old_position: 87,
     });
   });
+
+  it("preserves a multi-line parent's range", () => {
+    const comment = ForgejoReviewComment.parse({
+      id: 13,
+      path: "src/app.ts",
+      position: 18,
+      original_position: 0,
+      extra_lines_count: 2,
+    });
+    expect(forgejoThreadReplyBody(comment, "fixed")).toStrictEqual({
+      body: "<!-- gh-feedback:reply-to:13 -->\n\nfixed",
+      path: "src/app.ts",
+      new_position: 18,
+      extra_lines_count: 2,
+    });
+  });
 });
 
 describe("hasThreadablePosition", () => {

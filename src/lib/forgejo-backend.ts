@@ -34,16 +34,9 @@ import { postForgejoReply } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { REACTION_TO_GRAPHQL } from "./constants.js";
-import {
-  changeForgejoConversationResolution,
-  completeForgejoOutcome,
-  isForgejoConversationResolvedBy,
-} from "./forgejo-resolution.js";
+import { changeForgejoConversationResolution } from "./forgejo-resolution.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
-import {
-  forgejoConversationReadyToResolve,
-  forgejoNativeConversationAnchor,
-} from "./forgejo-conversation-guard.js";
+import { completeForgejoItem } from "./forgejo-completion.js";
 
 export function createForgejoBackend(slug: string): FeedbackBackend {
   /** Cache the detected meta so reply/react reuse it without re-probing. */
@@ -183,14 +176,13 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
 
     async complete(item, outcome): Promise<CapabilityResult> {
       const meta = await metaFor(item);
-      const viewer = await getForgejoViewer();
-      const resolvedByViewer = isForgejoConversationResolvedBy(
-        forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
-        viewer,
+      return completeForgejoItem(
+        slug,
+        item,
+        outcome,
+        meta.reviewComments ?? [],
+        meta.reviewComment,
       );
-      const readyToResolve =
-        outcome !== "disagreed" && (await forgejoConversationReadyToResolve(slug, item));
-      return completeForgejoOutcome(slug, item, outcome, resolvedByViewer, readyToResolve);
     },
 
     unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {

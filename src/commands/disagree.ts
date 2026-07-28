@@ -110,9 +110,7 @@ export function registerDisagreeCommand(program: Command): void {
             if (!completionResult.supported) {
               console.error(`Note: completion skipped - ${completionResult.reason}`);
             } else if (!completionResult.applied) {
-              console.error(
-                "Note: conversation remains open; no viewer-owned resolution needed reopening.",
-              );
+              console.error(`Note: ${completionResult.reason}.`);
             }
           } catch (statusError) {
             console.error(

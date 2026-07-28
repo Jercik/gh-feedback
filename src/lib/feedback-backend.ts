@@ -53,7 +53,8 @@ export interface ReplyResult {
  * treat the workflow marker as the reaction alone and report the reason.
  */
 export type CapabilityResult =
-  | { supported: true; applied: boolean }
+  | { supported: true; applied: true }
+  | { supported: true; applied: false; reason: string }
   | { supported: false; reason: string };
 
 export type FeedbackOutcome = "agreed" | "disagreed" | "acknowledged";
