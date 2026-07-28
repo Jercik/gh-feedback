@@ -8,16 +8,18 @@ const FORGEJO_UNSUPPORTED_HIDE =
 
 type ForgejoResolutionAction = "resolve" | "unresolve";
 
-const UNSUPPORTED_RESOLUTION_MESSAGES = [
-  "no conversation-resolution API",
-  "no conversation resolution API",
-  "unknown command",
-  "unrecognized subcommand",
-  "accepts 1 arg(s), received 3",
-];
-
 export function isForgejoResolutionUnsupported(message: string): boolean {
-  return UNSUPPORTED_RESOLUTION_MESSAGES.some((expected) => message.includes(expected));
+  return message.split(/\r?\n/u).some((rawLine) => {
+    const line = rawLine
+      .trim()
+      .toLowerCase()
+      .replace(/^error:\s*/u, "");
+    return (
+      /^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line) ||
+      /^(?:unknown command|unrecognized subcommand)\b/u.test(line) ||
+      /^accepts 1 arg\(s\), received 3$/u.test(line)
+    );
+  });
 }
 
 export function isForgejoConversationResolvedBy(

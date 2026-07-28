@@ -104,7 +104,7 @@ export function createGithubBackend(owner: string, repo: string): FeedbackBacken
       return Promise.resolve({ supported: true, applied: result.unresolved });
     },
 
-    blockIfUnresolvedSiblings(ref: FeedbackItemRef, _outcome, actionVerb: string): Promise<void> {
+    blockIfUnresolvedSiblings(ref: FeedbackItemRef, actionVerb: string): Promise<void> {
       guardSiblingThreads(rich(ref), actionVerb);
       return Promise.resolve();
     },

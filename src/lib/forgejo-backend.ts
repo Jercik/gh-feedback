@@ -197,7 +197,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       return Promise.resolve(changeForgejoConversationResolution(slug, item, "unresolve"));
     },
 
-    blockIfUnresolvedSiblings(_item, _outcome, _actionVerb): Promise<void> {
+    blockIfUnresolvedSiblings(_item, _actionVerb): Promise<void> {
       return Promise.resolve();
     },
   };

@@ -9,7 +9,7 @@
  *   agree      - Mark as agreed/fixed (reply + resolve)
  *   disagree   - Mark as disagreed/won't fix (reply + resolve; Forgejo stays open)
  *   ask        - Request clarification (reply, stays open)
- *   ack        - Acknowledge noise (hide)
+ *   ack        - Acknowledge noise (hide/resolve)
  */
 
 import { createProgram } from "./lib/create-program.js";

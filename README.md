@@ -29,6 +29,11 @@ comments and PR conversation comments are surfaced and tracked normally.
 `start` reopens only conversations resolved by the authenticated account; a
 reviewer's resolution remains visible in `detail` and is deliberately preserved.
 
+When one native Forgejo conversation contains several feedback items, each
+item's reaction is recorded independently. `agree` and `ack` defer the shared
+conversation resolution until every item is agreed or acknowledged; a
+disagreed or awaiting-reply item keeps the conversation open.
+
 ### Custom Paths
 
 To use a specific binary (or one not in `PATH`), set:

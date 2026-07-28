@@ -57,10 +57,11 @@ export async function buildSummary(
     conversations.map(async ({ root, replies }) => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
+      const isResolved = Boolean(forgejoNativeConversationAnchor(reviewComments, root)?.resolver);
       const item: FeedbackItem = {
         id: root.id,
         timestamp: root.created_at,
-        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
+        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer) || isResolved),
         author: root.user?.login ?? "ghost",
         location: formatLocation(root.path, reviewCommentLine(root)),
         body: root.body,
@@ -72,7 +73,7 @@ export async function buildSummary(
       };
       return {
         item,
-        isResolved: Boolean(forgejoNativeConversationAnchor(reviewComments, root)?.resolver),
+        isResolved,
       };
     }),
   );

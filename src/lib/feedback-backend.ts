@@ -84,9 +84,5 @@ export interface FeedbackBackend {
    * sibling threads. Exits with an error when blocked. No-op where the forge
    * has no review-container/sibling-thread concept.
    */
-  blockIfUnresolvedSiblings: (
-    item: FeedbackItemRef,
-    outcome: FeedbackOutcome,
-    actionVerb: string,
-  ) => Promise<void>;
+  blockIfUnresolvedSiblings: (item: FeedbackItemRef, actionVerb: string) => Promise<void>;
 }

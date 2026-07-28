@@ -45,7 +45,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         // Check for unresolved sibling threads in multi-thread reviews
-        await backend.blockIfUnresolvedSiblings(item, "acknowledged", "ACK");
+        await backend.blockIfUnresolvedSiblings(item, "ACK");
 
         verboseLog("");
         verboseLog("Actions: rocket + hide/resolve (acknowledge noise)");
@@ -64,16 +64,12 @@ export function registerAckCommand(program: Command): void {
         verboseLog("Adding reaction...");
         await backend.addReaction(item, "rocket");
 
-        try {
-          verboseLog("Hiding...");
-          const hideResult = await backend.complete(item, "acknowledged");
-          if (!hideResult.supported) {
-            console.error(`Note: hide skipped - ${hideResult.reason}`);
-          }
-        } catch (statusError) {
-          console.error(
-            `Warning: Rocket reaction applied, but hide/resolve failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
-          );
+        verboseLog("Hiding...");
+        const hideResult = await backend.complete(item, "acknowledged");
+        if (!hideResult.supported) {
+          console.error(`Note: hide skipped - ${hideResult.reason}`);
+        } else if (!hideResult.applied) {
+          console.error("Note: conversation resolution deferred until its other findings settle.");
         }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);

@@ -76,10 +76,10 @@ export function registerAgreeCommand(program: Command): void {
           verboseLog(message);
           verboseLog("---");
           // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "agreed", "agree with");
+          await backend.blockIfUnresolvedSiblings(item, "agree with");
 
           verboseLog("");
-          verboseLog("Actions: reply + thumbs_up + resolve");
+          verboseLog("Actions: reply + thumbs_up + apply conversation policy");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -109,6 +109,10 @@ export function registerAgreeCommand(program: Command): void {
             const resolveResult = await backend.complete(item, "agreed");
             if (!resolveResult.supported) {
               console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+            } else if (!resolveResult.applied) {
+              console.error(
+                "Note: conversation resolution deferred until its other findings settle.",
+              );
             }
           } catch (statusError) {
             console.error(

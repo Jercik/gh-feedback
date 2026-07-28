@@ -77,7 +77,7 @@ export function registerDisagreeCommand(program: Command): void {
           verboseLog("---");
 
           // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "disagreed", "disagree with");
+          await backend.blockIfUnresolvedSiblings(item, "disagree with");
 
           verboseLog("");
           verboseLog("Actions: reply + thumbs_down + apply conversation policy");
@@ -109,6 +109,10 @@ export function registerDisagreeCommand(program: Command): void {
             const completionResult = await backend.complete(item, "disagreed");
             if (!completionResult.supported) {
               console.error(`Note: completion skipped - ${completionResult.reason}`);
+            } else if (!completionResult.applied) {
+              console.error(
+                "Note: conversation remains open; no viewer-owned resolution needed reopening.",
+              );
             }
           } catch (statusError) {
             console.error(

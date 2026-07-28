@@ -60,10 +60,11 @@ describe("isForgejoResolutionUnsupported", () => {
     expect(isForgejoResolutionUnsupported(message)).toBe(true);
   });
 
-  it.each(["connection reset by peer", "not allowed to mark this conversation"])(
-    "does not hide an operational failure: %s",
-    (message) => {
-      expect(isForgejoResolutionUnsupported(message)).toBe(false);
-    },
-  );
+  it.each([
+    "connection reset by peer",
+    "not allowed to mark this conversation",
+    'request failed after remote said unknown command "resolve"',
+  ])("does not hide an operational failure: %s", (message) => {
+    expect(isForgejoResolutionUnsupported(message)).toBe(false);
+  });
 });
