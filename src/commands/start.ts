@@ -31,10 +31,9 @@ export function registerStartCommand(program: Command): void {
         const item = await backend.detectItem(itemId);
         const { viewerReactions, isMinimized, viewerMayReopen } = await backend.getItemStatus(item);
 
-        // Reopen if resolved, or (for comments and review containers, which can
-        // carry a thread's resolved flag) if hidden. A thread's minimized flag is
-        // independent of its resolved state, so for threads the resolved flag
-        // alone is authoritative and minimizing must not force a reopen.
+        // Reopen only when the backend says this viewer may do so. On Forgejo
+        // that preserves another user's resolution; on GitHub every resolved
+        // thread is reopenable. For non-thread items, hiding is a separate axis.
         const needsReopen = viewerMayReopen || (item.type !== "thread" && isMinimized);
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
