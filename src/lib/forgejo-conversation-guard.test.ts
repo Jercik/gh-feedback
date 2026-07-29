@@ -133,6 +133,25 @@ describe("forgejoNativeConversationSiblingRoots", () => {
       ),
     ).toBeUndefined();
   });
+
+  it("fails closed when no known key component can exclude a collision", () => {
+    expect(
+      forgejoNativeConversationSiblingRoots(
+        [
+          comment(),
+          comment({
+            id: 2,
+            pull_request_review_id: null,
+            path: null,
+            position: null,
+            original_position: null,
+          }),
+        ],
+        "codex",
+        1,
+      ),
+    ).toBeUndefined();
+  });
 });
 
 describe("forgejoNativeConversationAnchor", () => {

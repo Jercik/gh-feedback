@@ -1,12 +1,10 @@
-import { spawnSync } from "node:child_process";
 import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
 import type { FeedbackOutcome } from "./feedback-backend.js";
-import { forgejoApiHost, getFgjBinaryPath } from "./forgejo-cli.js";
 
 const FORGEJO_UNSUPPORTED_HIDE =
   "Forgejo has no comment-hide API; status is tracked by reaction only.";
 
-type ForgejoResolutionAction = "resolve" | "unresolve";
+export type ForgejoResolutionAction = "resolve" | "unresolve";
 
 type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction };
 
@@ -87,47 +85,6 @@ export function forgejoResolutionArgs(
     // JSON makes fgj reject malformed success bodies and exposes pre-j4k.4 builds through their unknown-flag error.
     "--json",
   ];
-}
-
-export function changeForgejoConversationResolution(
-  slug: string,
-  item: FeedbackItemRef,
-  action: ForgejoResolutionAction,
-): CapabilityResult {
-  if (item.type !== "thread") {
-    return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
-  }
-
-  const binary = getFgjBinaryPath();
-  // fgj owns fork capability detection and the display-line anchor derivation;
-  // duplicating those rules around a raw REST call would create two clients.
-  const result = spawnSync(
-    binary,
-    forgejoResolutionArgs(action, forgejoApiHost(), slug, item.prNumber, item.id),
-    { encoding: "utf8" },
-  );
-
-  if (result.error) {
-    const error = result.error as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      throw new Error(`Error: Required dependency 'fgj' not found at ${binary}.`);
-    }
-    throw result.error;
-  }
-
-  if (result.status !== 0) {
-    const fallback = result.signal
-      ? `fgj exited on signal ${result.signal}`
-      : `fgj exited ${result.status}`;
-    const message = result.stderr.trim() || result.stdout.trim() || fallback;
-    const unsupportedReason = forgejoResolutionUnsupportedReason(message);
-    if (unsupportedReason) {
-      return { supported: false, reason: unsupportedReason };
-    }
-    throw new Error(message);
-  }
-
-  return { supported: true, applied: true };
 }
 
 export function decideForgejoCompletion(

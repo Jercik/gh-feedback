@@ -28,6 +28,7 @@ export async function getForgejoItemStatus(
 
   const viewer = await getForgejoViewer();
   const reactions = await fetchReactions(slug, meta.kind, itemId);
+  // Non-final labels belong to summary; this surface returns native resolution separately below.
   const status = reactionToStatus(
     normalizeForgejoReactions(reactions, viewer),
     deriveIsDone(reactions, viewer),

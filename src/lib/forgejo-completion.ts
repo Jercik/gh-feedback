@@ -5,13 +5,13 @@ import {
 } from "./forgejo-conversation-guard.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import {
-  changeForgejoConversationResolution,
   decideForgejoReopen,
   decideForgejoCompletion,
   forgejoCompletionNeedsReadiness,
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+import { changeForgejoConversationResolution } from "./change-forgejo-conversation-resolution.js";
 
 export async function completeForgejoItem(
   slug: string,
@@ -33,7 +33,7 @@ export async function completeForgejoItem(
     readiness.ready ? undefined : readiness.reason,
   );
   if ("action" in decision) {
-    return changeForgejoConversationResolution(slug, item, decision.action);
+    return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;
 }
@@ -52,7 +52,7 @@ export async function reopenForgejoItem(
     Boolean(resolver),
   );
   if ("action" in decision) {
-    return changeForgejoConversationResolution(slug, item, decision.action);
+    return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;
 }
