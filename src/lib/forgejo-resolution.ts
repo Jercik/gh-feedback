@@ -86,8 +86,8 @@ export function forgejoResolutionArgs(
     String(commentId),
     "-R",
     slug,
+    // JSON makes fgj reject malformed success bodies and exposes pre-j4k.4 builds through their unknown-flag error.
     "--json",
-    // JSON mode makes fgj validate the success payload before reporting the transition.
   ];
 }
 
@@ -146,7 +146,7 @@ export function decideForgejoCompletion(
     return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);
   }
   if (resolvedByAnyone) {
-    return { supported: true, applied: false, reason: "conversation was already resolved" };
+    return { supported: true, applied: true };
   }
   if (notReadyReason) {
     return {

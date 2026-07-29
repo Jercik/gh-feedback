@@ -30,6 +30,7 @@ export function sameForgejoNativeConversation(
   ) {
     return false;
   }
+  // Review ID is load-bearing: Forgejo renders same-line comments from different reviews as separate conversations.
   return (
     left.pull_request_review_id === right.pull_request_review_id &&
     left.path === right.path &&
@@ -106,6 +107,7 @@ export function forgejoNativeConversationAnchor(
   if (!target) {
     return undefined;
   }
+  // The j4k fork stores resolver state only on the native conversation anchor, not on every grouped comment.
   return (
     comments
       .filter((comment) => sameForgejoNativeConversation(comment, target))

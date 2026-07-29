@@ -184,6 +184,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     },
 
     blockIfUnresolvedSiblings(_item, _actionVerb): Promise<void> {
+      // Shared Forgejo conversations defer completion until sibling findings settle, so no preflight block is needed.
       return Promise.resolve();
     },
   };

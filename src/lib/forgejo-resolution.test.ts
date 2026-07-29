@@ -164,6 +164,13 @@ describe("decideForgejoCompletion", () => {
     });
   });
 
+  it("treats an already-resolved agreement as policy success", () => {
+    expect(decideForgejoCompletion(thread, "agreed", false, true, undefined)).toStrictEqual({
+      supported: true,
+      applied: true,
+    });
+  });
+
   it("reports non-thread completion as unsupported", () => {
     expect(
       decideForgejoCompletion({ ...thread, type: "comment" }, "disagreed", false, false, undefined),

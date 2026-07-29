@@ -62,6 +62,16 @@ describe("hasThreadablePosition", () => {
     };
     expect(results).toStrictEqual({ newSide: true, oldSide: true, fileLevel: false });
   });
+
+  it("does not treat a range length as a missing line anchor", () => {
+    const comment = ForgejoReviewComment.parse({
+      id: 14,
+      position: 0,
+      original_position: 0,
+      extra_lines_count: 2,
+    });
+    expect(hasThreadablePosition(comment)).toBe(false);
+  });
 });
 
 describe("threadReplyParentId", () => {
