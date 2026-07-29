@@ -28,6 +28,10 @@ could never leave `pending`; check the forge UI for that text. Inline review
 comments and PR conversation comments are surfaced and tracked normally.
 `start` reopens only conversations resolved by the authenticated account; a
 reviewer's resolution remains visible in `detail` and is deliberately preserved.
+It changes reactions only after any required reopen succeeds. If reopening
+reports an operational error, correct the cause and rerun `start`; the retry
+re-reads native state, reconciling both a request that never landed and one whose
+server-side reopen succeeded before the error surfaced.
 
 When one native Forgejo conversation contains several feedback items, each
 item's reaction is recorded independently. `agree` and `ack` defer the shared

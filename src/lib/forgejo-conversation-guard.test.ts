@@ -48,6 +48,15 @@ describe("sameForgejoNativeConversation", () => {
     ).toBe(true);
   });
 
+  it("mirrors Forgejo's line-zero display bucket", () => {
+    expect(
+      sameForgejoNativeConversation(
+        comment({ position: 0, original_position: 0, extra_lines_count: 2 }),
+        comment({ id: 2, position: 2, original_position: 0, extra_lines_count: 0 }),
+      ),
+    ).toBe(true);
+  });
+
   it("keeps different reviews and old/new sides separate", () => {
     expect(sameForgejoNativeConversation(comment(), comment({ pull_request_review_id: 8 }))).toBe(
       false,

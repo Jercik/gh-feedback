@@ -61,6 +61,7 @@ export function registerStartCommand(program: Command): void {
         // Reopen the item if it was resolved/hidden
         if (needsReopen) {
           verboseLog("Reopening...");
+          // Keep the final reaction until reopen is confirmed; retries re-read ambiguous native state.
           const result = await backend.unresolve(item, isMinimized);
           if (!result.supported) {
             console.error(`Note: reopen skipped - ${result.reason}`);
