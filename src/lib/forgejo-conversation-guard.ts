@@ -93,26 +93,33 @@ export function forgejoNativeConversationResolver(
   return forgejoNativeConversationAnchor(comments, target)?.resolver;
 }
 
-export async function forgejoConversationReadyToResolve(
+export async function getForgejoConversationResolutionReadiness(
   slug: string,
   item: FeedbackItemRef,
   availableComments?: readonly ForgejoReviewComment[],
-): Promise<boolean> {
+): Promise<{ ready: true } | { ready: false; reason: string }> {
   if (item.type !== "thread") {
-    return true;
+    return { ready: true };
   }
 
   const viewer = await getForgejoViewer();
   const reviewComments = availableComments ?? (await fetchPullReviewComments(slug, item.prNumber));
   const siblings = forgejoNativeConversationSiblingRoots(reviewComments, viewer, item.id);
   if (!siblings) {
-    return false;
+    return {
+      ready: false,
+      reason:
+        "conversation resolution was not attempted because its native grouping could not be determined",
+    };
   }
   for (const root of siblings) {
     const reactions = await fetchReactions(slug, "review-comment", root.id);
     if (!isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer))) {
-      return false;
+      return {
+        ready: false,
+        reason: "conversation resolution deferred until its other findings settle",
+      };
     }
   }
-  return true;
+  return { ready: true };
 }

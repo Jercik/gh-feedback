@@ -1,7 +1,7 @@
 import type { CapabilityResult, FeedbackItemRef, FeedbackOutcome } from "./feedback-backend.js";
 import {
-  forgejoConversationReadyToResolve,
   forgejoNativeConversationResolver,
+  getForgejoConversationResolutionReadiness,
 } from "./forgejo-conversation-guard.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import {
@@ -20,15 +20,16 @@ export async function completeForgejoItem(
 ): Promise<CapabilityResult> {
   const viewer = await getForgejoViewer();
   const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
-  const readyToResolve =
-    outcome !== "disagreed" &&
-    (await forgejoConversationReadyToResolve(slug, item, reviewComments));
+  const readiness =
+    outcome === "disagreed"
+      ? { ready: true as const }
+      : await getForgejoConversationResolutionReadiness(slug, item, reviewComments);
   const decision = decideForgejoCompletion(
     item,
     outcome,
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
-    readyToResolve,
+    readiness.ready ? undefined : readiness.reason,
   );
   if ("action" in decision) {
     return changeForgejoConversationResolution(slug, item, decision.action);

@@ -55,6 +55,9 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
+        const hadRocket = viewerReactions.includes("rocket");
+        let reactionsRemoved = false;
+        let rocketAdded = false;
         let hideResult;
         try {
           await backend.removeReactions(item, viewerReactions, [
@@ -63,18 +66,24 @@ export function registerAckCommand(program: Command): void {
             "-1", // disagreed
             "confused", // awaiting-reply
           ]);
+          reactionsRemoved = true;
           verboseLog("Adding reaction...");
           await backend.addReaction(item, "rocket");
+          rocketAdded = !hadRocket;
 
           verboseLog("Hiding...");
           hideResult = await backend.complete(item, "acknowledged");
         } catch (completionError) {
           try {
-            await backend.removeReactions(item, ["rocket"], ["rocket"]);
-            for (const reaction of viewerReactions.filter((value) =>
-              ["eyes", "+1", "-1", "confused"].includes(value),
-            )) {
-              await backend.addReaction(item, reaction);
+            if (rocketAdded) {
+              await backend.removeReactions(item, ["rocket"], ["rocket"]);
+            }
+            if (reactionsRemoved) {
+              for (const reaction of viewerReactions.filter((value) =>
+                ["eyes", "+1", "-1", "confused"].includes(value),
+              )) {
+                await backend.addReaction(item, reaction);
+              }
             }
           } catch (rollbackError) {
             console.error(

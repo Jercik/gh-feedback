@@ -111,7 +111,7 @@ export function decideForgejoCompletion(
   outcome: FeedbackOutcome,
   resolvedByViewer: boolean,
   resolvedByAnyone: boolean,
-  readyToResolve: boolean,
+  notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
     return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
@@ -131,11 +131,11 @@ export function decideForgejoCompletion(
   if (resolvedByAnyone) {
     return { supported: true, applied: false, reason: "conversation was already resolved" };
   }
-  if (!readyToResolve) {
+  if (notReadyReason) {
     return {
       supported: true,
       applied: false,
-      reason: "conversation resolution deferred until its other findings settle",
+      reason: notReadyReason,
     };
   }
   return { action: "resolve" };
