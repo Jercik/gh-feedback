@@ -8,19 +8,33 @@ const FORGEJO_UNSUPPORTED_HIDE =
 
 type ForgejoResolutionAction = "resolve" | "unresolve";
 
-export function isForgejoResolutionUnsupported(message: string): boolean {
-  return message.split(/\r?\n/u).some((rawLine) => {
+type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction };
+
+const OLD_FGJ_RESOLUTION_REASON =
+  "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer";
+
+export function forgejoResolutionUnsupportedReason(message: string): string | undefined {
+  let unsupportedReason: string | undefined;
+  for (const rawLine of message.split(/\r?\n/u)) {
     const line = rawLine
       .trim()
       .toLowerCase()
       .replace(/^error:\s*/u, "");
-    return (
+    if (/^unknown flag:\s*--json$/u.test(line) || /^accepts 1 arg\(s\), received 3$/u.test(line)) {
+      return OLD_FGJ_RESOLUTION_REASON;
+    }
+    if (
       /^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line) ||
-      /^(?:unknown command|unrecognized subcommand)\b/u.test(line) ||
-      /^unknown flag:\s*--json$/u.test(line) ||
-      /^accepts 1 arg\(s\), received 3$/u.test(line)
-    );
-  });
+      /^(?:unknown command|unrecognized subcommand)\b/u.test(line)
+    ) {
+      unsupportedReason = message;
+    }
+  }
+  return unsupportedReason;
+}
+
+export function isForgejoResolutionUnsupported(message: string): boolean {
+  return forgejoResolutionUnsupportedReason(message) !== undefined;
 }
 
 export function isForgejoConversationResolvedBy(
@@ -82,8 +96,9 @@ export function changeForgejoConversationResolution(
       ? `fgj exited on signal ${result.signal}`
       : `fgj exited ${result.status}`;
     const message = result.stderr.trim() || result.stdout.trim() || fallback;
-    if (isForgejoResolutionUnsupported(message)) {
-      return { supported: false, reason: message };
+    const unsupportedReason = forgejoResolutionUnsupportedReason(message);
+    if (unsupportedReason) {
+      return { supported: false, reason: unsupportedReason };
     }
     throw new Error(message);
   }
@@ -91,20 +106,19 @@ export function changeForgejoConversationResolution(
   return { supported: true, applied: true };
 }
 
-export function completeForgejoOutcome(
-  slug: string,
+export function decideForgejoCompletion(
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
   resolvedByViewer: boolean,
   resolvedByAnyone: boolean,
   readyToResolve: boolean,
-): CapabilityResult {
+): ForgejoCompletionDecision {
   if (item.type !== "thread") {
     return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
   }
   if (outcome === "disagreed") {
     if (resolvedByViewer) {
-      return changeForgejoConversationResolution(slug, item, "unresolve");
+      return { action: "unresolve" };
     }
     return resolvedByAnyone
       ? {
@@ -124,5 +138,5 @@ export function completeForgejoOutcome(
       reason: "conversation resolution deferred until its other findings settle",
     };
   }
-  return changeForgejoConversationResolution(slug, item, "resolve");
+  return { action: "resolve" };
 }

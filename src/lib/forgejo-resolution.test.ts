@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  completeForgejoOutcome,
+  decideForgejoCompletion,
+  forgejoResolutionUnsupportedReason,
   forgejoResolutionArgs,
   isForgejoConversationResolvedBy,
   isForgejoResolutionUnsupported,
@@ -80,11 +81,28 @@ describe("isForgejoResolutionUnsupported", () => {
   });
 });
 
-describe("completeForgejoOutcome", () => {
-  it("reports the reason when shared resolution is deferred", () => {
+describe("forgejoResolutionUnsupportedReason", () => {
+  it("preserves the server capability verdict", () => {
     expect(
-      completeForgejoOutcome("j4k/cluster", thread, "agreed", false, false, false),
-    ).toStrictEqual({
+      forgejoResolutionUnsupportedReason(
+        "this Forgejo instance has no conversation-resolution API",
+      ),
+    ).toBe("this Forgejo instance has no conversation-resolution API");
+  });
+
+  it.each(["Error: unknown flag: --json", "accepts 1 arg(s), received 3"])(
+    "explains an outdated fgj build: %s",
+    (message) => {
+      expect(forgejoResolutionUnsupportedReason(message)).toBe(
+        "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer",
+      );
+    },
+  );
+});
+
+describe("decideForgejoCompletion", () => {
+  it("reports the reason when shared resolution is deferred", () => {
+    expect(decideForgejoCompletion(thread, "agreed", false, false, false)).toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution deferred until its other findings settle",
@@ -92,9 +110,7 @@ describe("completeForgejoOutcome", () => {
   });
 
   it("preserves another user's resolution on disagreement", () => {
-    expect(
-      completeForgejoOutcome("j4k/cluster", thread, "disagreed", false, true, true),
-    ).toStrictEqual({
+    expect(decideForgejoCompletion(thread, "disagreed", false, true, true)).toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
@@ -103,17 +119,22 @@ describe("completeForgejoOutcome", () => {
 
   it("reports non-thread completion as unsupported", () => {
     expect(
-      completeForgejoOutcome(
-        "j4k/cluster",
-        { ...thread, type: "comment" },
-        "disagreed",
-        false,
-        false,
-        true,
-      ),
+      decideForgejoCompletion({ ...thread, type: "comment" }, "disagreed", false, false, true),
     ).toStrictEqual({
       supported: false,
       reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
+    });
+  });
+
+  it("chooses native resolve for a ready open conversation", () => {
+    expect(decideForgejoCompletion(thread, "agreed", false, false, true)).toStrictEqual({
+      action: "resolve",
+    });
+  });
+
+  it("chooses native unresolve for a viewer-owned disagreement", () => {
+    expect(decideForgejoCompletion(thread, "disagreed", true, true, true)).toStrictEqual({
+      action: "unresolve",
     });
   });
 });

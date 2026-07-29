@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ForgejoReviewComment } from "./forgejo-schemas.js";
 import {
-  isForgejoSiblingSettledForResolution,
   forgejoNativeConversationAnchor,
+  forgejoNativeConversationSiblingRoots,
+  hasForgejoNativeConversationKey,
+  isForgejoSiblingSettledForResolution,
   sameForgejoNativeConversation,
 } from "./forgejo-conversation-guard.js";
 
@@ -69,11 +71,51 @@ describe("sameForgejoNativeConversation", () => {
   });
 });
 
+describe("hasForgejoNativeConversationKey", () => {
+  it("requires the review, path, and display line", () => {
+    expect(hasForgejoNativeConversationKey(comment())).toBe(true);
+    expect(hasForgejoNativeConversationKey(comment({ pull_request_review_id: null }))).toBe(false);
+    expect(hasForgejoNativeConversationKey(comment({ path: null }))).toBe(false);
+    expect(
+      hasForgejoNativeConversationKey(comment({ position: null, original_position: null })),
+    ).toBe(false);
+  });
+});
+
+describe("forgejoNativeConversationSiblingRoots", () => {
+  it("returns same-review siblings at the native display line", () => {
+    expect(
+      forgejoNativeConversationSiblingRoots(
+        [comment(), comment({ id: 2 }), comment({ id: 3, pull_request_review_id: 8 })],
+        "codex",
+        1,
+      )?.map(({ id }) => id),
+    ).toStrictEqual([2]);
+  });
+
+  it("refuses readiness when the target is missing or ignored", () => {
+    expect(forgejoNativeConversationSiblingRoots([comment()], "codex", 2)).toBeUndefined();
+    expect(
+      forgejoNativeConversationSiblingRoots([comment({ user: { login: "vercel" } })], "codex", 1),
+    ).toBeUndefined();
+  });
+
+  it("refuses readiness when native grouping data is incomplete", () => {
+    expect(
+      forgejoNativeConversationSiblingRoots(
+        [comment(), comment({ id: 2, path: null })],
+        "codex",
+        1,
+      ),
+    ).toBeUndefined();
+  });
+});
+
 describe("forgejoNativeConversationAnchor", () => {
-  it("returns the created-earliest comment and uses id as the tie breaker", () => {
-    const target = comment({ id: 30, created_at: "2026-07-28T10:00:01Z" });
-    const tiedEarlier = comment({ id: 10, created_at: "2026-07-28T10:00:00Z" });
-    const tiedLater = comment({ id: 20, created_at: "2026-07-28T10:00:00Z" });
-    expect(forgejoNativeConversationAnchor([target, tiedLater, tiedEarlier], target)?.id).toBe(10);
+  it("uses the lowest monotonic comment id even when a timestamp is missing", () => {
+    const target = comment({ id: 30, created_at: "" });
+    const earlier = comment({ id: 10, created_at: "2026-07-28T10:00:01Z" });
+    const middle = comment({ id: 20, created_at: "2026-07-28T10:00:00Z" });
+    expect(forgejoNativeConversationAnchor([target, middle, earlier], target)?.id).toBe(10);
   });
 });

@@ -37,6 +37,41 @@ export function sameForgejoNativeConversation(
   );
 }
 
+export function hasForgejoNativeConversationKey(comment: ForgejoReviewComment): boolean {
+  return (
+    reviewCommentDisplayLine(comment) !== null &&
+    comment.pull_request_review_id !== null &&
+    comment.pull_request_review_id !== undefined &&
+    Boolean(comment.path)
+  );
+}
+
+export function forgejoNativeConversationSiblingRoots(
+  reviewComments: readonly ForgejoReviewComment[],
+  viewer: string,
+  itemId: number,
+): ForgejoReviewComment[] | undefined {
+  const comments = reviewComments.filter(
+    (comment) => !comment.user || !isIgnoredAuthor(comment.user.login),
+  );
+  if (comments.some((comment) => !hasForgejoNativeConversationKey(comment))) {
+    return undefined;
+  }
+
+  const conversations = groupReviewCommentConversations(comments, viewer);
+  const target = conversations.find(
+    ({ root, replies }) => root.id === itemId || replies.some((reply) => reply.id === itemId),
+  );
+  if (!target) {
+    return undefined;
+  }
+  return conversations
+    .filter(
+      ({ root }) => root.id !== target.root.id && sameForgejoNativeConversation(root, target.root),
+    )
+    .map(({ root }) => root);
+}
+
 export function forgejoNativeConversationAnchor(
   comments: readonly ForgejoReviewComment[],
   target: ForgejoReviewComment | undefined,
@@ -47,10 +82,7 @@ export function forgejoNativeConversationAnchor(
   return (
     comments
       .filter((comment) => sameForgejoNativeConversation(comment, target))
-      .toSorted((left, right) => {
-        const createdOrder = left.created_at.localeCompare(right.created_at);
-        return createdOrder === 0 ? left.id - right.id : createdOrder;
-      })[0] ?? target
+      .toSorted((left, right) => left.id - right.id)[0] ?? target
   );
 }
 
@@ -72,21 +104,11 @@ export async function forgejoConversationReadyToResolve(
 
   const viewer = await getForgejoViewer();
   const reviewComments = availableComments ?? (await fetchPullReviewComments(slug, item.prNumber));
-  const comments = reviewComments.filter(
-    (comment) => !comment.user || !isIgnoredAuthor(comment.user.login),
-  );
-  const conversations = groupReviewCommentConversations(comments, viewer);
-  const target = conversations.find(
-    ({ root, replies }) => root.id === item.id || replies.some((reply) => reply.id === item.id),
-  );
-  if (!target) {
-    return true;
+  const siblings = forgejoNativeConversationSiblingRoots(reviewComments, viewer, item.id);
+  if (!siblings) {
+    return false;
   }
-
-  const siblings = conversations.filter(
-    ({ root }) => root.id !== target.root.id && sameForgejoNativeConversation(root, target.root),
-  );
-  for (const { root } of siblings) {
+  for (const root of siblings) {
     const reactions = await fetchReactions(slug, "review-comment", root.id);
     if (!isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer))) {
       return false;

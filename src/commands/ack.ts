@@ -55,18 +55,18 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
-        await backend.removeReactions(item, viewerReactions, [
-          "eyes", // in-progress
-          "+1", // agreed
-          "-1", // disagreed
-          "confused", // awaiting-reply
-        ]);
-        verboseLog("Adding reaction...");
-        await backend.addReaction(item, "rocket");
-
-        verboseLog("Hiding...");
         let hideResult;
         try {
+          await backend.removeReactions(item, viewerReactions, [
+            "eyes", // in-progress
+            "+1", // agreed
+            "-1", // disagreed
+            "confused", // awaiting-reply
+          ]);
+          verboseLog("Adding reaction...");
+          await backend.addReaction(item, "rocket");
+
+          verboseLog("Hiding...");
           hideResult = await backend.complete(item, "acknowledged");
         } catch (completionError) {
           try {

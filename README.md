@@ -34,8 +34,10 @@ item's reaction is recorded independently. `agree` and `ack` defer the shared
 conversation resolution until every item is agreed or acknowledged; a
 disagreed or awaiting-reply item keeps the conversation open.
 Accordingly, `summary --hide-resolved` keeps disagreed inline Forgejo findings
-visible for reviewer settlement; plain PR comments have no conversation axis,
-so their final reaction still controls that filter.
+visible while their native conversation remains open. A conversation resolved
+by another user remains hidden because `start` and `disagree` preserve that
+user's resolution. Plain PR comments have no conversation axis, so their final
+reaction still controls that filter.
 
 ### Custom Paths
 
@@ -101,28 +103,28 @@ gh-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                  | Description                                         |
-| ------------------------ | --------------------------------------------------- |
-| `summary`                | Get all PR feedback with semantic status            |
-| `detail <id>`            | Fetch full untruncated content                      |
-| `start <id>`             | Mark as work-in-progress (adds eyes reaction)       |
-| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                 |
-| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down; Forgejo stays open) |
-| `ask <id> -m "..."`      | Need clarification (reply + confused)               |
-| `ack <id>`               | Acknowledge noise (rocket + hide/resolve)           |
+| Command                  | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| `summary`                | Get all PR feedback with semantic status                      |
+| `detail <id>`            | Fetch full untruncated content                                |
+| `start <id>`             | Mark as work-in-progress (adds eyes reaction)                 |
+| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                           |
+| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down + resolve; Forgejo stays open) |
+| `ask <id> -m "..."`      | Need clarification (reply + confused)                         |
+| `ack <id>`               | Acknowledge noise (rocket + hide/resolve)                     |
 
 ### Summary Output
 
 The `summary` command outputs all PR feedback with semantic status. Status combines your reactions with resolution state:
 
-| Status           | Meaning                                 |
-| ---------------- | --------------------------------------- |
-| `pending`        | Needs attention (no reaction, not done) |
-| `in-progress`    | Being worked on (not yet resolved)      |
-| `awaiting-reply` | Asked question, waiting for answer      |
-| `agreed`         | Fixed (👍 + resolved)                   |
-| `disagreed`      | Won't fix (👎; Forgejo stays open)      |
-| `acknowledged`   | Noted, no action (🚀 + hidden)          |
+| Status           | Meaning                                                |
+| ---------------- | ------------------------------------------------------ |
+| `pending`        | Needs attention (no reaction, not done)                |
+| `in-progress`    | Being worked on (not yet resolved)                     |
+| `awaiting-reply` | Asked question, waiting for answer                     |
+| `agreed`         | Fixed (👍 + resolved)                                  |
+| `disagreed`      | Won't fix (👎; Forgejo stays open)                     |
+| `acknowledged`   | Noted, no action (🚀; hidden/resolved where supported) |
 
 ### Output Formats
 

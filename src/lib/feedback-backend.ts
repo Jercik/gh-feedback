@@ -38,6 +38,7 @@ export interface ItemStatus {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
+  isResolved: boolean;
   /** Whether `start` may reopen this item under the provider's ownership policy. */
   viewerMayReopen: boolean;
 }

@@ -21,6 +21,7 @@ export async function getForgejoItemStatus(
       doneStatus: undefined,
       viewerReactions: [],
       isMinimized: false,
+      isResolved: false,
       viewerMayReopen: false,
     };
   }
@@ -35,13 +36,15 @@ export async function getForgejoItemStatus(
     ? (status as "agreed" | "disagreed" | "acknowledged")
     : undefined;
 
+  const resolver = forgejoNativeConversationAnchor(
+    meta.reviewComments ?? [],
+    meta.reviewComment,
+  )?.resolver;
   return {
     doneStatus,
     viewerReactions: viewerReactionStrings(reactions, viewer),
     isMinimized: false,
-    viewerMayReopen: isForgejoConversationResolvedBy(
-      forgejoNativeConversationAnchor(meta.reviewComments ?? [], meta.reviewComment)?.resolver,
-      viewer,
-    ),
+    isResolved: Boolean(resolver),
+    viewerMayReopen: isForgejoConversationResolvedBy(resolver, viewer),
   };
 }

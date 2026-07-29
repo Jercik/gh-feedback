@@ -176,13 +176,7 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
 
     async complete(item, outcome): Promise<CapabilityResult> {
       const meta = await metaFor(item);
-      return completeForgejoItem(
-        slug,
-        item,
-        outcome,
-        meta.reviewComments ?? [],
-        meta.reviewComment,
-      );
+      return completeForgejoItem(slug, item, outcome, meta.reviewComments, meta.reviewComment);
     },
 
     unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {

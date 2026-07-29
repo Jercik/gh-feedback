@@ -29,7 +29,8 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isMinimized, viewerMayReopen } = await backend.getItemStatus(item);
+        const { viewerReactions, isMinimized, isResolved, viewerMayReopen } =
+          await backend.getItemStatus(item);
 
         // Reopen only when the backend says this viewer may do so. On Forgejo
         // that preserves another user's resolution; on GitHub every resolved
@@ -45,6 +46,11 @@ export function registerStartCommand(program: Command): void {
           verboseLog("Actions: reopen + eyes reaction (in-progress)");
         } else {
           verboseLog("Action: add eyes reaction (in-progress)");
+        }
+        if (item.type === "thread" && isResolved && !viewerMayReopen) {
+          console.error(
+            "Note: reopen skipped - conversation resolution belongs to another user and was preserved.",
+          );
         }
 
         if (options.dryRun) {

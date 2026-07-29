@@ -4,27 +4,34 @@ import {
   forgejoNativeConversationResolver,
 } from "./forgejo-conversation-guard.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
-import { completeForgejoOutcome, isForgejoConversationResolvedBy } from "./forgejo-resolution.js";
+import {
+  changeForgejoConversationResolution,
+  decideForgejoCompletion,
+  isForgejoConversationResolvedBy,
+} from "./forgejo-resolution.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export async function completeForgejoItem(
   slug: string,
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
-  reviewComments: readonly ForgejoReviewComment[],
+  reviewComments: readonly ForgejoReviewComment[] | undefined,
   reviewComment: ForgejoReviewComment | undefined,
 ): Promise<CapabilityResult> {
   const viewer = await getForgejoViewer();
-  const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
+  const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
   const readyToResolve =
     outcome !== "disagreed" &&
     (await forgejoConversationReadyToResolve(slug, item, reviewComments));
-  return completeForgejoOutcome(
-    slug,
+  const decision = decideForgejoCompletion(
     item,
     outcome,
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
     readyToResolve,
   );
+  if ("action" in decision) {
+    return changeForgejoConversationResolution(slug, item, decision.action);
+  }
+  return decision;
 }
