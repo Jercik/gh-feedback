@@ -33,6 +33,10 @@ When one native Forgejo conversation contains several feedback items, each
 item's reaction is recorded independently. `agree` and `ack` defer the shared
 conversation resolution until every item is agreed or acknowledged; a
 disagreed or awaiting-reply item keeps the conversation open.
+Because native resolution belongs to the whole conversation, `start` or a
+viewer-owned `disagree` on any finding reopens that shared conversation.
+Settled siblings keep their final reactions, and the conversation resolves
+again once every finding is agreed or acknowledged.
 `summary --hide-resolved` hides an agreed or acknowledged item as soon as its
 own final reaction is recorded, even when an unsettled sibling defers the
 native conversation resolution. Disagreed and awaiting-reply findings remain

@@ -90,14 +90,15 @@ describe("forgejoResolutionUnsupportedReason details", () => {
     ).toBe("this Forgejo instance has no conversation-resolution API");
   });
 
-  it.each(["Error: unknown flag: --json", "accepts 1 arg(s), received 3"])(
-    "explains an outdated fgj build: %s",
-    (message) => {
-      expect(forgejoResolutionUnsupportedReason(message)).toBe(
-        "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer",
-      );
-    },
-  );
+  it.each([
+    "Error: unknown flag: --json",
+    "accepts 1 arg(s), received 3",
+    'Error: unknown command "resolve" for "fgj pr review"\nUsage:\n  fgj pr review [flags]',
+  ])("explains an outdated fgj build: %s", (message) => {
+    expect(forgejoResolutionUnsupportedReason(message)).toBe(
+      "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer",
+    );
+  });
 });
 
 describe("forgejoCompletionNeedsReadiness", () => {

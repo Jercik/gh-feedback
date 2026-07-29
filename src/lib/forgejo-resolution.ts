@@ -24,10 +24,10 @@ export function forgejoResolutionUnsupportedReason(message: string): string | un
     if (/^unknown flag:\s*--json$/u.test(line) || /^accepts 1 arg\(s\), received 3$/u.test(line)) {
       return OLD_FGJ_RESOLUTION_REASON;
     }
-    if (
-      /^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line) ||
-      /^(?:unknown command|unrecognized subcommand)\b/u.test(line)
-    ) {
+    if (/^(?:unknown command|unrecognized subcommand)\b/u.test(line)) {
+      return OLD_FGJ_RESOLUTION_REASON;
+    }
+    if (/^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line)) {
       unsupportedReason = message;
     }
   }

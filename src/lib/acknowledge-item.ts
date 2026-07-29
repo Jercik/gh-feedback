@@ -9,10 +9,8 @@ export async function acknowledgeItem(
   viewerReactions: ReactionContent[],
 ): Promise<CapabilityResult> {
   const hadRocket = viewerReactions.includes("rocket");
-  let reactionRemovalAttempted = false;
   let rocketAdded = false;
   try {
-    reactionRemovalAttempted = true;
     await backend.removeReactions(item, viewerReactions, WORKFLOW_REACTIONS);
     await backend.addReaction(item, "rocket");
     rocketAdded = !hadRocket;
@@ -22,12 +20,10 @@ export async function acknowledgeItem(
       if (rocketAdded) {
         await backend.removeReactions(item, ["rocket"], ["rocket"]);
       }
-      if (reactionRemovalAttempted) {
-        for (const reaction of viewerReactions.filter((value) =>
-          WORKFLOW_REACTIONS.includes(value),
-        )) {
-          await backend.addReaction(item, reaction);
-        }
+      for (const reaction of viewerReactions.filter((value) =>
+        WORKFLOW_REACTIONS.includes(value),
+      )) {
+        await backend.addReaction(item, reaction);
       }
     } catch (rollbackError) {
       console.error(
