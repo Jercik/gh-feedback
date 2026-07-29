@@ -16,10 +16,8 @@ const OLD_FGJ_RESOLUTION_REASON =
 export function forgejoResolutionUnsupportedReason(message: string): string | undefined {
   let unsupportedReason: string | undefined;
   for (const rawLine of message.split(/\r?\n/u)) {
-    const line = rawLine
-      .trim()
-      .toLowerCase()
-      .replace(/^error:\s*/u, "");
+    const displayLine = rawLine.trim().replace(/^error:\s*/iu, "");
+    const line = displayLine.toLowerCase();
     // Pre-j4k.4 builds emit these exact Cobra 1.8.1 errors for this fixed argv shape.
     if (/^unknown flag:\s*--json$/u.test(line) || /^accepts 1 arg\(s\), received 3$/u.test(line)) {
       return OLD_FGJ_RESOLUTION_REASON;
@@ -28,7 +26,7 @@ export function forgejoResolutionUnsupportedReason(message: string): string | un
       return OLD_FGJ_RESOLUTION_REASON;
     }
     if (/^(?:this forgejo instance has )?no conversation-?resolution api\b/u.test(line)) {
-      unsupportedReason = message;
+      unsupportedReason = displayLine;
     }
   }
   return unsupportedReason;

@@ -91,6 +91,21 @@ describe("forgejoResolutionUnsupportedReason details", () => {
     ).toBe("this Forgejo instance has no conversation-resolution API");
   });
 
+  it("returns only the matched capability line from multiline stderr", () => {
+    expect(
+      forgejoResolutionUnsupportedReason(
+        [
+          "unrelated diagnostic",
+          "Error: this Forgejo instance has no conversation-resolution API (server reports version 11.0.1-j4k-1)",
+          "Usage:",
+          "  fgj pr review resolve [flags]",
+        ].join("\n"),
+      ),
+    ).toBe(
+      "this Forgejo instance has no conversation-resolution API (server reports version 11.0.1-j4k-1)",
+    );
+  });
+
   it.each([
     "Error: unknown flag: --json",
     "accepts 1 arg(s), received 3",
