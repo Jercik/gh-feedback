@@ -8,20 +8,33 @@ import {
   decideForgejoReopen,
   decideForgejoCompletion,
   forgejoCompletionNeedsReadiness,
+  forgejoUnsupportedHideResult,
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
-import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { changeForgejoConversationResolution } from "./change-forgejo-conversation-resolution.js";
+import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
+
+async function fetchForgejoTransitionState(slug: string, item: FeedbackItemRef) {
+  const reviewComments = await fetchPullReviewComments(slug, item.prNumber);
+  return {
+    reviewComments,
+    reviewComment: reviewComments.find(({ id }) => id === item.id),
+  };
+}
 
 export async function completeForgejoItem(
   slug: string,
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
-  reviewComments: readonly ForgejoReviewComment[] | undefined,
-  reviewComment: ForgejoReviewComment | undefined,
 ): Promise<CapabilityResult> {
-  const viewer = await getForgejoViewer();
-  const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
+  if (item.type !== "thread") {
+    return forgejoUnsupportedHideResult();
+  }
+  const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
+    fetchForgejoTransitionState(slug, item),
+    getForgejoViewer(),
+  ]);
+  const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const readiness = forgejoCompletionNeedsReadiness(item, outcome, Boolean(resolver))
     ? await getForgejoConversationResolutionReadiness(slug, item, reviewComments)
     : { ready: true as const };
@@ -41,11 +54,15 @@ export async function completeForgejoItem(
 export async function reopenForgejoItem(
   slug: string,
   item: FeedbackItemRef,
-  reviewComments: readonly ForgejoReviewComment[] | undefined,
-  reviewComment: ForgejoReviewComment | undefined,
 ): Promise<CapabilityResult> {
-  const viewer = await getForgejoViewer();
-  const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
+  if (item.type !== "thread") {
+    return forgejoUnsupportedHideResult();
+  }
+  const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
+    fetchForgejoTransitionState(slug, item),
+    getForgejoViewer(),
+  ]);
+  const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const decision = decideForgejoReopen(
     item,
     isForgejoConversationResolvedBy(resolver, viewer),

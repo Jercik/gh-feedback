@@ -4,6 +4,10 @@ import type { FeedbackOutcome } from "./feedback-backend.js";
 const FORGEJO_UNSUPPORTED_HIDE =
   "Forgejo has no comment-hide API; status is tracked by reaction only.";
 
+export function forgejoUnsupportedHideResult(): CapabilityResult {
+  return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
+}
+
 export type ForgejoResolutionAction = "resolve" | "unresolve";
 
 type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction };
@@ -51,7 +55,7 @@ export function decideForgejoReopen(
   resolvedByAnyone: boolean,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
+    return forgejoUnsupportedHideResult();
   }
   if (resolvedByViewer) {
     return { action: "unresolve" };
@@ -95,7 +99,7 @@ export function decideForgejoCompletion(
   notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
+    return forgejoUnsupportedHideResult();
   }
   if (outcome === "disagreed") {
     return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);

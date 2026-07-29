@@ -174,13 +174,11 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     },
 
     async complete(item, outcome): Promise<CapabilityResult> {
-      const meta = await metaFor(item);
-      return completeForgejoItem(slug, item, outcome, meta.reviewComments, meta.reviewComment);
+      return completeForgejoItem(slug, item, outcome);
     },
 
     async unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
-      const meta = await metaFor(item);
-      return reopenForgejoItem(slug, item, meta.reviewComments, meta.reviewComment);
+      return reopenForgejoItem(slug, item);
     },
 
     blockIfUnresolvedSiblings(_item, _actionVerb): Promise<void> {
