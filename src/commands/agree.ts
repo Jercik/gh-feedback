@@ -122,15 +122,19 @@ export function registerAgreeCommand(program: Command): void {
                 `Warning: Reply and thumbs-up reaction were recorded, but conversation resolution is unconfirmed: ${statusMessage}`,
               );
               console.error(
-                "Do not run start + agree; inspect the native conversation and retry only its resolve transition if needed.",
+                "Do not repeat agree; inspect the item in the forge and retry only its expected conversation transition if needed.",
               );
               console.error(`Reply URL: ${reply.url}`);
               process.exitCode = 1;
               return;
             }
             console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
+            console.error(
+              "Do not repeat agree; inspect the item in the forge and complete its missing status changes manually.",
+            );
             console.error(`Reply URL: ${reply.url}`);
-            // Continue - reply was posted successfully
+            process.exitCode = 1;
+            return;
           }
 
           verboseLog(`${SUCCESS} Marked #${itemId} as agreed.`);

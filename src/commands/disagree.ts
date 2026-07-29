@@ -121,18 +121,22 @@ export function registerDisagreeCommand(program: Command): void {
               statusError instanceof Error ? statusError.message : String(statusError);
             if (finalReactionAdded) {
               console.error(
-                `Warning: Reply and thumbs-down reaction were recorded, but conversation reopen policy is unconfirmed: ${statusMessage}`,
+                `Warning: Reply and thumbs-down reaction were recorded, but the conversation state for this outcome is unconfirmed: ${statusMessage}`,
               );
               console.error(
-                "Do not run start + disagree; inspect the native conversation and retry only its unresolve transition if needed.",
+                "Do not repeat disagree; inspect the item in the forge and retry only its expected conversation transition if needed.",
               );
               console.error(`Reply URL: ${reply.url}`);
               process.exitCode = 1;
               return;
             }
             console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
+            console.error(
+              "Do not repeat disagree; inspect the item in the forge and complete its missing status changes manually.",
+            );
             console.error(`Reply URL: ${reply.url}`);
-            // Continue - reply was posted successfully
+            process.exitCode = 1;
+            return;
           }
 
           verboseLog(`${SUCCESS} Marked #${itemId} as disagreed.`);
