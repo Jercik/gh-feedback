@@ -124,9 +124,11 @@ export function registerAgreeCommand(program: Command): void {
               console.error(
                 "Do not run start + agree; inspect the native conversation and retry only its resolve transition if needed.",
               );
-            } else {
-              console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
+              console.error(`Reply URL: ${reply.url}`);
+              process.exitCode = 1;
+              return;
             }
+            console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
             console.error(`Reply URL: ${reply.url}`);
             // Continue - reply was posted successfully
           }

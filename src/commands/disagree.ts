@@ -126,9 +126,11 @@ export function registerDisagreeCommand(program: Command): void {
               console.error(
                 "Do not run start + disagree; inspect the native conversation and retry only its unresolve transition if needed.",
               );
-            } else {
-              console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
+              console.error(`Reply URL: ${reply.url}`);
+              process.exitCode = 1;
+              return;
             }
+            console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
             console.error(`Reply URL: ${reply.url}`);
             // Continue - reply was posted successfully
           }
