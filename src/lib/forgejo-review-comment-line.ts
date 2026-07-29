@@ -3,19 +3,34 @@
  *
  * Forgejo reports the new-side line in `position` and the old-side line in
  * `original_position`; the unused side is 0. Prefer whichever is set so a
- * comment on a removed line shows its real line instead of 0.
+ * comment on a removed line shows its real line instead of 0. Multi-line
+ * comment positions store the start of the range; multi-line comments display
+ * its final line by adding extra_lines_count, matching Forgejo's conversation UI.
  */
 
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
+  if ((comment.position ?? 0) <= 0 && (comment.original_position ?? 0) <= 0) {
+    return null;
+  }
+  const displayLine = reviewCommentDisplayLine(comment);
+  return displayLine === null || displayLine === 0 ? null : Math.abs(displayLine);
+}
+
+/** Signed display line used by Forgejo's native conversation grouping. */
+export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number | null {
   const newSide = comment.position ?? 0;
   const oldSide = comment.original_position ?? 0;
+  const extraLines = comment.extra_lines_count ?? 0;
   if (newSide > 0) {
-    return newSide;
+    return newSide + extraLines;
   }
   if (oldSide > 0) {
-    return oldSide;
+    return -(oldSide + extraLines);
+  }
+  if (comment.position === 0 && comment.original_position === 0) {
+    return extraLines;
   }
   return null;
 }

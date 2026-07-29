@@ -20,6 +20,8 @@ export interface ForgejoItemMeta {
   prNumber: number;
   /** Present for review-comment kind; carries the review id + line a threaded reply targets. */
   reviewComment?: ForgejoReviewComment;
+  /** Complete PR review-comment set used to derive the native conversation anchor. */
+  reviewComments?: ForgejoReviewComment[];
 }
 
 interface ResolvedForgejoItem {
@@ -98,7 +100,7 @@ export async function resolveItemMeta(
   const reviewComment = reviewComments.find((c) => c.id === itemId);
   if (reviewComment) {
     return {
-      meta: { kind: "review-comment", prNumber, reviewComment },
+      meta: { kind: "review-comment", prNumber, reviewComment, reviewComments },
       reviewComment,
       reviewComments,
     };

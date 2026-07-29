@@ -8,6 +8,7 @@
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
+import { startItem } from "../lib/start-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -29,13 +30,13 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isMinimized, isResolved } = await backend.getItemStatus(item);
+        const { viewerReactions, isMinimized, isResolved, viewerMayReopen } =
+          await backend.getItemStatus(item);
 
-        // Reopen if resolved, or (for comments and review containers, which can
-        // carry a thread's resolved flag) if hidden. A thread's minimized flag is
-        // independent of its resolved state, so for threads the resolved flag
-        // alone is authoritative and minimizing must not force a reopen.
-        const needsReopen = isResolved || (item.type !== "thread" && isMinimized);
+        // Reopen only when the backend says this viewer may do so. On Forgejo
+        // that preserves another user's resolution; on GitHub every resolved
+        // thread is reopenable. For non-thread items, hiding is a separate axis.
+        const needsReopen = viewerMayReopen || (item.type !== "thread" && isMinimized);
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
@@ -47,30 +48,21 @@ export function registerStartCommand(program: Command): void {
         } else {
           verboseLog("Action: add eyes reaction (in-progress)");
         }
+        if (item.type === "thread" && isResolved && !viewerMayReopen) {
+          console.error(
+            "Note: reopen skipped - conversation resolution belongs to another user and was preserved.",
+          );
+        }
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
           return;
         }
 
-        // Reopen the item if it was resolved/hidden
         if (needsReopen) {
           verboseLog("Reopening...");
-          const result = await backend.unresolve(item, isMinimized);
-          if (!result.supported) {
-            console.error(`Note: reopen skipped - ${result.reason}`);
-          }
         }
-
-        // Remove conflicting status reactions (only those we've added)
-        await backend.removeReactions(item, viewerReactions, [
-          "+1", // agreed
-          "-1", // disagreed
-          "rocket", // acknowledged
-          "confused", // awaiting-reply
-        ]);
-
-        await backend.addReaction(item, "eyes");
+        await startItem(backend, item, viewerReactions, isMinimized, needsReopen);
         verboseLog(`${SUCCESS} Marked #${itemId} as in-progress.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

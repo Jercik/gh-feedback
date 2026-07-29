@@ -1,7 +1,7 @@
 /**
  * Disagree command - mark item as "won't fix"
  *
- * Performs: reply + 👎 (thumbs_down) + resolve
+ * Performs: reply + 👎 (thumbs_down), then resolves on GitHub only
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -14,7 +14,9 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerDisagreeCommand(program: Command): void {
   program
     .command("disagree")
-    .description("Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve)")
+    .description(
+      "Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve; Forgejo stays open)",
+    )
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
@@ -80,7 +82,7 @@ export function registerDisagreeCommand(program: Command): void {
           await backend.blockIfUnresolvedSiblings(item, "disagree with");
 
           verboseLog("");
-          verboseLog("Actions: reply + thumbs_down + resolve");
+          verboseLog("Actions: reply + thumbs_down + apply conversation policy");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -92,6 +94,7 @@ export function registerDisagreeCommand(program: Command): void {
           const reply = await backend.reply(item, message);
 
           // 2-4: Status updates (best-effort after reply succeeds)
+          let finalReactionAdded = false;
           try {
             // 2. Remove conflicting status reactions (only those we've added)
             await backend.removeReactions(item, viewerReactions, [
@@ -104,19 +107,36 @@ export function registerDisagreeCommand(program: Command): void {
             // 3. Add thumbs_down
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "-1");
+            finalReactionAdded = true;
 
-            // 4. Resolve (degrades to a no-op where the forge has no resolve API)
-            verboseLog("Resolving...");
-            const resolveResult = await backend.resolve(item);
-            if (!resolveResult.supported) {
-              console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+            verboseLog("Applying conversation policy...");
+            const completionResult = await backend.complete(item, "disagreed");
+            if (!completionResult.supported) {
+              console.error(`Note: completion skipped - ${completionResult.reason}`);
+            } else if (!completionResult.applied) {
+              console.error(`Note: ${completionResult.reason}.`);
             }
           } catch (statusError) {
+            const statusMessage =
+              statusError instanceof Error ? statusError.message : String(statusError);
+            if (finalReactionAdded) {
+              console.error(
+                `Warning: Reply and thumbs-down reaction were recorded, but the conversation state for this outcome is unconfirmed: ${statusMessage}`,
+              );
+              console.error(
+                "Do not repeat disagree; inspect the item in the forge and retry only its expected conversation transition if needed.",
+              );
+              console.error(`Reply URL: ${reply.url}`);
+              process.exitCode = 1;
+              return;
+            }
+            console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
             console.error(
-              `Warning: Reply posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+              "Do not repeat disagree; inspect the item in the forge and complete its missing status changes manually.",
             );
             console.error(`Reply URL: ${reply.url}`);
-            // Continue - reply was posted successfully
+            process.exitCode = 1;
+            return;
           }
 
           verboseLog(`${SUCCESS} Marked #${itemId} as disagreed.`);

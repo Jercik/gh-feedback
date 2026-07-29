@@ -26,6 +26,7 @@ import { getForgejoViewer } from "./forgejo-environment.js";
 import { formatLocation, reactionToStatus, isStatusDone } from "./summary-types.js";
 import { isIgnoredAuthor } from "./github-environment.js";
 import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
+import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 
 export async function buildSummary(
   slug: string,
@@ -52,14 +53,15 @@ export async function buildSummary(
   // canonicalize to it before reacting, so the root's reactions carry the status.
   const conversations = groupReviewCommentConversations(visibleReviewComments, viewer);
 
-  const reviewCommentItems = await Promise.all(
-    conversations.map(async ({ root, replies }): Promise<FeedbackItem> => {
+  const reviewCommentRecords = await Promise.all(
+    conversations.map(async ({ root, replies }) => {
       const reactions = await fetchReactions(slug, "review-comment", root.id);
       const normalized = normalizeForgejoReactions(reactions, viewer);
-      return {
+      const isResolved = Boolean(forgejoNativeConversationAnchor(reviewComments, root)?.resolver);
+      const item: FeedbackItem = {
         id: root.id,
         timestamp: root.created_at,
-        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer)),
+        status: reactionToStatus(normalized, deriveIsDone(reactions, viewer) || isResolved),
         author: root.user?.login ?? "ghost",
         location: formatLocation(root.path, reviewCommentLine(root)),
         body: root.body,
@@ -69,8 +71,19 @@ export async function buildSummary(
           body: stripThreadReplyMarker(reply.body),
         })),
       };
+      return {
+        item,
+        isResolved,
+      };
     }),
   );
+  const reviewCommentItems = reviewCommentRecords
+    .filter(
+      ({ item, isResolved }) =>
+        !options.hideResolved ||
+        (!isResolved && item.status !== "agreed" && item.status !== "acknowledged"),
+    )
+    .map(({ item }) => item);
 
   const visibleIssueComments = issueComments.filter((c) => {
     if (c.body.trim().length === 0) {
@@ -99,11 +112,12 @@ export async function buildSummary(
     }),
   );
 
-  // hideResolved: Forgejo has no resolved-thread axis, so its reaction-backed
-  // equivalent is a done status (agreed/disagreed/acknowledged). hideHidden has
-  // no Forgejo equivalent — nothing is ever minimized — so it filters nothing.
-  const all = [...reviewCommentItems, ...issueCommentItems];
-  const filtered = options.hideResolved ? all.filter((i) => !isStatusDone(i.status)) : all;
+  // Inline conversations use native resolver state. Plain issue comments have
+  // no such axis, so their reaction-backed final status remains the equivalent.
+  const visibleIssueCommentItems = options.hideResolved
+    ? issueCommentItems.filter((item) => !isStatusDone(item.status))
+    : issueCommentItems;
+  const filtered = [...reviewCommentItems, ...visibleIssueCommentItems];
 
   const items = filtered.toSorted(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),

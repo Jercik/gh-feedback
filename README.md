@@ -14,11 +14,44 @@ npm install -g gh-feedback
 - Git repository with `origin` remote
 - Git installed (`git`)
 - For GitHub repos: GitHub CLI (`gh`) authenticated
-- For Forgejo repos: Forgejo CLI (`fgj`) authenticated
+- For Forgejo repos: the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
 
 The relevant forge CLI is required only for the forge that backs `origin`; a Forgejo repo never needs `gh`, and a GitHub repo never needs `fgj`.
 
-Forgejo has no thread-resolve or comment-hide API, so `agree`/`disagree`/`ack` track status by reaction alone there — the resolve/hide step is reported as skipped rather than failing. Forgejo review _bodies_ (the overall review text) are also intentionally excluded from `summary`, because a review entity has no reaction or resolve endpoint and so could never leave `pending`; check the forge UI for that text. Inline review comments and PR conversation comments are surfaced and tracked normally.
+The j4k Forgejo fork resolves inline review conversations through the local
+`fgj` CLI. `agree` and `ack` resolve settled inline conversations, while
+`disagree` deliberately leaves them open for the reviewer to settle. Plain PR
+comments have no hide API, so their status remains reaction-backed. Forgejo
+review _bodies_ (the overall review text) are also intentionally excluded from
+`summary`, because a review entity has no reaction or resolve endpoint and so
+could never leave `pending`; check the forge UI for that text. Inline review
+comments and PR conversation comments are surfaced and tracked normally.
+`start` reopens only conversations resolved by the authenticated account; a
+reviewer's resolution remains visible in `detail` and is deliberately preserved.
+It changes reactions only after any required reopen succeeds. If reopening
+reports an operational error, correct the cause and rerun `start`; the retry
+re-reads native state, reconciling both a request that never landed and one whose
+server-side reopen succeeded before the error surfaced.
+If `agree` or `disagree` records its final reaction but reports an operational
+completion failure, do not repeat the outcome command because that duplicates
+the reply. Inspect the native anchor and retry only `fgj pr review resolve` or
+`fgj pr review unresolve` when the expected transition did not land.
+
+When one native Forgejo conversation contains several feedback items, each
+item's reaction is recorded independently. `agree` and `ack` defer the shared
+conversation resolution until every item is agreed or acknowledged; a
+disagreed or awaiting-reply item keeps the conversation open.
+Because native resolution belongs to the whole conversation, `start` or a
+viewer-owned `disagree` on any finding reopens that shared conversation.
+Settled siblings keep their final reactions, and the conversation resolves
+again once every finding is agreed or acknowledged.
+`summary --hide-resolved` hides an agreed or acknowledged item as soon as its
+own final reaction is recorded, even when an unsettled sibling defers the
+native conversation resolution. Disagreed and awaiting-reply findings remain
+visible while their native conversation is open. A conversation resolved by
+another user hides all of its findings because `start` and `disagree` preserve
+that user's resolution. Plain PR comments have no conversation axis, so their
+final reaction still controls that filter.
 
 ### Custom Paths
 
@@ -37,6 +70,10 @@ export GH_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 ```
 
 This overrides only the API hostname. Whether an origin is treated as Forgejo is decided by `repoq`'s host classification, so this variable does not, on its own, enable an instance whose origin host `repoq` doesn't recognize.
+
+`repoq` is intentionally pinned to 1.2.0: later fallback classification treats
+unknown origin hosts as Forgejo. Keep the pin until provider detection is made
+explicit for unknown hosts.
 
 ## Usage
 
@@ -71,7 +108,7 @@ gh-feedback disagree 123456 -m 'Intentional, see docs'
 # Request clarification
 gh-feedback ask 123456 -m 'Could you clarify the expected behavior?'
 
-# Acknowledge noise (hide)
+# Acknowledge noise (hide/resolve)
 gh-feedback ack 123456
 
 # Preview any action without executing
@@ -80,28 +117,28 @@ gh-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                  | Description                                   |
-| ------------------------ | --------------------------------------------- |
-| `summary`                | Get all PR feedback with semantic status      |
-| `detail <id>`            | Fetch full untruncated content                |
-| `start <id>`             | Mark as work-in-progress (adds eyes reaction) |
-| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)           |
-| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down + resolve)     |
-| `ask <id> -m "..."`      | Need clarification (reply + confused)         |
-| `ack <id>`               | Acknowledge noise (rocket + hide)             |
+| Command                  | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| `summary`                | Get all PR feedback with semantic status                      |
+| `detail <id>`            | Fetch full untruncated content                                |
+| `start <id>`             | Mark as work-in-progress (adds eyes reaction)                 |
+| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                           |
+| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down + resolve; Forgejo stays open) |
+| `ask <id> -m "..."`      | Need clarification (reply + confused)                         |
+| `ack <id>`               | Acknowledge noise (rocket + hide/resolve)                     |
 
 ### Summary Output
 
 The `summary` command outputs all PR feedback with semantic status. Status combines your reactions with resolution state:
 
-| Status           | Meaning                                 |
-| ---------------- | --------------------------------------- |
-| `pending`        | Needs attention (no reaction, not done) |
-| `in-progress`    | Being worked on (not yet resolved)      |
-| `awaiting-reply` | Asked question, waiting for answer      |
-| `agreed`         | Fixed (👍 + resolved)                   |
-| `disagreed`      | Won't fix (👎 + resolved)               |
-| `acknowledged`   | Noted, no action (🚀 + hidden)          |
+| Status           | Meaning                                                |
+| ---------------- | ------------------------------------------------------ |
+| `pending`        | Needs attention (no reaction, not done)                |
+| `in-progress`    | Being worked on (not yet resolved)                     |
+| `awaiting-reply` | Asked question, waiting for answer                     |
+| `agreed`         | Fixed (👍 + resolved)                                  |
+| `disagreed`      | Won't fix (👎; Forgejo stays open)                     |
+| `acknowledged`   | Noted, no action (🚀; hidden/resolved where supported) |
 
 ### Output Formats
 

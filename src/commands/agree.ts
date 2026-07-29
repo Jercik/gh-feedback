@@ -79,7 +79,7 @@ export function registerAgreeCommand(program: Command): void {
           await backend.blockIfUnresolvedSiblings(item, "agree with");
 
           verboseLog("");
-          verboseLog("Actions: reply + thumbs_up + resolve");
+          verboseLog("Actions: reply + thumbs_up + apply conversation policy");
 
           if (options.dryRun) {
             console.error("Dry run: no changes made.");
@@ -91,6 +91,7 @@ export function registerAgreeCommand(program: Command): void {
           const reply = await backend.reply(item, message);
 
           // 2-4: Status updates (best-effort after reply succeeds)
+          let finalReactionAdded = false;
           try {
             // 2. Remove conflicting status reactions (only those we've added)
             await backend.removeReactions(item, viewerReactions, [
@@ -103,19 +104,37 @@ export function registerAgreeCommand(program: Command): void {
             // 3. Add thumbs_up
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "+1");
+            finalReactionAdded = true;
 
-            // 4. Resolve (degrades to a no-op where the forge has no resolve API)
+            // 4. Resolve the inline conversation, or report unsupported item types.
             verboseLog("Resolving...");
-            const resolveResult = await backend.resolve(item);
+            const resolveResult = await backend.complete(item, "agreed");
             if (!resolveResult.supported) {
               console.error(`Note: resolve skipped - ${resolveResult.reason}`);
+            } else if (!resolveResult.applied) {
+              console.error(`Note: ${resolveResult.reason}.`);
             }
           } catch (statusError) {
+            const statusMessage =
+              statusError instanceof Error ? statusError.message : String(statusError);
+            if (finalReactionAdded) {
+              console.error(
+                `Warning: Reply and thumbs-up reaction were recorded, but conversation resolution is unconfirmed: ${statusMessage}`,
+              );
+              console.error(
+                "Do not repeat agree; inspect the item in the forge and retry only its expected conversation transition if needed.",
+              );
+              console.error(`Reply URL: ${reply.url}`);
+              process.exitCode = 1;
+              return;
+            }
+            console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
             console.error(
-              `Warning: Reply posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
+              "Do not repeat agree; inspect the item in the forge and complete its missing status changes manually.",
             );
             console.error(`Reply URL: ${reply.url}`);
-            // Continue - reply was posted successfully
+            process.exitCode = 1;
+            return;
           }
 
           verboseLog(`${SUCCESS} Marked #${itemId} as agreed.`);

@@ -1,11 +1,12 @@
 /**
  * Ack command - acknowledge informational item
  *
- * Performs: 🚀 (rocket) + hide
+ * Performs: 🚀 (rocket) + hide/resolve
  * Used for bot summaries, status updates, or noise.
  */
 
 import type { Command } from "@commander-js/extra-typings";
+import { acknowledgeItem } from "../lib/acknowledge-item.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
@@ -14,7 +15,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description("Acknowledge informational item (rocket + hide)")
+    .description("Acknowledge informational item (rocket + hide/resolve)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
@@ -48,30 +49,19 @@ export function registerAckCommand(program: Command): void {
         await backend.blockIfUnresolvedSiblings(item, "ACK");
 
         verboseLog("");
-        verboseLog("Actions: rocket + hide (acknowledge noise)");
+        verboseLog("Actions: rocket + hide/resolve (acknowledge noise)");
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
           return;
         }
 
-        // 1. Remove conflicting status reactions (only those we've added)
-        await backend.removeReactions(item, viewerReactions, [
-          "eyes", // in-progress
-          "+1", // agreed
-          "-1", // disagreed
-          "confused", // awaiting-reply
-        ]);
-
-        // 2. Add rocket
-        verboseLog("Adding reaction...");
-        await backend.addReaction(item, "rocket");
-
-        // 3. Hide/resolve (degrades to a no-op where the forge has no hide API)
-        verboseLog("Hiding...");
-        const hideResult = await backend.resolve(item);
+        verboseLog("Updating reaction and completion state...");
+        const hideResult = await acknowledgeItem(backend, item, viewerReactions);
         if (!hideResult.supported) {
           console.error(`Note: hide skipped - ${hideResult.reason}`);
+        } else if (!hideResult.applied) {
+          console.error(`Note: ${hideResult.reason}.`);
         }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);

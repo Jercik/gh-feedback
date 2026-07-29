@@ -7,8 +7,8 @@
  * its provider-specific handle (GraphQL node/thread IDs, Forgejo item kind)
  * private and re-associates it by `id`.
  *
- * Capabilities that one forge lacks (thread resolve, comment hide) are modeled
- * as explicit results so callers can DEGRADE gracefully instead of crashing.
+ * Provider capability gaps and refused transitions are modeled as explicit
+ * results so callers can DEGRADE gracefully instead of crashing.
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
@@ -38,8 +38,9 @@ export interface ItemStatus {
   doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
   viewerReactions: ReactionContent[];
   isMinimized: boolean;
-  /** Thread/PR-level resolved state; always false where the forge lacks resolve. */
   isResolved: boolean;
+  /** Whether `start` may reopen this item under the provider's ownership policy. */
+  viewerMayReopen: boolean;
 }
 
 export interface ReplyResult {
@@ -49,12 +50,16 @@ export interface ReplyResult {
 
 /**
  * Outcome of a resolve/hide attempt. `supported: false` means the forge has no
- * equivalent API (Forgejo lacks thread RESOLVE and comment MINIMIZE), so the
- * caller should treat the workflow marker as the reaction alone.
+ * equivalent API. `applied: true` means the requested policy's target state
+ * was confirmed, not necessarily that storage changed. A supported policy
+ * no-op that deserves a user-facing explanation carries its reason separately.
  */
 export type CapabilityResult =
-  | { supported: true; applied: boolean }
+  | { supported: true; applied: true }
+  | { supported: true; applied: false; reason: string }
   | { supported: false; reason: string };
+
+export type FeedbackOutcome = "agreed" | "disagreed" | "acknowledged";
 
 export interface FeedbackBackend {
   readonly provider: "github" | "forgejo";
@@ -72,8 +77,8 @@ export interface FeedbackBackend {
     toRemove: ReactionContent[],
   ) => Promise<void>;
 
-  /** Mark an item done (resolve thread / hide comment). May be unsupported. */
-  resolve: (item: FeedbackItemRef) => Promise<CapabilityResult>;
+  /** Apply the forge's conversation policy for a completed outcome. */
+  complete: (item: FeedbackItemRef, outcome: FeedbackOutcome) => Promise<CapabilityResult>;
   /** Re-open an item. `isMinimized` only matters for the GitHub hide axis. */
   unresolve: (item: FeedbackItemRef, isMinimized: boolean) => Promise<CapabilityResult>;
 

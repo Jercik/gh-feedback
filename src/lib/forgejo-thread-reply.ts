@@ -29,8 +29,9 @@ const REPLY_PARENT_WITH_GAP = /^<!-- gh-feedback:reply-to:\d+ -->[ \t]*\r?\n\r?\
 
 /**
  * Whether a parent comment has a diff line a threaded reply can attach to.
- * Forgejo's create endpoint blames the line, erroring on a zero position, so a
- * positionless (file-level) parent must take the top-level reply path instead.
+ * Forgejo's create endpoint blames the line, erroring on a zero position;
+ * extra_lines_count describes range length and cannot supply a missing anchor.
+ * A positionless (file-level) parent must take the top-level reply path instead.
  */
 export function hasThreadablePosition(comment: ForgejoReviewComment): boolean {
   return (comment.position ?? 0) > 0 || (comment.original_position ?? 0) > 0;
@@ -48,6 +49,9 @@ export function forgejoThreadReplyBody(
     body.new_position = newSide;
   } else if (oldSide > 0) {
     body.old_position = oldSide;
+  }
+  if ((comment.extra_lines_count ?? 0) > 0) {
+    body.extra_lines_count = comment.extra_lines_count ?? 0;
   }
   return body;
 }
