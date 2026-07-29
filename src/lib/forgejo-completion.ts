@@ -6,6 +6,7 @@ import {
 import { getForgejoViewer } from "./forgejo-environment.js";
 import {
   changeForgejoConversationResolution,
+  decideForgejoReopen,
   decideForgejoCompletion,
   forgejoCompletionNeedsReadiness,
   isForgejoConversationResolvedBy,
@@ -30,6 +31,25 @@ export async function completeForgejoItem(
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
     readiness.ready ? undefined : readiness.reason,
+  );
+  if ("action" in decision) {
+    return changeForgejoConversationResolution(slug, item, decision.action);
+  }
+  return decision;
+}
+
+export async function reopenForgejoItem(
+  slug: string,
+  item: FeedbackItemRef,
+  reviewComments: readonly ForgejoReviewComment[] | undefined,
+  reviewComment: ForgejoReviewComment | undefined,
+): Promise<CapabilityResult> {
+  const viewer = await getForgejoViewer();
+  const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
+  const decision = decideForgejoReopen(
+    item,
+    isForgejoConversationResolvedBy(resolver, viewer),
+    Boolean(resolver),
   );
   if ("action" in decision) {
     return changeForgejoConversationResolution(slug, item, decision.action);

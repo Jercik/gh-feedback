@@ -49,6 +49,26 @@ export function forgejoCompletionNeedsReadiness(
   return item.type === "thread" && outcome !== "disagreed" && !resolvedByAnyone;
 }
 
+export function decideForgejoReopen(
+  item: FeedbackItemRef,
+  resolvedByViewer: boolean,
+  resolvedByAnyone: boolean,
+): ForgejoCompletionDecision {
+  if (item.type !== "thread") {
+    return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
+  }
+  if (resolvedByViewer) {
+    return { action: "unresolve" };
+  }
+  return resolvedByAnyone
+    ? {
+        supported: true,
+        applied: false,
+        reason: "conversation resolution belongs to another user and was preserved",
+      }
+    : { supported: true, applied: true };
+}
+
 export function forgejoResolutionArgs(
   action: ForgejoResolutionAction,
   apiHost: string,
@@ -67,6 +87,7 @@ export function forgejoResolutionArgs(
     "-R",
     slug,
     "--json",
+    // JSON mode makes fgj validate the success payload before reporting the transition.
   ];
 }
 
@@ -122,16 +143,7 @@ export function decideForgejoCompletion(
     return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
   }
   if (outcome === "disagreed") {
-    if (resolvedByViewer) {
-      return { action: "unresolve" };
-    }
-    return resolvedByAnyone
-      ? {
-          supported: true,
-          applied: false,
-          reason: "conversation resolution belongs to another user and was preserved",
-        }
-      : { supported: true, applied: true };
+    return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);
   }
   if (resolvedByAnyone) {
     return { supported: true, applied: false, reason: "conversation was already resolved" };

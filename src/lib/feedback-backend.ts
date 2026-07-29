@@ -50,8 +50,9 @@ export interface ReplyResult {
 
 /**
  * Outcome of a resolve/hide attempt. `supported: false` means the forge has no
- * equivalent API. A supported no-op carries its reason separately so callers
- * can distinguish policy decisions from capability gaps.
+ * equivalent API. `applied: true` means the requested policy's target state
+ * was confirmed, not necessarily that storage changed. A supported policy
+ * no-op that deserves a user-facing explanation carries its reason separately.
  */
 export type CapabilityResult =
   | { supported: true; applied: true }

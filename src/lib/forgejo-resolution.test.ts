@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   decideForgejoCompletion,
+  decideForgejoReopen,
   forgejoCompletionNeedsReadiness,
   forgejoResolutionUnsupportedReason,
   forgejoResolutionArgs,
@@ -109,6 +110,25 @@ describe("forgejoCompletionNeedsReadiness", () => {
     expect(forgejoCompletionNeedsReadiness({ ...thread, type: "comment" }, "agreed", false)).toBe(
       false,
     );
+  });
+});
+
+describe("decideForgejoReopen", () => {
+  it("reopens only a viewer-owned thread", () => {
+    expect(decideForgejoReopen(thread, true, true)).toStrictEqual({ action: "unresolve" });
+    expect(decideForgejoReopen(thread, false, false)).toStrictEqual({
+      supported: true,
+      applied: true,
+    });
+    expect(decideForgejoReopen(thread, false, true)).toStrictEqual({
+      supported: true,
+      applied: false,
+      reason: "conversation resolution belongs to another user and was preserved",
+    });
+    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toStrictEqual({
+      supported: false,
+      reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
+    });
   });
 });
 

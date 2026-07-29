@@ -10,6 +10,9 @@
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
+  if ((comment.position ?? 0) <= 0 && (comment.original_position ?? 0) <= 0) {
+    return null;
+  }
   const displayLine = reviewCommentDisplayLine(comment);
   return displayLine === null || displayLine === 0 ? null : Math.abs(displayLine);
 }

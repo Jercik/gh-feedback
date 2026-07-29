@@ -32,7 +32,7 @@ describe("reviewCommentLine", () => {
       extra_lines_count: 2,
     });
     expect(reviewCommentDisplayLine(comment)).toBe(2);
-    expect(reviewCommentLine(comment)).toBe(2);
+    expect(reviewCommentLine(comment)).toBeNull();
   });
 
   it("uses the final display line and preserves the old-side sign for grouping", () => {
