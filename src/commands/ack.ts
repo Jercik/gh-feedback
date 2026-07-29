@@ -6,6 +6,7 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
+import { acknowledgeItem } from "../lib/acknowledge-item.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
@@ -55,43 +56,8 @@ export function registerAckCommand(program: Command): void {
           return;
         }
 
-        const hadRocket = viewerReactions.includes("rocket");
-        let reactionsRemoved = false;
-        let rocketAdded = false;
-        let hideResult;
-        try {
-          await backend.removeReactions(item, viewerReactions, [
-            "eyes", // in-progress
-            "+1", // agreed
-            "-1", // disagreed
-            "confused", // awaiting-reply
-          ]);
-          reactionsRemoved = true;
-          verboseLog("Adding reaction...");
-          await backend.addReaction(item, "rocket");
-          rocketAdded = !hadRocket;
-
-          verboseLog("Hiding...");
-          hideResult = await backend.complete(item, "acknowledged");
-        } catch (completionError) {
-          try {
-            if (rocketAdded) {
-              await backend.removeReactions(item, ["rocket"], ["rocket"]);
-            }
-            if (reactionsRemoved) {
-              for (const reaction of viewerReactions.filter((value) =>
-                ["eyes", "+1", "-1", "confused"].includes(value),
-              )) {
-                await backend.addReaction(item, reaction);
-              }
-            }
-          } catch (rollbackError) {
-            console.error(
-              `Warning: Could not restore prior reactions after completion failed: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
-            );
-          }
-          throw completionError;
-        }
+        verboseLog("Updating reaction and completion state...");
+        const hideResult = await acknowledgeItem(backend, item, viewerReactions);
         if (!hideResult.supported) {
           console.error(`Note: hide skipped - ${hideResult.reason}`);
         } else if (!hideResult.applied) {

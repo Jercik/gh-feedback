@@ -33,11 +33,13 @@ When one native Forgejo conversation contains several feedback items, each
 item's reaction is recorded independently. `agree` and `ack` defer the shared
 conversation resolution until every item is agreed or acknowledged; a
 disagreed or awaiting-reply item keeps the conversation open.
-Accordingly, `summary --hide-resolved` keeps disagreed inline Forgejo findings
-visible while their native conversation remains open. A conversation resolved
-by another user remains hidden because `start` and `disagree` preserve that
-user's resolution. Plain PR comments have no conversation axis, so their final
-reaction still controls that filter.
+`summary --hide-resolved` hides an agreed or acknowledged item as soon as its
+own final reaction is recorded, even when an unsettled sibling defers the
+native conversation resolution. Disagreed and awaiting-reply findings remain
+visible while their native conversation is open. A conversation resolved by
+another user hides all of its findings because `start` and `disagree` preserve
+that user's resolution. Plain PR comments have no conversation axis, so their
+final reaction still controls that filter.
 
 ### Custom Paths
 

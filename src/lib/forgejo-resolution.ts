@@ -20,6 +20,7 @@ export function forgejoResolutionUnsupportedReason(message: string): string | un
       .trim()
       .toLowerCase()
       .replace(/^error:\s*/u, "");
+    // Pre-j4k.4 builds emit these exact Cobra 1.8.1 errors for this fixed argv shape.
     if (/^unknown flag:\s*--json$/u.test(line) || /^accepts 1 arg\(s\), received 3$/u.test(line)) {
       return OLD_FGJ_RESOLUTION_REASON;
     }
@@ -33,15 +34,19 @@ export function forgejoResolutionUnsupportedReason(message: string): string | un
   return unsupportedReason;
 }
 
-export function isForgejoResolutionUnsupported(message: string): boolean {
-  return forgejoResolutionUnsupportedReason(message) !== undefined;
-}
-
 export function isForgejoConversationResolvedBy(
   resolver: { login: string } | null | undefined,
   viewer: string,
 ): boolean {
   return resolver?.login === viewer;
+}
+
+export function forgejoCompletionNeedsReadiness(
+  item: FeedbackItemRef,
+  outcome: FeedbackOutcome,
+  resolvedByAnyone: boolean,
+): boolean {
+  return item.type === "thread" && outcome !== "disagreed" && !resolvedByAnyone;
 }
 
 export function forgejoResolutionArgs(
@@ -126,7 +131,7 @@ export function decideForgejoCompletion(
           applied: false,
           reason: "conversation resolution belongs to another user and was preserved",
         }
-      : { supported: true, applied: false, reason: "conversation was already open" };
+      : { supported: true, applied: true };
   }
   if (resolvedByAnyone) {
     return { supported: true, applied: false, reason: "conversation was already resolved" };

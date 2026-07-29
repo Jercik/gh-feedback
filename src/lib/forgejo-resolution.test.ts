@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   decideForgejoCompletion,
+  forgejoCompletionNeedsReadiness,
   forgejoResolutionUnsupportedReason,
   forgejoResolutionArgs,
   isForgejoConversationResolvedBy,
-  isForgejoResolutionUnsupported,
 } from "./forgejo-resolution.js";
 
 const thread = {
@@ -62,14 +62,14 @@ describe("isForgejoConversationResolvedBy", () => {
   });
 });
 
-describe("isForgejoResolutionUnsupported", () => {
+describe("forgejoResolutionUnsupportedReason", () => {
   it.each([
     "this Forgejo instance has no conversation-resolution API",
     'unknown command "resolve"',
     "Error: unknown flag: --json",
     "accepts 1 arg(s), received 3",
   ])("recognizes a graceful-degrade failure: %s", (message) => {
-    expect(isForgejoResolutionUnsupported(message)).toBe(true);
+    expect(forgejoResolutionUnsupportedReason(message)).toBeDefined();
   });
 
   it.each([
@@ -77,11 +77,11 @@ describe("isForgejoResolutionUnsupported", () => {
     "not allowed to mark this conversation",
     'request failed after remote said unknown command "resolve"',
   ])("does not hide an operational failure: %s", (message) => {
-    expect(isForgejoResolutionUnsupported(message)).toBe(false);
+    expect(forgejoResolutionUnsupportedReason(message)).toBeUndefined();
   });
 });
 
-describe("forgejoResolutionUnsupportedReason", () => {
+describe("forgejoResolutionUnsupportedReason details", () => {
   it("preserves the server capability verdict", () => {
     expect(
       forgejoResolutionUnsupportedReason(
@@ -98,6 +98,17 @@ describe("forgejoResolutionUnsupportedReason", () => {
       );
     },
   );
+});
+
+describe("forgejoCompletionNeedsReadiness", () => {
+  it("checks only unresolved thread settlements", () => {
+    expect(forgejoCompletionNeedsReadiness(thread, "agreed", false)).toBe(true);
+    expect(forgejoCompletionNeedsReadiness(thread, "acknowledged", true)).toBe(false);
+    expect(forgejoCompletionNeedsReadiness(thread, "disagreed", false)).toBe(false);
+    expect(forgejoCompletionNeedsReadiness({ ...thread, type: "comment" }, "agreed", false)).toBe(
+      false,
+    );
+  });
 });
 
 describe("decideForgejoCompletion", () => {
@@ -122,6 +133,13 @@ describe("decideForgejoCompletion", () => {
       supported: true,
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
+    });
+  });
+
+  it("treats an already-open disagreement as policy success", () => {
+    expect(decideForgejoCompletion(thread, "disagreed", false, false, undefined)).toStrictEqual({
+      supported: true,
+      applied: true,
     });
   });
 

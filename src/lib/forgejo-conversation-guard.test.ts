@@ -109,6 +109,30 @@ describe("forgejoNativeConversationSiblingRoots", () => {
       ),
     ).toBeUndefined();
   });
+
+  it("ignores incomplete roots whose known key components conflict", () => {
+    expect(
+      forgejoNativeConversationSiblingRoots(
+        [
+          comment(),
+          comment({ id: 2, pull_request_review_id: 8, path: null }),
+          comment({ id: 3, pull_request_review_id: null, path: "src/elsewhere.ts" }),
+        ],
+        "codex",
+        1,
+      ),
+    ).toStrictEqual([]);
+  });
+
+  it("fails closed for an incomplete root that could share the target conversation", () => {
+    expect(
+      forgejoNativeConversationSiblingRoots(
+        [comment(), comment({ id: 2, pull_request_review_id: null })],
+        "codex",
+        1,
+      ),
+    ).toBeUndefined();
+  });
 });
 
 describe("forgejoNativeConversationAnchor", () => {

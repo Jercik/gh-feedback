@@ -46,6 +46,25 @@ export function hasForgejoNativeConversationKey(comment: ForgejoReviewComment): 
   );
 }
 
+function couldShareForgejoNativeConversation(
+  candidate: ForgejoReviewComment,
+  target: ForgejoReviewComment,
+): boolean {
+  const candidateLine = reviewCommentDisplayLine(candidate);
+  const targetLine = reviewCommentDisplayLine(target);
+  if (
+    candidate.pull_request_review_id !== null &&
+    candidate.pull_request_review_id !== undefined &&
+    candidate.pull_request_review_id !== target.pull_request_review_id
+  ) {
+    return false;
+  }
+  if (candidate.path && candidate.path !== target.path) {
+    return false;
+  }
+  return candidateLine === null || candidateLine === targetLine;
+}
+
 export function forgejoNativeConversationSiblingRoots(
   reviewComments: readonly ForgejoReviewComment[],
   viewer: string,
@@ -54,10 +73,6 @@ export function forgejoNativeConversationSiblingRoots(
   const comments = reviewComments.filter(
     (comment) => !comment.user || !isIgnoredAuthor(comment.user.login),
   );
-  if (comments.some((comment) => !hasForgejoNativeConversationKey(comment))) {
-    return undefined;
-  }
-
   const conversations = groupReviewCommentConversations(comments, viewer);
   const target = conversations.find(
     ({ root, replies }) => root.id === itemId || replies.some((reply) => reply.id === itemId),
@@ -65,11 +80,23 @@ export function forgejoNativeConversationSiblingRoots(
   if (!target) {
     return undefined;
   }
-  return conversations
-    .filter(
-      ({ root }) => root.id !== target.root.id && sameForgejoNativeConversation(root, target.root),
-    )
-    .map(({ root }) => root);
+  if (!hasForgejoNativeConversationKey(target.root)) {
+    return undefined;
+  }
+
+  const siblings: ForgejoReviewComment[] = [];
+  for (const { root } of conversations) {
+    if (root.id === target.root.id || !couldShareForgejoNativeConversation(root, target.root)) {
+      continue;
+    }
+    if (!hasForgejoNativeConversationKey(root)) {
+      return undefined;
+    }
+    if (sameForgejoNativeConversation(root, target.root)) {
+      siblings.push(root);
+    }
+  }
+  return siblings;
 }
 
 export function forgejoNativeConversationAnchor(

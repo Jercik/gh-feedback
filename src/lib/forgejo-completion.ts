@@ -7,6 +7,7 @@ import { getForgejoViewer } from "./forgejo-environment.js";
 import {
   changeForgejoConversationResolution,
   decideForgejoCompletion,
+  forgejoCompletionNeedsReadiness,
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
@@ -20,10 +21,9 @@ export async function completeForgejoItem(
 ): Promise<CapabilityResult> {
   const viewer = await getForgejoViewer();
   const resolver = forgejoNativeConversationResolver(reviewComments ?? [], reviewComment);
-  const readiness =
-    outcome === "disagreed"
-      ? { ready: true as const }
-      : await getForgejoConversationResolutionReadiness(slug, item, reviewComments);
+  const readiness = forgejoCompletionNeedsReadiness(item, outcome, Boolean(resolver))
+    ? await getForgejoConversationResolutionReadiness(slug, item, reviewComments)
+    : { ready: true as const };
   const decision = decideForgejoCompletion(
     item,
     outcome,
