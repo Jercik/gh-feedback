@@ -94,6 +94,7 @@ export function registerDisagreeCommand(program: Command): void {
           const reply = await backend.reply(item, message);
 
           // 2-4: Status updates (best-effort after reply succeeds)
+          let finalReactionAdded = false;
           try {
             // 2. Remove conflicting status reactions (only those we've added)
             await backend.removeReactions(item, viewerReactions, [
@@ -106,6 +107,7 @@ export function registerDisagreeCommand(program: Command): void {
             // 3. Add thumbs_down
             verboseLog("Adding reaction...");
             await backend.addReaction(item, "-1");
+            finalReactionAdded = true;
 
             verboseLog("Applying conversation policy...");
             const completionResult = await backend.complete(item, "disagreed");
@@ -115,9 +117,18 @@ export function registerDisagreeCommand(program: Command): void {
               console.error(`Note: ${completionResult.reason}.`);
             }
           } catch (statusError) {
-            console.error(
-              `Warning: Reply posted, but status update failed: ${statusError instanceof Error ? statusError.message : String(statusError)}`,
-            );
+            const statusMessage =
+              statusError instanceof Error ? statusError.message : String(statusError);
+            if (finalReactionAdded) {
+              console.error(
+                `Warning: Reply and thumbs-down reaction were recorded, but conversation reopen policy is unconfirmed: ${statusMessage}`,
+              );
+              console.error(
+                "Do not run start + disagree; inspect the native conversation and retry only its unresolve transition if needed.",
+              );
+            } else {
+              console.error(`Warning: Reply posted, but status update failed: ${statusMessage}`);
+            }
             console.error(`Reply URL: ${reply.url}`);
             // Continue - reply was posted successfully
           }

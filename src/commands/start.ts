@@ -8,6 +8,7 @@
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
+import { startItem } from "../lib/start-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
@@ -58,27 +59,10 @@ export function registerStartCommand(program: Command): void {
           return;
         }
 
-        // Reopen the item if it was resolved/hidden
         if (needsReopen) {
           verboseLog("Reopening...");
-          // Keep the final reaction until reopen is confirmed; retries re-read ambiguous native state.
-          const result = await backend.unresolve(item, isMinimized);
-          if (!result.supported) {
-            console.error(`Note: reopen skipped - ${result.reason}`);
-          } else if (!result.applied) {
-            console.error(`Note: ${result.reason}.`);
-          }
         }
-
-        // Remove conflicting status reactions (only those we've added)
-        await backend.removeReactions(item, viewerReactions, [
-          "+1", // agreed
-          "-1", // disagreed
-          "rocket", // acknowledged
-          "confused", // awaiting-reply
-        ]);
-
-        await backend.addReaction(item, "eyes");
+        await startItem(backend, item, viewerReactions, isMinimized, needsReopen);
         verboseLog(`${SUCCESS} Marked #${itemId} as in-progress.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

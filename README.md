@@ -32,6 +32,10 @@ It changes reactions only after any required reopen succeeds. If reopening
 reports an operational error, correct the cause and rerun `start`; the retry
 re-reads native state, reconciling both a request that never landed and one whose
 server-side reopen succeeded before the error surfaced.
+If `agree` or `disagree` records its final reaction but reports an operational
+completion failure, do not repeat the outcome command because that duplicates
+the reply. Inspect the native anchor and retry only `fgj pr review resolve` or
+`fgj pr review unresolve` when the expected transition did not land.
 
 When one native Forgejo conversation contains several feedback items, each
 item's reaction is recorded independently. `agree` and `ack` defer the shared
