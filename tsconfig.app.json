@@ -9,7 +9,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "sourceMap": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "target": "es2025"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts", "src/**/*.json"],
   "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*"]
