@@ -47,6 +47,7 @@
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.5",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
     "fta-check": "^1.5.2",
     "fta-cli": "^3.0.0",
     "knip": "^6.6.0",
