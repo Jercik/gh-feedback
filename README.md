@@ -1,12 +1,34 @@
 # gh-feedback
 
+Source: https://code.j4k.dev/j4k-oss/gh-feedback. github.com/Jercik/gh-feedback is a read-only mirror; open issues and pull requests on the Forge.
+
 Semantic CLI for pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on the current branch's PR. The backend is chosen from the `origin` remote: GitHub (`github.com`, via `gh` + GraphQL) or Forgejo (`code.j4k.dev`, via `fgj` + REST).
 
 ## Installation
 
+Each release is published under two names with the same files:
+
+- `gh-feedback` on npmjs.org, for `npm install -g` and `npx`.
+- `@j4k-oss/gh-feedback` on the `code.j4k.dev` registry, for pnpm projects that exempt the `@j4k-oss` scope from `minimumReleaseAge`. The registry reads anonymously.
+
 ```bash
 npm install -g gh-feedback
 ```
+
+To use the `code.j4k.dev` copy, map the scope to its registry and exempt it in `pnpm-workspace.yaml`, then add the package:
+
+```yaml
+registries:
+  "@j4k-oss": https://code.j4k.dev/api/packages/j4k-oss/npm/
+minimumReleaseAgeExclude:
+  - "@j4k-oss/*"
+```
+
+```bash
+pnpm add -D @j4k-oss/gh-feedback
+```
+
+Both packages install the same `gh-feedback` command.
 
 ## Prerequisites
 

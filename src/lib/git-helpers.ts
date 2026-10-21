@@ -1,5 +1,4 @@
 import { spawnSync } from "node:child_process";
-import packageJson from "../../package.json" with { type: "json" };
 import { resolveDependencyPath } from "./resolve-dependency-path.js";
 
 export const GIT_PATH_ENV_VAR = "GH_FEEDBACK_GIT_PATH";
@@ -24,7 +23,7 @@ export function git(...arguments_: [...string[], { cwd?: string }] | string[]): 
   // Check if the last argument is an options object
   const lastArgument = arguments_.at(-1);
   if (lastArgument && typeof lastArgument === "object" && "cwd" in lastArgument) {
-    cwd = (lastArgument as { cwd?: string }).cwd;
+    cwd = lastArgument.cwd;
     gitArguments = arguments_.slice(0, -1) as string[];
   } else {
     gitArguments = arguments_ as string[];
@@ -58,7 +57,7 @@ export function git(...arguments_: [...string[], { cwd?: string }] | string[]): 
  */
 export function exitWithMessage(message: string): never {
   console.error(message);
-  console.error(`Try '${packageJson.name} --help' for details.`);
+  console.error(`Try 'gh-feedback --help' for details.`);
   // eslint-disable-next-line unicorn/no-process-exit
   process.exit(1);
 }

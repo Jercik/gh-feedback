@@ -13,7 +13,7 @@ import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-cli.js";
 
 /**
  * Create a Commander program with common configuration and preAction hooks.
- * Imports name, version, and description from package.json.
+ * Imports version and description from package.json; the program name is pinned to the unscoped CLI name.
  *
  * Global options:
  * - -v, --verbose: Show progress messages (quiet by default)
@@ -25,7 +25,7 @@ import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-cli.js";
  */
 export function createProgram(): Command {
   const program = new Command()
-    .name(packageJson.name)
+    .name("gh-feedback")
     .description(packageJson.description)
     .version(packageJson.version)
     .showHelpAfterError("(add --help for additional information)")

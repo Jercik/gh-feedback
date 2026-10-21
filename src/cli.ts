@@ -112,4 +112,14 @@ registerDisagreeCommand(program);
 registerAskCommand(program);
 registerAckCommand(program);
 
-await program.parseAsync(process.argv);
+async function main(): Promise<void> {
+  await program.parseAsync(process.argv);
+}
+
+// Called from a plain function: the repo's lint config forbids both a
+// top-level await and a top-level call to an async function.
+function start(): void {
+  void main();
+}
+
+start();
