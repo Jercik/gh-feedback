@@ -46,7 +46,7 @@ All of these provide the same `gh-feedback` command.
 
 ## Prerequisites
 
-- Node.js 24+
+- Node.js 24.15.0+
 - Git repository with `origin` remote
 - Git installed (`git`)
 - For GitHub repos: GitHub CLI (`gh`) authenticated

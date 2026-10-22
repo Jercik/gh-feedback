@@ -43,6 +43,13 @@ describe("detectProvider", () => {
   });
 
   it("strips a trailing .git only at the end of the slug", () => {
+    expect(detectProvider("https://github.com/owner/repo.git-tools.git")).toStrictEqual({
+      provider: "github",
+      host: "github.com",
+      owner: "owner",
+      repo: "repo.git-tools",
+      slug: "owner/repo.git-tools",
+    });
     expect(detectProvider("https://github.com/owner/repo")).toStrictEqual({
       provider: "github",
       host: "github.com",
