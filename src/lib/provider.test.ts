@@ -52,7 +52,26 @@ describe("detectProvider", () => {
     });
   });
 
+  it("detects github from the SSH-over-443 host", () => {
+    expect(detectProvider("ssh://git@ssh.github.com:443/Jercik/gh-feedback.git")).toStrictEqual({
+      provider: "github",
+      host: "github.com",
+      owner: "Jercik",
+      repo: "gh-feedback",
+      slug: "Jercik/gh-feedback",
+    });
+  });
+
   it("returns undefined for an unrecognized host", () => {
     expect(detectProvider("https://gitlab.com/owner/repo.git")).toBeUndefined();
+  });
+
+  it.each([
+    "https://codeberg.org/owner/repo.git",
+    "https://git.example.com:8443/owner/repo.git",
+    "git@git.example.com:owner/repo.git",
+    "ssh://git@gitea.internal:2222/owner/repo.git",
+  ])("returns undefined for a host that only looks like a Forgejo instance: %s", (origin) => {
+    expect(detectProvider(origin)).toBeUndefined();
   });
 });

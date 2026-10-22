@@ -171,12 +171,12 @@ importers:
       '@commander-js/extra-typings':
         specifier: ^14.0.0
         version: 14.0.0(commander@14.0.3)
+      '@j4k-oss/repoq':
+        specifier: 1.4.2
+        version: 1.4.2
       commander:
         specifier: ^14.0.3
         version: 14.0.3
-      repoq:
-        specifier: 1.2.0
-        version: 1.2.0
       zod:
         specifier: ^4.4.3
         version: 4.6.7
@@ -450,6 +450,10 @@ packages:
     hasBin: true
     peerDependencies:
       fta-cli: ^3.0.0
+
+  '@j4k-oss/repoq@1.4.2':
+    resolution: {integrity: sha512-mu1uGC63Xsd5t31Z0CODl+A6gdtIH3zPwlCD3Q78WHOjY1ukPDiqr/crAgOPombmTtjPfoNkjeeas+ctXRZsjA==, tarball: https://code.j4k.dev/api/packages/j4k-oss/npm/%40j4k-oss%2Frepoq/-/1.4.2/repoq-1.4.2.tgz}
+    hasBin: true
 
   '@j4k/oxlint-config@2.14.4':
     resolution: {integrity: sha512-YSdNcTWQ3mR2hmVkL0R7uUhYwQDpOFXUUBSVxssNhhxZvHdJpzMUVbbPvAFTv2358PzFWB/FDOzffKB8pI5szg==, tarball: https://code.j4k.dev/api/packages/j4k/npm/%40j4k%2Foxlint-config/-/2.14.4/oxlint-config-2.14.4.tgz}
@@ -2330,11 +2334,6 @@ packages:
     resolution: {integrity: sha512-P7B4+jq8DeD2nMsAcdfaqHbssgHtZ7Z5+++a5ask90fvmJ8p5je4mOa+wzu+DB4vQ5tdJV/xywY+UnVFeQLV5Q==}
     engines: {node: '>=14'}
 
-  repoq@1.2.0:
-    resolution: {integrity: sha512-cRgRCtRDWXJduEe5xuoCTxXWd3MbApHCv0iEybiqVjqqFdk2fw63Ecb15Mby/f5wMvvuvJmrLTamWohwUw0hmg==}
-    engines: {node: '>=24.0.0'}
-    hasBin: true
-
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -2921,6 +2920,12 @@ snapshots:
       '@commander-js/extra-typings': 15.0.0(commander@15.0.0)
       commander: 15.0.0
       fta-cli: 3.0.0
+
+  '@j4k-oss/repoq@1.4.2':
+    dependencies:
+      '@commander-js/extra-typings': 15.0.0(commander@15.0.0)
+      commander: 15.0.0
+      zod: 4.6.7
 
   '@j4k/oxlint-config@2.14.4(oxlint-tsgolint@7.0.2004)(oxlint@1.89.0(oxlint-tsgolint@7.0.2004))':
     dependencies:
@@ -4474,12 +4479,6 @@ snapshots:
   registry-auth-token@5.1.1:
     dependencies:
       '@pnpm/npm-conf': 3.0.2
-
-  repoq@1.2.0:
-    dependencies:
-      '@commander-js/extra-typings': 15.0.0(commander@15.0.0)
-      commander: 15.0.0
-      zod: 4.6.7
 
   require-directory@2.1.1: {}
 

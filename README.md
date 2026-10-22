@@ -6,16 +6,30 @@ Semantic CLI for pull request feedback workflow. Provides workflow-oriented comm
 
 ## Installation
 
-Each release is published under two names with the same files:
+`gh-feedback` is published only as `@j4k-oss/gh-feedback` on the `code.j4k.dev` registry, which reads anonymously. The unscoped `gh-feedback` package on npmjs.org is frozen at its last version and gets no updates.
 
-- `gh-feedback` on npmjs.org, for `npm install -g` and `npx`.
-- `@j4k-oss/gh-feedback` on the `code.j4k.dev` registry, for pnpm projects that exempt the `@j4k-oss` scope from `minimumReleaseAge`. The registry reads anonymously.
+The `@j4k-oss` scope also exists on npmjs.org with an owner we have not confirmed, so always map it to the `code.j4k.dev` registry. For a one-time setup, add this line to `~/.npmrc`:
 
-```bash
-npm install -g gh-feedback
+```ini
+@j4k-oss:registry=https://code.j4k.dev/api/packages/j4k-oss/npm/
 ```
 
-To use the `code.j4k.dev` copy, map the scope to its registry and exempt it in `pnpm-workspace.yaml`, then add the package:
+The inline flag in the commands below is enough for a single `npx` run. Keep the `~/.npmrc` line for global installs: `npm update -g` and `npm outdated -g` read the registry from your configuration, so without it they look the scoped name up on npmjs.org.
+
+To install the command globally, first remove any old unscoped install. Both packages provide the `gh-feedback` command, so `npm install -g` stops with `EEXIST` while the old one is there:
+
+```bash
+npm uninstall -g gh-feedback
+npm install -g --@j4k-oss:registry=https://code.j4k.dev/api/packages/j4k-oss/npm/ @j4k-oss/gh-feedback
+```
+
+To run it once without installing:
+
+```bash
+npx -y --@j4k-oss:registry=https://code.j4k.dev/api/packages/j4k-oss/npm/ @j4k-oss/gh-feedback@latest --help
+```
+
+To use it as a pnpm project dependency, map the scope to its registry and exempt it from `minimumReleaseAge` in `pnpm-workspace.yaml`, then add the package:
 
 ```yaml
 registries:
@@ -28,7 +42,7 @@ minimumReleaseAgeExclude:
 pnpm add -D @j4k-oss/gh-feedback
 ```
 
-Both packages install the same `gh-feedback` command.
+All of these provide the same `gh-feedback` command.
 
 ## Prerequisites
 
@@ -91,11 +105,9 @@ For an origin that is already detected as Forgejo, override the REST API host â€
 export GH_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 ```
 
-This overrides only the API hostname. Whether an origin is treated as Forgejo is decided by `repoq`'s host classification, so this variable does not, on its own, enable an instance whose origin host `repoq` doesn't recognize.
+This overrides only the API hostname. `gh-feedback` treats an origin as Forgejo only when `@j4k-oss/repoq` resolves it to the Forge (`code.j4k.dev` or its tailnet alias `code.tail.j4k.dev`), so this variable does not, on its own, enable any other instance.
 
-`repoq` is intentionally pinned to 1.2.0: later fallback classification treats
-unknown origin hosts as Forgejo. Keep the pin until provider detection is made
-explicit for unknown hosts.
+`@j4k-oss/repoq` classifies every parseable non-GitHub host as a candidate Forgejo instance, so `detectProvider` in `src/lib/provider.ts` rejects any origin whose resolved API host is not the Forge's. Keep that check when upgrading `@j4k-oss/repoq`.
 
 ## Usage
 
