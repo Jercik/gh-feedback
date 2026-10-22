@@ -165,14 +165,14 @@ gh-feedback agree 123456 -m 'Fixed' --dry-run
 
 The `summary` command outputs all PR feedback with semantic status. Status combines your reactions with resolution state:
 
-| Status           | Meaning                                                |
-| ---------------- | ------------------------------------------------------ |
-| `pending`        | Needs attention (no reaction, not done)                |
-| `in-progress`    | Being worked on (not yet resolved)                     |
-| `awaiting-reply` | Asked question, waiting for answer                     |
-| `agreed`         | Fixed (👍 + resolved)                                  |
-| `disagreed`      | Won't fix (👎; Forgejo stays open)                     |
-| `acknowledged`   | Noted, no action (🚀; hidden/resolved where supported) |
+| Status           | Meaning                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `pending`        | Needs attention (no reaction, not done)                                                                                   |
+| `in-progress`    | Work started, or reactions and resolution disagree (e.g. conflicting final reactions, resolved with no final reaction)    |
+| `awaiting-reply` | Asked a question (😕), not resolved; a reply does not clear it                                                            |
+| `agreed`         | Fixed (👍 + hidden/resolved; on Forgejo 👍 alone, so the conversation may stay open, see [Prerequisites](#prerequisites)) |
+| `disagreed`      | Won't fix (👎 + hidden/resolved; on Forgejo 👎 alone, so the conversation may stay open)                                  |
+| `acknowledged`   | Noted, no action (🚀 + hidden/resolved; on Forgejo 🚀 alone, so the conversation may stay open)                           |
 
 ### Output Formats
 
