@@ -6,9 +6,9 @@ Semantic CLI for pull request feedback workflow. Provides workflow-oriented comm
 
 ## Installation
 
-`gh-feedback` is published only as `@j4k-oss/gh-feedback` on the `code.j4k.dev` registry, which reads anonymously. The unscoped `gh-feedback` package on npmjs.org is frozen at its last version and gets no updates.
+`gh-feedback` is published only as `@j4k-oss/gh-feedback` on the `code.j4k.dev` registry, which reads anonymously. The unscoped `gh-feedback` package on npmjs.org is deprecated and gets no updates.
 
-The `@j4k-oss` scope also exists on npmjs.org with an owner we have not confirmed, so always map it to the `code.j4k.dev` registry. For a one-time setup, add this line to `~/.npmrc`:
+Always map the `@j4k-oss` scope to the `code.j4k.dev` registry: without a mapping, `npm` looks on npmjs.org, finds nothing, and fails with a 404. For a one-time setup, add this line to `~/.npmrc`:
 
 ```ini
 @j4k-oss:registry=https://code.j4k.dev/api/packages/j4k-oss/npm/
