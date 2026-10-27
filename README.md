@@ -127,8 +127,8 @@ gh-feedback start 123456
 # Mark as agreed/fixed (reply + resolve)
 gh-feedback agree 123456 -m 'Fixed in commit abc123'
 
-# Same, but read the message from stdin (scriptable)
-printf '%s\n' 'Fixed in commit abc123' | gh-feedback agree 123456
+# Same, but read the message from stdin; stdin is read only for -f - or --interactive
+printf '%s\n' 'Fixed in commit abc123' | gh-feedback agree 123456 -f -
 
 # Heredoc for messages with special characters (backticks, $, {})
 gh-feedback disagree 123456 -f - <<'EOF'

@@ -5,7 +5,7 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
-import { readMessageFromFile, readMessageFromStdin } from "../lib/message-input.js";
+import { resolveMessage } from "../lib/message-input.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
@@ -25,7 +25,7 @@ export function registerAskCommand(program: Command): void {
     .option("-m, --message <text>", "Question or clarification request")
     .option("-f, --body-file <path>", "Read message from file (use - for stdin)")
     .option("-n, --dry-run", "Preview without executing")
-    .option("-i, --interactive", "Allow typing message via stdin (Ctrl+D)")
+    .option("-i, --interactive", "Type the message on stdin (Ctrl+D to finish)")
     .action(
       async (
         itemId: number,
@@ -37,22 +37,8 @@ export function registerAskCommand(program: Command): void {
         },
       ) => {
         try {
+          const message = await resolveMessage(options, "question");
           const { backend } = resolveBackend();
-
-          // Get message
-          let message: string;
-          if (options.bodyFile) {
-            message = await readMessageFromFile(options.bodyFile, "question");
-          } else if (options.message) {
-            message = options.message;
-          } else {
-            if (process.stdin.isTTY && !options.interactive) {
-              exitWithMessage(
-                "Error: Missing question message. Provide -m/--message, -f/--body-file, pipe via stdin, or pass --interactive to type it.",
-              );
-            }
-            message = await readMessageFromStdin("question");
-          }
 
           verboseLog(`Detecting item type for #${itemId}...`);
           const item = await backend.detectItem(itemId);

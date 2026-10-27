@@ -1,12 +1,13 @@
 /**
- * Message input helpers for reading from file or stdin.
+ * Resolve the reply message from -m, -f, or an explicit --interactive request.
+ * Stdin is never read implicitly: an agent's stdin can stay open without sending EOF.
  */
 
 import * as fs from "node:fs/promises";
 import * as readline from "node:readline/promises";
 import { exitWithMessage } from "./git-helpers.js";
 
-export async function readMessageFromFile(filePath: string, prompt = "message"): Promise<string> {
+async function readMessageFromFile(filePath: string, prompt = "message"): Promise<string> {
   // Treat "-" as stdin (standard Unix convention)
   if (filePath === "-") {
     return readMessageFromStdin(prompt);
@@ -26,7 +27,7 @@ export async function readMessageFromFile(filePath: string, prompt = "message"):
   }
 }
 
-export async function readMessageFromStdin(prompt: string): Promise<string> {
+async function readMessageFromStdin(prompt: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stderr,
@@ -55,4 +56,23 @@ export async function readMessageFromStdin(prompt: string): Promise<string> {
   }
 
   return message;
+}
+
+export async function resolveMessage(
+  options: { message?: string; bodyFile?: string; interactive?: boolean },
+  prompt: string,
+): Promise<string> {
+  if (options.bodyFile !== undefined) {
+    return readMessageFromFile(options.bodyFile, prompt);
+  }
+  if (options.message !== undefined) {
+    const message = options.message.trim();
+    return message || exitWithMessage(`Error: Empty ${prompt} message.`);
+  }
+  if (options.interactive) {
+    return readMessageFromStdin(prompt);
+  }
+  return exitWithMessage(
+    `Error: Missing ${prompt} message. Provide -m/--message or -f/--body-file (use "-f -" to read stdin), or pass --interactive to type it.`,
+  );
 }
