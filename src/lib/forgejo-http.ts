@@ -153,15 +153,15 @@ export async function forgejoResponse(request: ForgejoRequest): Promise<Response
  * Parse successful JSON, or return undefined for HTTP 204 or an empty body.
  * T is the caller's assertion of the response shape, not runtime validation.
  */
-export async function forgejoFetch<T>(request: ForgejoRequest): Promise<T> {
+export async function forgejoFetch<T>(request: ForgejoRequest): Promise<T | undefined> {
   const response = await forgejoResponse(request);
   if (response.status === 204) {
-    return undefined as T;
+    return undefined;
   }
 
   const text = await response.text();
   if (!text) {
-    return undefined as T;
+    return undefined;
   }
   return JSON.parse(text) as T;
 }

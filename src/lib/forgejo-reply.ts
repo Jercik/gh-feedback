@@ -56,5 +56,10 @@ export async function postForgejoReply(
     path,
     body,
   });
+  if (reply === undefined) {
+    throw new Error(
+      `Forgejo POST ${path}: missing JSON reply response; the reply may already exist`,
+    );
+  }
   return { id: reply.id, url: reply.html_url };
 }
