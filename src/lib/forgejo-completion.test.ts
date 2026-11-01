@@ -103,10 +103,7 @@ describe("forgejo transition state refresh", () => {
   it("does not fetch review comments for a plain comment", async () => {
     await expect(
       completeForgejoItem("j4k-oss/pr-feedback", { ...thread, type: "comment" }, "acknowledged"),
-    ).resolves.toStrictEqual({
-      supported: false,
-      reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
-    });
+    ).resolves.toBeUndefined();
     expect(mocks.fetchComments).not.toHaveBeenCalled();
   });
 });

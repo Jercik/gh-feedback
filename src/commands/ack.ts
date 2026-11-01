@@ -54,11 +54,11 @@ export function registerAckCommand(program: Command): void {
         }
 
         verboseLog("Updating reaction and completion state...");
-        const hideResult = await acknowledgeItem(backend, item, viewerReactions);
-        if (!hideResult.supported) {
-          console.error(`Note: hide skipped - ${hideResult.reason}`);
-        } else if (!hideResult.applied) {
-          console.error(`Note: ${hideResult.reason}.`);
+        const completionResult = await acknowledgeItem(backend, item, viewerReactions);
+        if (completionResult && !completionResult.supported) {
+          console.error(`Note: conversation resolution skipped - ${completionResult.reason}`);
+        } else if (completionResult && !completionResult.applied) {
+          console.error(`Note: ${completionResult.reason}.`);
         }
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);

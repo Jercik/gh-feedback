@@ -90,12 +90,12 @@ export function registerAgreeCommand(program: Command): void {
             await backend.addReaction(item, "+1");
             finalReactionAdded = true;
 
-            // 4. Resolve the inline conversation, or report unsupported item types.
+            // 4. Resolve the inline conversation when applicable.
             verboseLog("Resolving...");
             const resolveResult = await backend.complete(item, "agreed");
-            if (!resolveResult.supported) {
+            if (resolveResult && !resolveResult.supported) {
               console.error(`Note: resolve skipped - ${resolveResult.reason}`);
-            } else if (!resolveResult.applied) {
+            } else if (resolveResult && !resolveResult.applied) {
               console.error(`Note: ${resolveResult.reason}.`);
             }
           } catch (statusError) {

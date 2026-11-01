@@ -8,7 +8,6 @@ import {
   decideForgejoReopen,
   decideForgejoCompletion,
   forgejoCompletionNeedsReadiness,
-  forgejoUnsupportedHideResult,
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
 import { changeForgejoConversationResolution } from "./change-forgejo-conversation-resolution.js";
@@ -26,9 +25,9 @@ export async function completeForgejoItem(
   slug: string,
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
-): Promise<CapabilityResult> {
+): Promise<CapabilityResult | undefined> {
   if (item.type !== "thread") {
-    return forgejoUnsupportedHideResult();
+    return undefined;
   }
   const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
     fetchForgejoTransitionState(slug, item),
@@ -45,7 +44,7 @@ export async function completeForgejoItem(
     Boolean(resolver),
     readiness.ready ? undefined : readiness.reason,
   );
-  if ("action" in decision) {
+  if (decision && "action" in decision) {
     return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;
@@ -54,9 +53,9 @@ export async function completeForgejoItem(
 export async function reopenForgejoItem(
   slug: string,
   item: FeedbackItemRef,
-): Promise<CapabilityResult> {
+): Promise<CapabilityResult | undefined> {
   if (item.type !== "thread") {
-    return forgejoUnsupportedHideResult();
+    return undefined;
   }
   const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
     fetchForgejoTransitionState(slug, item),
@@ -68,7 +67,7 @@ export async function reopenForgejoItem(
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
   );
-  if ("action" in decision) {
+  if (decision && "action" in decision) {
     return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;

@@ -2,7 +2,7 @@
  * Forgejo backend: REST /api/v1 implementation of the FeedbackBackend seam.
  *
  * The j4k Forgejo fork resolves inline conversations through the local fgj CLI.
- * Plain issue comments still have no hide API, so their status uses reactions.
+ * Plain issue comments and review bodies settle through reactions alone.
  *
  * `detectItem` returns the neutral ref but caches the resolved item kind by
  * `id`, so reply/react re-use it without re-probing the REST endpoints. For an
@@ -154,11 +154,11 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
     },
 
-    async complete(item, outcome): Promise<CapabilityResult> {
+    async complete(item, outcome): Promise<CapabilityResult | undefined> {
       return completeForgejoItem(slug, item, outcome);
     },
 
-    async unresolve(item: FeedbackItemRef): Promise<CapabilityResult> {
+    async unresolve(item: FeedbackItemRef): Promise<CapabilityResult | undefined> {
       return reopenForgejoItem(slug, item);
     },
   };

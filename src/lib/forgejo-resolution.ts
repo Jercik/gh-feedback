@@ -1,16 +1,9 @@
 import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
 import type { FeedbackOutcome } from "./feedback-backend.js";
 
-const FORGEJO_UNSUPPORTED_HIDE =
-  "Forgejo has no comment-hide API; status is tracked by reaction only.";
-
-export function forgejoUnsupportedHideResult(): CapabilityResult {
-  return { supported: false, reason: FORGEJO_UNSUPPORTED_HIDE };
-}
-
 export type ForgejoResolutionAction = "resolve" | "unresolve";
 
-type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction };
+type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction } | undefined;
 
 const OLD_FGJ_RESOLUTION_REASON =
   "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer";
@@ -55,7 +48,7 @@ export function decideForgejoReopen(
   resolvedByAnyone: boolean,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return forgejoUnsupportedHideResult();
+    return undefined;
   }
   if (resolvedByViewer) {
     return { action: "unresolve" };
@@ -99,7 +92,7 @@ export function decideForgejoCompletion(
   notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return forgejoUnsupportedHideResult();
+    return undefined;
   }
   if (outcome === "disagreed") {
     return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);

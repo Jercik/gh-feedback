@@ -51,10 +51,7 @@ test("mutates the backing comment and replies using its action identity", async 
     path: "repos/o/r/issues/3/comments",
     body: { body: "> Replying to review #91\n\nFixed" },
   });
-  await expect(backend.complete(item, "agreed")).resolves.toStrictEqual({
-    supported: false,
-    reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
-  });
+  await expect(backend.complete(item, "agreed")).resolves.toBeUndefined();
   expect(mocks.comments).not.toHaveBeenCalled();
 });
 

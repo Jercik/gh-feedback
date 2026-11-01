@@ -94,9 +94,9 @@ export function registerDisagreeCommand(program: Command): void {
 
             verboseLog("Applying conversation policy...");
             const completionResult = await backend.complete(item, "disagreed");
-            if (!completionResult.supported) {
+            if (completionResult && !completionResult.supported) {
               console.error(`Note: completion skipped - ${completionResult.reason}`);
-            } else if (!completionResult.applied) {
+            } else if (completionResult && !completionResult.applied) {
               console.error(`Note: ${completionResult.reason}.`);
             }
           } catch (statusError) {

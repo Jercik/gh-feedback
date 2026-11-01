@@ -140,10 +140,7 @@ describe("decideForgejoReopen", () => {
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
     });
-    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toStrictEqual({
-      supported: false,
-      reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
-    });
+    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toBeUndefined();
   });
 });
 
@@ -186,13 +183,10 @@ describe("decideForgejoCompletion", () => {
     });
   });
 
-  it("reports non-thread completion as unsupported", () => {
+  it("finishes reaction-only completion without a native transition", () => {
     expect(
       decideForgejoCompletion({ ...thread, type: "comment" }, "disagreed", false, false, undefined),
-    ).toStrictEqual({
-      supported: false,
-      reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
-    });
+    ).toBeUndefined();
   });
 
   it("chooses native resolve for a ready open conversation", () => {
