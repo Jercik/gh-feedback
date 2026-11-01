@@ -63,13 +63,7 @@ export function normalizeInlineComment(
   };
   return {
     comment,
-    nativeIdentity: reviewCommentConversationIdentity({
-      ...raw,
-      user: undefined,
-      resolver: undefined,
-      created_at: raw.created_at ?? "",
-      html_url: raw.html_url ?? "",
-    }),
+    nativeIdentity: reviewCommentConversationIdentity(raw),
   };
 }
 

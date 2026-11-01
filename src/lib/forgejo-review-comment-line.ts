@@ -20,7 +20,9 @@ export function reviewCommentLine(comment: ForgejoReviewComment): number | null 
 }
 
 /** Signed display line used by Forgejo's native conversation grouping. */
-export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number | null {
+export function reviewCommentDisplayLine(
+  comment: Pick<ForgejoReviewComment, "position" | "original_position" | "extra_lines_count">,
+): number | null {
   const newSide = comment.position ?? 0;
   const oldSide = comment.original_position ?? 0;
   const extraLines = comment.extra_lines_count ?? 0;
@@ -53,7 +55,12 @@ export function reviewCommentCoordinates(
   return { side, displayLine: (position === 0 ? originalPosition : position) + extraLines };
 }
 
-export function reviewCommentConversationIdentity(comment: ForgejoReviewComment): string | null {
+export function reviewCommentConversationIdentity(
+  comment: Pick<
+    ForgejoReviewComment,
+    "pull_request_review_id" | "path" | "position" | "original_position" | "extra_lines_count"
+  >,
+): string | null {
   const signedLine = reviewCommentDisplayLine(comment);
   if (
     signedLine === null ||
