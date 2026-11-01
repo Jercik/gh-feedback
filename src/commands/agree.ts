@@ -4,6 +4,7 @@
  * Performs: reply + 👍 (thumbs_up) + resolve
  */
 
+import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { resolveMessage } from "../lib/message-input.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
@@ -93,11 +94,7 @@ export function registerAgreeCommand(program: Command): void {
             // 4. Resolve the inline conversation when applicable.
             verboseLog("Resolving...");
             const resolveResult = await backend.complete(item, "agreed");
-            if (!resolveResult.supported) {
-              console.error(`Note: conversation resolution skipped - ${resolveResult.reason}`);
-            } else if (!resolveResult.applied) {
-              console.error(`Note: ${resolveResult.reason}.`);
-            }
+            reportCompletionResult(resolveResult);
           } catch (statusError) {
             const statusMessage =
               statusError instanceof Error ? statusError.message : String(statusError);

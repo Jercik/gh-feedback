@@ -34,11 +34,10 @@ export async function completeForgejoItem(
     getForgejoViewer(),
   ]);
   const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
-  const readiness = forgejoCompletionNeedsReadiness(item, outcome, Boolean(resolver))
+  const readiness = forgejoCompletionNeedsReadiness(outcome, Boolean(resolver))
     ? await getForgejoConversationResolutionReadiness(slug, item, reviewComments)
     : { ready: true as const };
   const decision = decideForgejoCompletion(
-    item,
     outcome,
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
@@ -63,7 +62,6 @@ export async function reopenForgejoItem(
   ]);
   const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const decision = decideForgejoReopen(
-    item,
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
   );

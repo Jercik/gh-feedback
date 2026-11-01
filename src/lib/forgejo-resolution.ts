@@ -1,4 +1,4 @@
-import type { CapabilityResult, FeedbackItemRef } from "./feedback-backend.js";
+import type { CapabilityResult } from "./feedback-backend.js";
 import type { FeedbackOutcome } from "./feedback-backend.js";
 
 export type ForgejoResolutionAction = "resolve" | "unresolve";
@@ -35,21 +35,16 @@ export function isForgejoConversationResolvedBy(
 }
 
 export function forgejoCompletionNeedsReadiness(
-  item: FeedbackItemRef,
   outcome: FeedbackOutcome,
   resolvedByAnyone: boolean,
 ): boolean {
-  return item.type === "thread" && outcome !== "disagreed" && !resolvedByAnyone;
+  return outcome !== "disagreed" && !resolvedByAnyone;
 }
 
 export function decideForgejoReopen(
-  item: FeedbackItemRef,
   resolvedByViewer: boolean,
   resolvedByAnyone: boolean,
 ): ForgejoCompletionDecision {
-  if (item.type !== "thread") {
-    return { supported: true, applied: true };
-  }
   if (resolvedByViewer) {
     return { action: "unresolve" };
   }
@@ -85,17 +80,13 @@ export function forgejoResolutionArgs(
 }
 
 export function decideForgejoCompletion(
-  item: FeedbackItemRef,
   outcome: FeedbackOutcome,
   resolvedByViewer: boolean,
   resolvedByAnyone: boolean,
   notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
-  if (item.type !== "thread") {
-    return { supported: true, applied: true };
-  }
   if (outcome === "disagreed") {
-    return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);
+    return decideForgejoReopen(resolvedByViewer, resolvedByAnyone);
   }
   if (resolvedByAnyone) {
     return { supported: true, applied: true };

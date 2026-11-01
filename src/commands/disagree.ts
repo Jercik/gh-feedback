@@ -4,6 +4,7 @@
  * Performs: reply + 👎 (thumbs_down), leaving the conversation open
  */
 
+import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { resolveMessage } from "../lib/message-input.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
@@ -94,11 +95,7 @@ export function registerDisagreeCommand(program: Command): void {
 
             verboseLog("Applying conversation policy...");
             const completionResult = await backend.complete(item, "disagreed");
-            if (!completionResult.supported) {
-              console.error(`Note: conversation resolution skipped - ${completionResult.reason}`);
-            } else if (!completionResult.applied) {
-              console.error(`Note: ${completionResult.reason}.`);
-            }
+            reportCompletionResult(completionResult);
           } catch (statusError) {
             const statusMessage =
               statusError instanceof Error ? statusError.message : String(statusError);

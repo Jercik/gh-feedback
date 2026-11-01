@@ -5,6 +5,7 @@
  * Used for bot summaries, status updates, or noise.
  */
 
+import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { acknowledgeItem } from "../lib/acknowledge-item.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
@@ -55,11 +56,7 @@ export function registerAckCommand(program: Command): void {
 
         verboseLog("Updating reaction and completion state...");
         const completionResult = await acknowledgeItem(backend, item, viewerReactions);
-        if (!completionResult.supported) {
-          console.error(`Note: conversation resolution skipped - ${completionResult.reason}`);
-        } else if (!completionResult.applied) {
-          console.error(`Note: ${completionResult.reason}.`);
-        }
+        reportCompletionResult(completionResult);
 
         verboseLog(`${SUCCESS} Acknowledged #${itemId}.`);
       } catch (error) {

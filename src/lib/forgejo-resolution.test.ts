@@ -8,15 +8,6 @@ import {
   isForgejoConversationResolvedBy,
 } from "./forgejo-resolution.js";
 
-const thread = {
-  type: "thread" as const,
-  id: 25_226,
-  author: "reviewer",
-  prNumber: 160,
-  path: "src/a.ts",
-  line: 20,
-};
-
 describe("forgejoResolutionArgs", () => {
   it("builds the native resolve command", () => {
     expect(
@@ -119,30 +110,23 @@ describe("forgejoResolutionUnsupportedReason details", () => {
 
 describe("forgejoCompletionNeedsReadiness", () => {
   it("checks only unresolved thread settlements", () => {
-    expect(forgejoCompletionNeedsReadiness(thread, "agreed", false)).toBe(true);
-    expect(forgejoCompletionNeedsReadiness(thread, "acknowledged", true)).toBe(false);
-    expect(forgejoCompletionNeedsReadiness(thread, "disagreed", false)).toBe(false);
-    expect(forgejoCompletionNeedsReadiness({ ...thread, type: "comment" }, "agreed", false)).toBe(
-      false,
-    );
+    expect(forgejoCompletionNeedsReadiness("agreed", false)).toBe(true);
+    expect(forgejoCompletionNeedsReadiness("acknowledged", true)).toBe(false);
+    expect(forgejoCompletionNeedsReadiness("disagreed", false)).toBe(false);
   });
 });
 
 describe("decideForgejoReopen", () => {
   it("reopens only a viewer-owned thread", () => {
-    expect(decideForgejoReopen(thread, true, true)).toStrictEqual({ action: "unresolve" });
-    expect(decideForgejoReopen(thread, false, false)).toStrictEqual({
+    expect(decideForgejoReopen(true, true)).toStrictEqual({ action: "unresolve" });
+    expect(decideForgejoReopen(false, false)).toStrictEqual({
       supported: true,
       applied: true,
     });
-    expect(decideForgejoReopen(thread, false, true)).toStrictEqual({
+    expect(decideForgejoReopen(false, true)).toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
-    });
-    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toStrictEqual({
-      supported: true,
-      applied: true,
     });
   });
 });
@@ -151,7 +135,6 @@ describe("decideForgejoCompletion", () => {
   it("reports the reason when shared resolution is deferred", () => {
     expect(
       decideForgejoCompletion(
-        thread,
         "agreed",
         false,
         false,
@@ -165,7 +148,7 @@ describe("decideForgejoCompletion", () => {
   });
 
   it("preserves another user's resolution on disagreement", () => {
-    expect(decideForgejoCompletion(thread, "disagreed", false, true, undefined)).toStrictEqual({
+    expect(decideForgejoCompletion("disagreed", false, true, undefined)).toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
@@ -173,33 +156,27 @@ describe("decideForgejoCompletion", () => {
   });
 
   it("treats an already-open disagreement as policy success", () => {
-    expect(decideForgejoCompletion(thread, "disagreed", false, false, undefined)).toStrictEqual({
+    expect(decideForgejoCompletion("disagreed", false, false, undefined)).toStrictEqual({
       supported: true,
       applied: true,
     });
   });
 
   it("treats an already-resolved agreement as policy success", () => {
-    expect(decideForgejoCompletion(thread, "agreed", false, true, undefined)).toStrictEqual({
+    expect(decideForgejoCompletion("agreed", false, true, undefined)).toStrictEqual({
       supported: true,
       applied: true,
     });
   });
 
-  it("finishes reaction-only completion without a native transition", () => {
-    expect(
-      decideForgejoCompletion({ ...thread, type: "comment" }, "disagreed", false, false, undefined),
-    ).toStrictEqual({ supported: true, applied: true });
-  });
-
   it("chooses native resolve for a ready open conversation", () => {
-    expect(decideForgejoCompletion(thread, "agreed", false, false, undefined)).toStrictEqual({
+    expect(decideForgejoCompletion("agreed", false, false, undefined)).toStrictEqual({
       action: "resolve",
     });
   });
 
   it("chooses native unresolve for a viewer-owned disagreement", () => {
-    expect(decideForgejoCompletion(thread, "disagreed", true, true, undefined)).toStrictEqual({
+    expect(decideForgejoCompletion("disagreed", true, true, undefined)).toStrictEqual({
       action: "unresolve",
     });
   });
