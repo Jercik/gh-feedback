@@ -1,16 +1,14 @@
-import type { CommentRecord, ConversationRecord, Side } from "./feedback-types.js";
+import { compareForgejoCommentOrder } from "./compare-forgejo-comment-order.js";
+import {
+  forgejoConversationIdentity,
+  reviewCommentCoordinates,
+} from "./forgejo-review-comment-line.js";
+import type { CommentRecord, ConversationRecord } from "./feedback-types.js";
 
 import { unfetchedFindingState, integerOrZero, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReviewComment } from "./forgejo-schemas.js";
 
 import { threadReplyParentId } from "./forgejo-thread-reply.js";
-
-function inlineCommentSide(position: number, originalPosition: number): Side {
-  if (position === 0 && originalPosition === 0) {
-    return "zero";
-  }
-  return position === 0 ? "old" : "new";
-}
 
 export function normalizeInlineComment(
   raw: ForgejoSnapshotReviewComment,
@@ -22,9 +20,12 @@ export function normalizeInlineComment(
 
   const position = integerOrZero(raw.position);
   const originalPosition = integerOrZero(raw.original_position);
-  const side = inlineCommentSide(position, originalPosition);
   const extraLinesCount = integerOrZero(raw.extra_lines_count);
-  const displayLine = (position === 0 ? originalPosition : position) + extraLinesCount;
+  const { side, displayLine } = reviewCommentCoordinates(
+    position,
+    originalPosition,
+    extraLinesCount,
+  );
   const body = raw.body;
   const user = userRef(raw.user) ?? { id: null, login: null };
   const parentId = user.login === viewer ? threadReplyParentId(body) : undefined;
@@ -57,23 +58,19 @@ export function normalizeInlineComment(
   };
 }
 
-function commentOrder(a: CommentRecord, b: CommentRecord): number {
-  const aTime = a.createdAt === null ? Number.MAX_SAFE_INTEGER : Date.parse(a.createdAt);
-  const bTime = b.createdAt === null ? Number.MAX_SAFE_INTEGER : Date.parse(b.createdAt);
-  const aOrder = Number.isNaN(aTime) ? Number.MAX_SAFE_INTEGER : aTime;
-  const bOrder = Number.isNaN(bTime) ? Number.MAX_SAFE_INTEGER : bTime;
-  if (aOrder !== bOrder) {
-    return aOrder - bOrder;
-  }
-  return a.id - b.id;
-}
-
 export function deriveConversations(publishedComments: CommentRecord[]): ConversationRecord[] {
   const groups = new Map<string, CommentRecord[]>();
   for (const comment of publishedComments) {
-    const key = [comment.pullRequestReviewId, comment.side, comment.displayLine, comment.path].join(
-      "\u0000",
-    );
+    // Snapshots retain the explicit zero side even when native signed-line buckets coincide.
+    const key = [
+      comment.side,
+      forgejoConversationIdentity(
+        comment.pullRequestReviewId,
+        comment.path,
+        comment.side,
+        comment.displayLine,
+      ),
+    ].join("\u0000");
     const bucket = groups.get(key);
     if (bucket === undefined) {
       groups.set(key, [comment]);
@@ -83,7 +80,7 @@ export function deriveConversations(publishedComments: CommentRecord[]): Convers
   }
   const conversations: ConversationRecord[] = [];
   for (const bucket of groups.values()) {
-    bucket.sort(commentOrder);
+    bucket.sort(compareForgejoCommentOrder);
     const anchor = bucket[0];
     if (anchor === undefined) {
       continue;

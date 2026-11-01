@@ -1,3 +1,4 @@
+import { deriveConversations, normalizeInlineComment } from "./feedback-model.js";
 import { describe, expect, it } from "vitest";
 import { ForgejoReviewComment } from "./forgejo-schemas.js";
 import {
@@ -164,10 +165,49 @@ describe("forgejoNativeConversationSiblingRoots", () => {
 });
 
 describe("forgejoNativeConversationAnchor", () => {
-  it("uses the lowest monotonic comment id even when a timestamp is missing", () => {
+  it("orders dated comments before a missing timestamp", () => {
     const target = comment({ id: 30, created_at: "" });
-    const earlier = comment({ id: 10, created_at: "2026-07-28T10:00:01Z" });
-    const middle = comment({ id: 20, created_at: "2026-07-28T10:00:00Z" });
-    expect(forgejoNativeConversationAnchor([target, middle, earlier], target)?.id).toBe(10);
+    const later = comment({ id: 10, created_at: "2026-07-28T10:00:01Z" });
+    const earlier = comment({ id: 20, created_at: "2026-07-28T10:00:00Z" });
+    expect(forgejoNativeConversationAnchor([target, earlier, later], target)?.id).toBe(20);
+  });
+});
+
+describe("native and snapshot anchor order", () => {
+  it("falls back to IDs when both timestamps are unavailable", () => {
+    const higher = comment({ id: 2, created_at: "" });
+    const lower = comment({ id: 1, created_at: "invalid" });
+    expect(forgejoNativeConversationAnchor([higher, lower], higher)?.id).toBe(1);
+  });
+
+  it("takes the earliest timestamp rather than the lowest ID", () => {
+    const later = comment({ id: 1, created_at: "2026-01-02T00:00:00Z" });
+    const earlier = comment({
+      id: 2,
+      created_at: "2026-01-01T00:00:00Z",
+      resolver: { login: "reviewer" },
+    });
+    expect(forgejoNativeConversationAnchor([later, earlier], later)?.id).toBe(2);
+    expect(forgejoNativeConversationAnchor([later, earlier], later)?.resolver?.login).toBe(
+      "reviewer",
+    );
+    expect(
+      deriveConversations([
+        normalizeInlineComment(later, 7, "viewer", []),
+        normalizeInlineComment(earlier, 7, "viewer", []),
+      ])[0],
+    ).toMatchObject({ anchorId: 2, resolver: { login: "reviewer" } });
+  });
+
+  it("breaks equal timestamp ties with the lowest ID", () => {
+    const higher = comment({ id: 2, created_at: "2026-01-01T00:00:00Z" });
+    const lower = comment({ id: 1, created_at: "2026-01-01T00:00:00Z" });
+    expect(forgejoNativeConversationAnchor([higher, lower], higher)?.id).toBe(1);
+    expect(
+      deriveConversations([
+        normalizeInlineComment(higher, 7, "viewer", []),
+        normalizeInlineComment(lower, 7, "viewer", []),
+      ])[0]?.anchorId,
+    ).toBe(1);
   });
 });

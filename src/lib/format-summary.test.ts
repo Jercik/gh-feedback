@@ -53,3 +53,36 @@ describe("nonactionable review bodies", () => {
     expect(formatSummary(summary, { porcelain: false })).toContain("Missing native anchor");
   });
 });
+
+describe("tsv response encoding", () => {
+  it("escapes each complete response once and leaves only response boundaries unescaped", () => {
+    expect(
+      formatSummary(
+        {
+          prNumber: 7,
+          prUrl: "url",
+          prTitle: "Feedback",
+          items: [
+            {
+              id: null,
+              actionable: false,
+              reviewId: 12,
+              timestamp: "",
+              status: "pending",
+              author: "reviewer",
+              location: "",
+              body: "Finding",
+              responses: [
+                { author: "a|b", timestamp: "t\tz", body: "line\nnext\r\tpipe|slash\\" },
+                { author: "second", timestamp: "later", body: "reply" },
+              ],
+            },
+          ],
+        },
+        { porcelain: true },
+      ),
+    ).toBe(
+      "ID\tTIMESTAMP\tSTATUS\tAUTHOR\tLOCATION\tBODY\tRESPONSES\n\t\tpending\treviewer\t\tFinding\t@a\\|b t\\tz: line\\nnext\\r\\tpipe\\|slash\\\\|@second later: reply",
+    );
+  });
+});

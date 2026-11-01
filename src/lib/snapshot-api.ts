@@ -10,11 +10,7 @@ import { verboseLog } from "./verbose-mode.js";
 import { reactionsPath } from "./forgejo-reactions.js";
 import { deriveStatus, userRef } from "./feedback-values.js";
 import { forgejoResponse } from "./forgejo-cli.js";
-import { fetchReviewListing, requireTotalCount } from "./forgejo-review-pages.js";
-
-export function progress(message: string): void {
-  verboseLog(message);
-}
+import { fetchPaginatedListing, requireTotalCount } from "./forgejo-review-pages.js";
 
 export async function fetchFindingStatus(
   slug: string,
@@ -48,13 +44,13 @@ export async function fetchRawReviews(
   limit: number,
   pass: number,
 ): Promise<{ totalCount: number; rawById: Map<number, ForgejoSnapshotReview> }> {
-  const listing = await fetchReviewListing(`repos/${slug}/pulls/${pr}/reviews`, limit);
+  const listing = await fetchPaginatedListing(`repos/${slug}/pulls/${pr}/reviews`, limit);
   const rawById = new Map<number, ForgejoSnapshotReview>();
   for (const item of listing.items) {
     const review = ForgejoSnapshotReview.parse(item);
     rawById.set(review.id, review);
   }
-  progress(`pass ${pass}: reviews complete (X-Total-Count ${listing.totalCount})`);
+  verboseLog(`pass ${pass}: reviews complete (X-Total-Count ${listing.totalCount})`);
   return { totalCount: listing.totalCount, rawById };
 }
 

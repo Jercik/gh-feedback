@@ -139,7 +139,7 @@ describe("compiled snapshot CLI", () => {
   });
 
   it.each([
-    ["malformed", "Forgejo repos/owner/repo/pulls/7/reviews: expected a review array"],
+    ["malformed", "Forgejo repos/owner/repo/pulls/7/reviews: expected a JSON array"],
     ["bad-count", "GET repos/owner/repo/pulls/7/reviews: missing or invalid X-Total-Count"],
     [
       "issue-gap",

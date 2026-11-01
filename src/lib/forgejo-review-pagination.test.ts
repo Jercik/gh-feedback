@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { forgejoFetchReviews } from "./forgejo-cli.js";
+import { forgejoFetchAll, forgejoFetchReviews } from "./forgejo-cli.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 
 vi.mock("node:child_process", () => ({
@@ -69,5 +69,34 @@ describe("forgejo review pagination", () => {
 
     await expect(forgejoFetchReviews("reviews")).rejects.toThrow("exceeded 1000 pages");
     expect(fetch).toHaveBeenCalledTimes(1001);
+  });
+});
+
+describe("counted pull listing", () => {
+  it("requests pages at the instance cap and finds the third record", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(json({ max_response_items: 2 }))
+        .mockResolvedValueOnce(json([{ id: 1 }, { id: 2 }], "3"))
+        .mockResolvedValueOnce(json([{ id: 3 }], "3")),
+    );
+    await expect(
+      forgejoFetchAll("repos/owner/repo/pulls", { state: "open" }),
+    ).resolves.toStrictEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+  });
+
+  it("fails closed when a paginated list has no completeness count", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(json({ max_response_items: 2 }))
+        .mockResolvedValueOnce(json([{ id: 1 }])),
+    );
+    await expect(forgejoFetchAll("repos/owner/repo/pulls")).rejects.toThrow(
+      "missing or invalid X-Total-Count",
+    );
   });
 });

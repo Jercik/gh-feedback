@@ -43,9 +43,8 @@ function formatResponsesTsv(responses: readonly FeedbackResponse[]): string {
 
   return responses
     .map((r) => {
-      // Escape individual response bodies before concatenating
-      const body = escapeTsv(truncateMiddle(r.body, MAX_BODY_LENGTH));
-      return `@${r.author} ${r.timestamp}: ${body}`;
+      const body = truncateMiddle(r.body, MAX_BODY_LENGTH);
+      return escapeTsv(`@${r.author} ${r.timestamp}: ${body}`);
     })
     .join(RESPONSE_SEPARATOR);
 }
@@ -72,7 +71,7 @@ function formatSummaryTsv(summary: FeedbackSummary): string {
       item.author,
       item.location,
       escapeTsv(body),
-      escapeTsv(responses),
+      responses,
     ].join("\t");
   });
 

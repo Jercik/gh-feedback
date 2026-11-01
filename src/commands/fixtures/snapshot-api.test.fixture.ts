@@ -81,7 +81,7 @@ globalThis.fetch = async (input, options): Promise<Response> => {
     return response({ max_response_items: 2 });
   }
   if (route === "repos/owner/repo/pulls") {
-    return response([pull]);
+    return response([pull], "1");
   }
   if (route === "repos/owner/repo/pulls/7") {
     pass += 1;

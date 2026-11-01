@@ -8,6 +8,7 @@
  * its final line by adding extra_lines_count, matching Forgejo's conversation UI.
  */
 
+import type { Side } from "./feedback-types.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
@@ -23,14 +24,60 @@ export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number 
   const newSide = comment.position ?? 0;
   const oldSide = comment.original_position ?? 0;
   const extraLines = comment.extra_lines_count ?? 0;
-  if (newSide > 0) {
-    return newSide + extraLines;
+  if (
+    newSide <= 0 &&
+    oldSide <= 0 &&
+    !(comment.position === 0 && comment.original_position === 0)
+  ) {
+    return null;
   }
-  if (oldSide > 0) {
-    return -(oldSide + extraLines);
+  const coordinates = reviewCommentCoordinates(
+    Math.max(newSide, 0),
+    Math.max(oldSide, 0),
+    extraLines,
+  );
+  return coordinates.side === "old" ? -coordinates.displayLine : coordinates.displayLine;
+}
+
+export function reviewCommentCoordinates(
+  position: number,
+  originalPosition: number,
+  extraLines: number,
+): { side: Side; displayLine: number } {
+  let side: Side = "new";
+  if (position === 0) {
+    side = originalPosition === 0 ? "zero" : "old";
   }
-  if (comment.position === 0 && comment.original_position === 0) {
-    return extraLines;
+  return { side, displayLine: (position === 0 ? originalPosition : position) + extraLines };
+}
+
+export function forgejoConversationIdentity(
+  reviewId: number,
+  path: string,
+  side: Side,
+  displayLine: number,
+): string {
+  return [reviewId, side === "old" ? -displayLine : displayLine, path].join("\u0000");
+}
+
+export function reviewCommentConversationIdentity(comment: ForgejoReviewComment): string | null {
+  if (
+    reviewCommentDisplayLine(comment) === null ||
+    comment.pull_request_review_id === null ||
+    comment.pull_request_review_id === undefined ||
+    !comment.path
+  ) {
+    return null;
   }
-  return null;
+  const coordinates = reviewCommentCoordinates(
+    Math.max(comment.position ?? 0, 0),
+    Math.max(comment.original_position ?? 0, 0),
+    comment.extra_lines_count ?? 0,
+  );
+  return forgejoConversationIdentity(
+    comment.pull_request_review_id,
+    comment.path,
+    coordinates.side,
+    coordinates.displayLine,
+  );
 }

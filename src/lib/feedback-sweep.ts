@@ -1,9 +1,9 @@
+import { verboseLog } from "./verbose-mode.js";
 import {
   fetchIssueComments,
   fetchRawReviews,
   fetchReviewComments,
   fetchFindingStatus,
-  progress,
 } from "./snapshot-api.js";
 import { deriveConversations, normalizeInlineComment } from "./feedback-model.js";
 import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
@@ -138,7 +138,7 @@ export async function runPass(
   const countGap = totalCount - distinctCount;
   reportCountGap(totalCount, distinctCount, diagnostics);
   unpublishedComments.sort((a, b) => a.id - b.id);
-  progress(
+  verboseLog(
     `pass ${pass}: ${distinctCount} reviews (${reviewRecords.filter((r) => r.unpublished).length} unpublished), ` +
       `${publishedComments.length} inline comments in ${conversations.length} conversations, ` +
       `${issueComments.records.length} issue comments`,

@@ -1,10 +1,14 @@
+import { compareForgejoCommentOrder } from "./compare-forgejo-comment-order.js";
 import { deriveStatus } from "./feedback-values.js";
 import type { FeedbackItemRef } from "./feedback-backend.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
-import { reviewCommentDisplayLine } from "./forgejo-review-comment-line.js";
+import {
+  reviewCommentConversationIdentity,
+  reviewCommentDisplayLine,
+} from "./forgejo-review-comment-line.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
 
@@ -17,35 +21,12 @@ export function sameForgejoNativeConversation(
   left: ForgejoReviewComment,
   right: ForgejoReviewComment,
 ): boolean {
-  const leftLine = reviewCommentDisplayLine(left);
-  const rightLine = reviewCommentDisplayLine(right);
-  if (
-    leftLine === null ||
-    rightLine === null ||
-    left.pull_request_review_id === null ||
-    left.pull_request_review_id === undefined ||
-    right.pull_request_review_id === null ||
-    right.pull_request_review_id === undefined ||
-    !left.path ||
-    !right.path
-  ) {
-    return false;
-  }
-  // Review ID is load-bearing: Forgejo renders same-line comments from different reviews as separate conversations.
-  return (
-    left.pull_request_review_id === right.pull_request_review_id &&
-    left.path === right.path &&
-    leftLine === rightLine
-  );
+  const leftKey = reviewCommentConversationIdentity(left);
+  return leftKey !== null && leftKey === reviewCommentConversationIdentity(right);
 }
 
 export function hasForgejoNativeConversationKey(comment: ForgejoReviewComment): boolean {
-  return (
-    reviewCommentDisplayLine(comment) !== null &&
-    comment.pull_request_review_id !== null &&
-    comment.pull_request_review_id !== undefined &&
-    Boolean(comment.path)
-  );
+  return reviewCommentConversationIdentity(comment) !== null;
 }
 
 function couldShareForgejoNativeConversation(
@@ -112,7 +93,12 @@ export function forgejoNativeConversationAnchor(
   return (
     comments
       .filter((comment) => sameForgejoNativeConversation(comment, target))
-      .toSorted((left, right) => left.id - right.id)[0] ?? target
+      .toSorted((left, right) =>
+        compareForgejoCommentOrder(
+          { id: left.id, createdAt: left.created_at },
+          { id: right.id, createdAt: right.created_at },
+        ),
+      )[0] ?? target
   );
 }
 
