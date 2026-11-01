@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { forgejoFetch } from "./forgejo-http.js";
 import { postForgejoReply } from "./forgejo-reply.js";
 import { ForgejoReviewComment } from "./forgejo-schemas.js";
-import { forgejoFetchReviews } from "./forgejo-cli.js";
+import { forgejoFetchAll } from "./forgejo-cli.js";
 
 vi.mock("node:child_process", () => ({
   spawnSync: vi.fn(() => ({ status: 0, stdout: "token", stderr: "" })),
@@ -35,7 +35,7 @@ describe("forgejo response bodies", () => {
 
   it("fails a required settings read with its actionable validation error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
-    await expect(forgejoFetchReviews("reviews")).rejects.toThrow(
+    await expect(forgejoFetchAll("reviews")).rejects.toThrow(
       "GET settings/api: invalid max_response_items",
     );
   });

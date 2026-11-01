@@ -6,6 +6,7 @@ import {
   fetchFindingStatus,
 } from "./snapshot-api.js";
 import { deriveConversations, normalizeInlineComment } from "./feedback-model.js";
+import type { NormalizedInlineComment } from "./feedback-model.js";
 import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
 import type { CommentRecord, PassSnapshot, ReviewRecord } from "./feedback-types.js";
@@ -58,7 +59,7 @@ async function normalizeReview(
   pr: number,
   viewer: string,
   diagnostics: string[],
-  publishedComments: CommentRecord[],
+  publishedComments: NormalizedInlineComment[],
   unpublishedComments: CommentRecord[],
 ): Promise<ReviewRecord> {
   const state = raw.state;
@@ -67,7 +68,11 @@ async function normalizeReview(
   const rawComments = await fetchReviewComments(slug, pr, reviewId);
   for (const entry of rawComments) {
     const comment = normalizeInlineComment(entry, reviewId, viewer, diagnostics);
-    (unpublished ? unpublishedComments : publishedComments).push(comment);
+    if (unpublished) {
+      unpublishedComments.push(comment.comment);
+    } else {
+      publishedComments.push(comment);
+    }
   }
 
   let backingCommentId: number | null = null;
@@ -109,7 +114,7 @@ export async function runPass(
   const diagnostics: string[] = [];
   const { totalCount, rawById } = await fetchRawReviews(slug, pr, limit, pass);
   const reviewRecords: ReviewRecord[] = [];
-  const publishedComments: CommentRecord[] = [];
+  const publishedComments: NormalizedInlineComment[] = [];
   const unpublishedComments: CommentRecord[] = [];
 
   for (const reviewId of [...rawById.keys()].toSorted((a, b) => a - b)) {
@@ -130,8 +135,9 @@ export async function runPass(
       ),
     );
   }
-  await applyFindingStatuses(publishedComments, slug, viewer);
-  reportMissingReplies(publishedComments, diagnostics);
+  const publishedRecords = publishedComments.map(({ comment }) => comment);
+  await applyFindingStatuses(publishedRecords, slug, viewer);
+  reportMissingReplies(publishedRecords, diagnostics);
   const conversations = deriveConversations(publishedComments);
   const issueComments = await fetchIssueComments(slug, pr, viewer);
   const distinctCount = reviewRecords.length;

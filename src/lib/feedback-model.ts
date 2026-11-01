@@ -1,5 +1,8 @@
 import { compareForgejoCommentOrder } from "./compare-forgejo-comment-order.js";
-import { reviewCommentCoordinates } from "./forgejo-review-comment-line.js";
+import {
+  reviewCommentConversationIdentity,
+  reviewCommentCoordinates,
+} from "./forgejo-review-comment-line.js";
 import type { CommentRecord, ConversationRecord } from "./feedback-types.js";
 
 import { unfetchedFindingState, integerOrZero, userRef } from "./feedback-values.js";
@@ -7,12 +10,17 @@ import type { ForgejoSnapshotReviewComment } from "./forgejo-schemas.js";
 
 import { threadReplyParentId } from "./forgejo-thread-reply.js";
 
+export interface NormalizedInlineComment {
+  comment: CommentRecord;
+  nativeIdentity: string | null;
+}
+
 export function normalizeInlineComment(
   raw: ForgejoSnapshotReviewComment,
   listingReviewId: number,
   viewer: string,
   diagnostics: string[],
-): CommentRecord {
+): NormalizedInlineComment {
   const id = raw.id;
 
   const position = integerOrZero(raw.position);
@@ -35,7 +43,7 @@ export function normalizeInlineComment(
     }
   }
   const reviewIdField = raw.pull_request_review_id;
-  return {
+  const comment: CommentRecord = {
     id,
     kind: isReply ? "reply" : "finding",
     replyTo,
@@ -53,20 +61,26 @@ export function normalizeInlineComment(
     resolver: userRef(raw.resolver),
     ...unfetchedFindingState,
   };
+  return {
+    comment,
+    nativeIdentity: reviewCommentConversationIdentity({
+      ...raw,
+      user: undefined,
+      resolver: undefined,
+      created_at: raw.created_at ?? "",
+      html_url: raw.html_url ?? "",
+    }),
+  };
 }
 
-// Preserve explicit side and unclamped integer coordinates in snapshot output: zero/new sides stay
-// separate even when reviewCommentConversationIdentity gives them the same native signed line.
-function snapshotConversationProjectionKey(comment: CommentRecord): string {
-  return [comment.pullRequestReviewId, comment.side, comment.displayLine, comment.path].join(
-    "\u0000",
-  );
-}
-
-export function deriveConversations(publishedComments: CommentRecord[]): ConversationRecord[] {
+// Native identity is derived before normalization fills missing coordinates. Unknown identities
+// stay isolated; raw coordinate and side fields remain on every serialized comment.
+export function deriveConversations(
+  publishedComments: NormalizedInlineComment[],
+): ConversationRecord[] {
   const groups = new Map<string, CommentRecord[]>();
-  for (const comment of publishedComments) {
-    const key = snapshotConversationProjectionKey(comment);
+  for (const { comment, nativeIdentity } of publishedComments) {
+    const key = nativeIdentity ?? JSON.stringify(["unknown", comment.id]);
     const bucket = groups.get(key);
     if (bucket === undefined) {
       groups.set(key, [comment]);

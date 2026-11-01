@@ -66,7 +66,7 @@ describe("snapshot and native coordinate input contracts", () => {
       original_position: 5,
       path: "file.ts",
     });
-    expect(normalizeInlineComment(raw, 7, "viewer", [])).toMatchObject({
+    expect(normalizeInlineComment(raw, 7, "viewer", []).comment).toMatchObject({
       position: -1,
       originalPosition: 5,
       side: "new",
@@ -75,7 +75,7 @@ describe("snapshot and native coordinate input contracts", () => {
     expect(reviewCommentDisplayLine(ForgejoReviewComment.parse(raw))).toBe(-5);
   });
 
-  it("retains separate explicit snapshot sides where native signed-line keys coincide", () => {
+  it("pairs the native anchor resolver with all comments sharing its signed line", () => {
     const zero = ForgejoSnapshotReviewComment.parse({
       id: 1,
       pull_request_review_id: 7,
@@ -83,6 +83,8 @@ describe("snapshot and native coordinate input contracts", () => {
       position: 0,
       original_position: 0,
       extra_lines_count: 2,
+      created_at: "2026-01-01T00:00:00Z",
+      resolver: { id: 9, login: "resolver" },
     });
     const added = ForgejoSnapshotReviewComment.parse({
       id: 2,
@@ -90,6 +92,7 @@ describe("snapshot and native coordinate input contracts", () => {
       path: "file.ts",
       position: 2,
       original_position: 0,
+      created_at: "2026-01-02T00:00:00Z",
     });
     expect(reviewCommentConversationIdentity(ForgejoReviewComment.parse(zero))).toBe(
       "7\u00002\u0000file.ts",
@@ -103,8 +106,53 @@ describe("snapshot and native coordinate input contracts", () => {
         normalizeInlineComment(added, 7, "viewer", []),
       ]),
     ).toMatchObject([
-      { anchorId: 1, side: "zero", displayLine: 2 },
-      { anchorId: 2, side: "new", displayLine: 2 },
+      {
+        anchorId: 1,
+        side: "zero",
+        displayLine: 2,
+        resolver: { id: 9, login: "resolver" },
+        comments: [
+          { id: 1, side: "zero", position: 0, originalPosition: 0, extraLinesCount: 2 },
+          { id: 2, side: "new", position: 2, originalPosition: 0, extraLinesCount: 0 },
+        ],
+      },
+    ]);
+  });
+
+  it("isolates missing native metadata before snapshot defaults can invent a shared identity", () => {
+    const comments = [
+      { id: 1, pull_request_review_id: 7, path: "file.ts" },
+      {
+        id: 2,
+        pull_request_review_id: 7,
+        path: "file.ts",
+        position: null,
+        original_position: null,
+      },
+      { id: 3, path: "file.ts", position: 0, original_position: 0 },
+      { id: 4, pull_request_review_id: 7, position: 0, original_position: 0 },
+      { id: 5, pull_request_review_id: 7, path: "file.ts", position: -1, original_position: 0 },
+    ].map((raw) =>
+      normalizeInlineComment(ForgejoSnapshotReviewComment.parse(raw), 7, "viewer", []),
+    );
+    expect(comments.map(({ nativeIdentity }) => nativeIdentity)).toStrictEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(
+      deriveConversations(comments).map(({ anchorId, comments: bucket }) => ({
+        anchorId,
+        ids: bucket.map(({ id }) => id),
+      })),
+    ).toStrictEqual([
+      { anchorId: 4, ids: [4] },
+      { anchorId: 5, ids: [5] },
+      { anchorId: 1, ids: [1] },
+      { anchorId: 2, ids: [2] },
+      { anchorId: 3, ids: [3] },
     ]);
   });
 });
