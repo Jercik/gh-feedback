@@ -36,24 +36,25 @@ export async function postForgejoReply(
   reviewComment: ForgejoReviewComment | undefined,
 ): Promise<ReplyResult> {
   const reviewId = reviewComment?.pull_request_review_id;
+  let path: string;
+  let body: Record<string, string | number>;
   if (
     item.type === "thread" &&
     reviewComment &&
     typeof reviewId === "number" &&
     hasThreadablePosition(reviewComment)
   ) {
-    const threaded = await forgejoFetch<{ id: number; html_url: string }>({
-      method: "POST",
-      path: `repos/${slug}/pulls/${item.prNumber}/reviews/${reviewId}/comments`,
-      body: forgejoThreadReplyBody(reviewComment, message),
-    });
-    return { id: threaded.id, url: threaded.html_url };
+    path = `repos/${slug}/pulls/${item.prNumber}/reviews/${reviewId}/comments`;
+    body = forgejoThreadReplyBody(reviewComment, message);
+  } else {
+    path = `repos/${slug}/issues/${item.prNumber}/comments`;
+    body = { body: forgejoReplyPrefix(item.type, item.id) + message };
   }
 
-  const issueComment = await forgejoFetch<{ id: number; html_url: string }>({
+  const reply = await forgejoFetch<{ id: number; html_url: string }>({
     method: "POST",
-    path: `repos/${slug}/issues/${item.prNumber}/comments`,
-    body: { body: forgejoReplyPrefix(item.type, item.id) + message },
+    path,
+    body,
   });
-  return { id: issueComment.id, url: issueComment.html_url };
+  return { id: reply.id, url: reply.html_url };
 }
