@@ -46,14 +46,14 @@ function run(id: string) {
 }
 
 describe("ack completion output", () => {
-  it("acknowledges an issue comment quietly without a nonexistent hide operation", () => {
+  it("acknowledges an issue comment without printing anything", () => {
     const result = run("401");
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("");
     expect(result.stderr).toBe("");
   });
 
-  it("still reports an unsupported native conversation resolution", () => {
+  it("reports when the installed fgj cannot resolve conversations", () => {
     const result = run("201");
     expect(result.status).toBe(0);
     expect(result.stdout).toBe("");

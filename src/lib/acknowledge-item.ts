@@ -7,7 +7,7 @@ export async function acknowledgeItem(
   backend: FeedbackBackend,
   item: FeedbackItemRef,
   viewerReactions: ReactionContent[],
-): Promise<CapabilityResult | undefined> {
+): Promise<CapabilityResult> {
   const hadRocket = viewerReactions.includes("rocket");
   let rocketAdded = false;
   try {

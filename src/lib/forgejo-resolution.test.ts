@@ -140,7 +140,10 @@ describe("decideForgejoReopen", () => {
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
     });
-    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toBeUndefined();
+    expect(decideForgejoReopen({ ...thread, type: "comment" }, false, false)).toStrictEqual({
+      supported: true,
+      applied: true,
+    });
   });
 });
 
@@ -186,7 +189,7 @@ describe("decideForgejoCompletion", () => {
   it("finishes reaction-only completion without a native transition", () => {
     expect(
       decideForgejoCompletion({ ...thread, type: "comment" }, "disagreed", false, false, undefined),
-    ).toBeUndefined();
+    ).toStrictEqual({ supported: true, applied: true });
   });
 
   it("chooses native resolve for a ready open conversation", () => {

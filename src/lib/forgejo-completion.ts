@@ -25,9 +25,9 @@ export async function completeForgejoItem(
   slug: string,
   item: FeedbackItemRef,
   outcome: FeedbackOutcome,
-): Promise<CapabilityResult | undefined> {
+): Promise<CapabilityResult> {
   if (item.type !== "thread") {
-    return undefined;
+    return { supported: true, applied: true };
   }
   const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
     fetchForgejoTransitionState(slug, item),
@@ -44,7 +44,7 @@ export async function completeForgejoItem(
     Boolean(resolver),
     readiness.ready ? undefined : readiness.reason,
   );
-  if (decision && "action" in decision) {
+  if ("action" in decision) {
     return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;
@@ -53,9 +53,9 @@ export async function completeForgejoItem(
 export async function reopenForgejoItem(
   slug: string,
   item: FeedbackItemRef,
-): Promise<CapabilityResult | undefined> {
+): Promise<CapabilityResult> {
   if (item.type !== "thread") {
-    return undefined;
+    return { supported: true, applied: true };
   }
   const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
     fetchForgejoTransitionState(slug, item),
@@ -67,7 +67,7 @@ export async function reopenForgejoItem(
     isForgejoConversationResolvedBy(resolver, viewer),
     Boolean(resolver),
   );
-  if (decision && "action" in decision) {
+  if ("action" in decision) {
     return changeForgejoConversationResolution(slug, item.prNumber, item.id, decision.action);
   }
   return decision;

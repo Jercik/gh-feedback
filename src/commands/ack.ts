@@ -55,9 +55,9 @@ export function registerAckCommand(program: Command): void {
 
         verboseLog("Updating reaction and completion state...");
         const completionResult = await acknowledgeItem(backend, item, viewerReactions);
-        if (completionResult && !completionResult.supported) {
+        if (!completionResult.supported) {
           console.error(`Note: conversation resolution skipped - ${completionResult.reason}`);
-        } else if (completionResult && !completionResult.applied) {
+        } else if (!completionResult.applied) {
           console.error(`Note: ${completionResult.reason}.`);
         }
 

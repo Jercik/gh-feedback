@@ -11,10 +11,10 @@ export async function startItem(
 ): Promise<void> {
   if (needsReopen) {
     const result = await backend.unresolve(item);
-    if (result && !result.supported) {
+    if (!result.supported) {
       throw new Error(`Reopen skipped: ${result.reason}`);
     }
-    if (result && !result.applied) {
+    if (!result.applied) {
       throw new Error(`Reopen failed: ${result.reason}`);
     }
   }

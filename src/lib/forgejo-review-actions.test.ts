@@ -51,7 +51,10 @@ test("mutates the backing comment and replies using its action identity", async 
     path: "repos/o/r/issues/3/comments",
     body: { body: "> Replying to review #91\n\nFixed" },
   });
-  await expect(backend.complete(item, "agreed")).resolves.toBeUndefined();
+  await expect(backend.complete(item, "agreed")).resolves.toStrictEqual({
+    supported: true,
+    applied: true,
+  });
   expect(mocks.comments).not.toHaveBeenCalled();
 });
 

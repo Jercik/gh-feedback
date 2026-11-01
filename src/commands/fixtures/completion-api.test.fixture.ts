@@ -52,13 +52,13 @@ globalThis.fetch = async (input, options): Promise<Response> => {
     return Response.json({ login: "maintainer" });
   }
   if (route === "repos/owner/repo/pulls") {
-    return Response.json([pull]);
+    return Response.json([pull], { headers: { "X-Total-Count": "1" } });
   }
   if (route === "repos/owner/repo/pulls/7/reviews") {
     return Response.json([{ id: 10, state: "COMMENT" }], { headers: { "X-Total-Count": "1" } });
   }
   if (route === "repos/owner/repo/pulls/7/reviews/10/comments") {
-    return Response.json([inline]);
+    return Response.json([inline], { headers: { "X-Total-Count": "1" } });
   }
   if (route === "repos/owner/repo/issues/comments/201") {
     return new Response(null, { status: 204 });
@@ -67,7 +67,7 @@ globalThis.fetch = async (input, options): Promise<Response> => {
     return Response.json({ id: 401, pull_request_url: pull.html_url, user: { login: "reviewer" } });
   }
   if (/^repos\/owner\/repo\/issues\/comments\/(?:201|401)\/reactions$/u.test(route)) {
-    return Response.json([]);
+    return Response.json([], { headers: { "X-Total-Count": "0" } });
   }
   throw new Error(`Unexpected fixture route: ${route}`);
 };

@@ -154,11 +154,11 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       }
     },
 
-    async complete(item, outcome): Promise<CapabilityResult | undefined> {
+    async complete(item, outcome): Promise<CapabilityResult> {
       return completeForgejoItem(slug, item, outcome);
     },
 
-    async unresolve(item: FeedbackItemRef): Promise<CapabilityResult | undefined> {
+    async unresolve(item: FeedbackItemRef): Promise<CapabilityResult> {
       return reopenForgejoItem(slug, item);
     },
   };

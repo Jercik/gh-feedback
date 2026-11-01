@@ -103,7 +103,7 @@ describe("forgejo transition state refresh", () => {
   it("does not fetch review comments for a plain comment", async () => {
     await expect(
       completeForgejoItem("j4k-oss/pr-feedback", { ...thread, type: "comment" }, "acknowledged"),
-    ).resolves.toBeUndefined();
+    ).resolves.toStrictEqual({ supported: true, applied: true });
     expect(mocks.fetchComments).not.toHaveBeenCalled();
   });
 });

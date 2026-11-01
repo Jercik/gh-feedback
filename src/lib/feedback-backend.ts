@@ -48,10 +48,6 @@ export interface FeedbackBackend {
     toRemove: ReactionContent[],
   ) => Promise<void>;
 
-  // Non-inline items settle through reactions without a native-resolution result.
-  complete: (
-    item: FeedbackItemRef,
-    outcome: FeedbackOutcome,
-  ) => Promise<CapabilityResult | undefined>;
-  unresolve: (item: FeedbackItemRef) => Promise<CapabilityResult | undefined>;
+  complete: (item: FeedbackItemRef, outcome: FeedbackOutcome) => Promise<CapabilityResult>;
+  unresolve: (item: FeedbackItemRef) => Promise<CapabilityResult>;
 }

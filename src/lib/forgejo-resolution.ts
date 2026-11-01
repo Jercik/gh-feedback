@@ -3,7 +3,7 @@ import type { FeedbackOutcome } from "./feedback-backend.js";
 
 export type ForgejoResolutionAction = "resolve" | "unresolve";
 
-type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction } | undefined;
+type ForgejoCompletionDecision = CapabilityResult | { action: ForgejoResolutionAction };
 
 const OLD_FGJ_RESOLUTION_REASON =
   "installed fgj does not support conversation resolution; install the j4k build v0.5.0-j4k.4 or newer";
@@ -48,7 +48,7 @@ export function decideForgejoReopen(
   resolvedByAnyone: boolean,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return undefined;
+    return { supported: true, applied: true };
   }
   if (resolvedByViewer) {
     return { action: "unresolve" };
@@ -92,7 +92,7 @@ export function decideForgejoCompletion(
   notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
   if (item.type !== "thread") {
-    return undefined;
+    return { supported: true, applied: true };
   }
   if (outcome === "disagreed") {
     return decideForgejoReopen(item, resolvedByViewer, resolvedByAnyone);
