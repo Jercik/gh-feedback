@@ -174,12 +174,10 @@ acquisition have a 15-second timeout; progress and errors use stderr.
 Published review bodies use the native backing comment ID from their PR-scoped
 `html_url`; the review entity ID is provenance, not an action target. Bodies with
 no backing anchor and unpublished records remain visible in snapshots but cannot
-be acted on. Summary projects the same complete snapshot and includes review
-bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
-provenance in JSON. Pretty output labels these bodies as nonactionable reviews;
-TSV retains them with an empty ID field and their pending status. An empty ID cannot
-be passed to mutation commands; filter it out when extracting actionable IDs. Inline findings remain independent even when they share a
-native conversation; only authenticated reply markers attach responses.
+be acted on.
+
+Inline findings remain independent even when they share a native conversation;
+only authenticated reply markers attach responses.
 
 Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.
 
@@ -195,6 +193,12 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `agreed`         | Fixed (👍; the conversation may stay open, see [Prerequisites](#prerequisites))                                        |
 | `disagreed`      | Won't fix (👎; the conversation stays open)                                                                            |
 | `acknowledged`   | Noted, no action (🚀; the conversation may stay open)                                                                  |
+
+`summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review
+bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
+provenance in JSON. Pretty output labels these bodies as nonactionable reviews;
+TSV retains them with an empty ID field and their pending status. An empty ID cannot
+be passed to mutation commands; filter it out when extracting actionable IDs.
 
 ### Output Formats
 
