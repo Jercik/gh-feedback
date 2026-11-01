@@ -11,11 +11,6 @@ export {
   forgejoResponse,
 } from "./forgejo-http.js";
 
-export async function forgejoFetchReviews(path: string): Promise<unknown[]> {
-  const listing = await fetchPaginatedListing(path);
-  return listing.items;
-}
-
 /**
  * Fetch a Forgejo collection endpoint that returns its whole set in one
  * response and ignores page/limit (e.g. issues/{index}/comments and
@@ -23,8 +18,8 @@ export async function forgejoFetchReviews(path: string): Promise<unknown[]> {
  * DB query applies no LIMIT and returns every row regardless of count — the
  * MAX_RESPONSE_ITEMS cap only bounds endpoints that opt into paging, so the
  * full set comes back even past 50 items. forgejoFetchAll must NOT be used on
- * these: once the set reaches the page size, every page returns everything, so
- * it would loop forever accumulating duplicates.
+ * these: missing or invalid X-Total-Count throws, and a route that ignores
+ * page/limit repeats the full set on every requested page, duplicating records.
  */
 export async function forgejoFetchList<T>(
   path: string,

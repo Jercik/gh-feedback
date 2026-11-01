@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { forgejoFetchAll, forgejoFetchReviews } from "./forgejo-cli.js";
+import { forgejoFetchAll } from "./forgejo-cli.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 
 vi.mock("node:child_process", () => ({
@@ -48,16 +48,14 @@ describe("forgejo review pagination", () => {
           .mockResolvedValueOnce(json([], count)),
       );
 
-      await expect(forgejoFetchReviews("reviews")).rejects.toThrow(
-        "missing or invalid X-Total-Count",
-      );
+      await expect(forgejoFetchAll("reviews")).rejects.toThrow("missing or invalid X-Total-Count");
     },
   );
 
   it.each([0, -1, 1.5, "2", null])("rejects invalid instance page limit %s", async (limit) => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(json({ max_response_items: limit })));
 
-    await expect(forgejoFetchReviews("reviews")).rejects.toThrow("invalid max_response_items");
+    await expect(forgejoFetchAll("reviews")).rejects.toThrow("invalid max_response_items");
   });
 
   it("bounds pagination even when the count never fits", async () => {
@@ -67,24 +65,29 @@ describe("forgejo review pagination", () => {
       .mockImplementation(async () => json([], "1001"));
     vi.stubGlobal("fetch", fetch);
 
-    await expect(forgejoFetchReviews("reviews")).rejects.toThrow("exceeded 1000 pages");
+    await expect(forgejoFetchAll("reviews")).rejects.toThrow("exceeded 1000 pages");
     expect(fetch).toHaveBeenCalledTimes(1001);
   });
 });
 
 describe("counted pull listing", () => {
   it("requests pages at the instance cap and finds the third record", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockResolvedValueOnce(json({ max_response_items: 2 }))
-        .mockResolvedValueOnce(json([{ id: 1 }, { id: 2 }], "3"))
-        .mockResolvedValueOnce(json([{ id: 3 }], "3")),
-    );
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(json({ max_response_items: 2 }))
+      .mockResolvedValueOnce(json([{ id: 1 }, { id: 2 }], "3"))
+      .mockResolvedValueOnce(json([{ id: 3 }], "3"));
+    vi.stubGlobal("fetch", fetch);
+
     await expect(
       forgejoFetchAll("repos/owner/repo/pulls", { state: "open" }),
     ).resolves.toStrictEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    expect(fetch.mock.calls[1]?.[0]).toBe(
+      "https://code.j4k.dev/api/v1/repos/owner/repo/pulls?state=open&page=1&limit=2",
+    );
+    expect(fetch.mock.calls[2]?.[0]).toBe(
+      "https://code.j4k.dev/api/v1/repos/owner/repo/pulls?state=open&page=2&limit=2",
+    );
   });
 
   it("fails closed when a paginated list has no completeness count", async () => {

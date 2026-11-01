@@ -4,7 +4,7 @@ import { resolveItemMeta } from "./forgejo-item.js";
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), reviews: vi.fn(), comments: vi.fn() }));
 vi.mock("./forgejo-cli.js", () => ({
   forgejoFetch: mocks.fetch,
-  forgejoFetchReviews: mocks.reviews,
+  forgejoFetchAll: mocks.reviews,
   isForgejoNotFound: () => false,
 }));
 vi.mock("./forgejo-pull-review-comments.js", () => ({

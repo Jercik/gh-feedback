@@ -4,7 +4,7 @@ import { createForgejoBackend } from "./forgejo-backend.js";
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), reviews: vi.fn(), comments: vi.fn() }));
 vi.mock("./forgejo-cli.js", () => ({
   forgejoFetch: mocks.fetch,
-  forgejoFetchReviews: mocks.reviews,
+  forgejoFetchAll: mocks.reviews,
   forgejoFetchList: vi.fn().mockResolvedValue([]),
   isForgejoNotFound: () => false,
 }));

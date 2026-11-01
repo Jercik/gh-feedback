@@ -9,7 +9,7 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchReviews, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetch, forgejoFetchAll, isForgejoNotFound } from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { parseBackingCommentId } from "./feedback-values.js";
@@ -62,7 +62,7 @@ export async function resolveItemMeta(
   prNumber: number,
   itemId: number,
 ): Promise<ResolvedForgejoItem | undefined> {
-  const reviewsRaw = await forgejoFetchReviews(`repos/${slug}/pulls/${prNumber}/reviews`);
+  const reviewsRaw = await forgejoFetchAll(`repos/${slug}/pulls/${prNumber}/reviews`);
   const reviews = reviewsRaw.map((raw) => ForgejoReview.parse(raw));
   const review = reviews.find(
     (candidate) => parseBackingCommentId(candidate.html_url ?? null) === itemId,

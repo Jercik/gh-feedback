@@ -39,6 +39,8 @@ export function reviewCommentDisplayLine(comment: ForgejoReviewComment): number 
   return coordinates.side === "old" ? -coordinates.displayLine : coordinates.displayLine;
 }
 
+// Does not clamp inputs: snapshots pass raw integers, while reviewCommentDisplayLine validates
+// native positions and clamps negative coordinates to zero before calling.
 export function reviewCommentCoordinates(
   position: number,
   originalPosition: number,
@@ -51,33 +53,15 @@ export function reviewCommentCoordinates(
   return { side, displayLine: (position === 0 ? originalPosition : position) + extraLines };
 }
 
-export function forgejoConversationIdentity(
-  reviewId: number,
-  path: string,
-  side: Side,
-  displayLine: number,
-): string {
-  return [reviewId, side === "old" ? -displayLine : displayLine, path].join("\u0000");
-}
-
 export function reviewCommentConversationIdentity(comment: ForgejoReviewComment): string | null {
+  const signedLine = reviewCommentDisplayLine(comment);
   if (
-    reviewCommentDisplayLine(comment) === null ||
+    signedLine === null ||
     comment.pull_request_review_id === null ||
     comment.pull_request_review_id === undefined ||
     !comment.path
   ) {
     return null;
   }
-  const coordinates = reviewCommentCoordinates(
-    Math.max(comment.position ?? 0, 0),
-    Math.max(comment.original_position ?? 0, 0),
-    comment.extra_lines_count ?? 0,
-  );
-  return forgejoConversationIdentity(
-    comment.pull_request_review_id,
-    comment.path,
-    coordinates.side,
-    coordinates.displayLine,
-  );
+  return [comment.pull_request_review_id, signedLine, comment.path].join("\u0000");
 }

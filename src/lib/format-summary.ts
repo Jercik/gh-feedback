@@ -19,7 +19,6 @@ const RESPONSE_SEPARATOR = "|";
 
 /**
  * Escape special characters for TSV output.
- * Newlines → \n, tabs → \t, pipe → \|
  * Pipe escaping prevents confusion with RESPONSE_SEPARATOR.
  */
 function escapeTsv(text: string): string {

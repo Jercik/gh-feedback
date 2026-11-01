@@ -1,8 +1,5 @@
 import { compareForgejoCommentOrder } from "./compare-forgejo-comment-order.js";
-import {
-  forgejoConversationIdentity,
-  reviewCommentCoordinates,
-} from "./forgejo-review-comment-line.js";
+import { reviewCommentCoordinates } from "./forgejo-review-comment-line.js";
 import type { CommentRecord, ConversationRecord } from "./feedback-types.js";
 
 import { unfetchedFindingState, integerOrZero, userRef } from "./feedback-values.js";
@@ -58,19 +55,18 @@ export function normalizeInlineComment(
   };
 }
 
+// Preserve explicit side and unclamped integer coordinates in snapshot output: zero/new sides stay
+// separate even when reviewCommentConversationIdentity gives them the same native signed line.
+function snapshotConversationProjectionKey(comment: CommentRecord): string {
+  return [comment.pullRequestReviewId, comment.side, comment.displayLine, comment.path].join(
+    "\u0000",
+  );
+}
+
 export function deriveConversations(publishedComments: CommentRecord[]): ConversationRecord[] {
   const groups = new Map<string, CommentRecord[]>();
   for (const comment of publishedComments) {
-    // Snapshots retain the explicit zero side even when native signed-line buckets coincide.
-    const key = [
-      comment.side,
-      forgejoConversationIdentity(
-        comment.pullRequestReviewId,
-        comment.path,
-        comment.side,
-        comment.displayLine,
-      ),
-    ].join("\u0000");
+    const key = snapshotConversationProjectionKey(comment);
     const bucket = groups.get(key);
     if (bucket === undefined) {
       groups.set(key, [comment]);
