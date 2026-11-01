@@ -111,6 +111,7 @@ describe("forgejoResolutionUnsupportedReason details", () => {
 describe("forgejoCompletionNeedsReadiness", () => {
   it("checks only unresolved thread settlements", () => {
     expect(forgejoCompletionNeedsReadiness("agreed", false)).toBe(true);
+    expect(forgejoCompletionNeedsReadiness("acknowledged", false)).toBe(true);
     expect(forgejoCompletionNeedsReadiness("acknowledged", true)).toBe(false);
     expect(forgejoCompletionNeedsReadiness("disagreed", false)).toBe(false);
   });
