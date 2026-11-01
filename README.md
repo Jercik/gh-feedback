@@ -54,7 +54,7 @@ The j4k Forgejo fork resolves inline review conversations through the local
 `fgj` CLI. `agree` and `ack` resolve settled inline conversations, while
 `disagree` deliberately leaves them open for the reviewer to settle. Plain PR
 comments have no hide API, so their status remains reaction-backed. Published review bodies are tracked through their native backing comment IDs.
-Inline review comments and PR conversation comments are surfaced and tracked normally.
+Inline review comments and plain PR comments (Forgejo issue comments) are surfaced and tracked normally.
 `start` reopens only conversations resolved by the authenticated account; a
 reviewer's resolution remains visible in `detail` and is deliberately preserved.
 It changes reactions only after any required reopen succeeds. If reopening
@@ -97,7 +97,7 @@ For an origin that is already detected as Forgejo, override the REST API host â€
 export PR_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 ```
 
-This overrides only the API hostname. `pr-feedback` treats an origin as Forgejo only when `@j4k-oss/repoq` resolves it to the Forge (`code.j4k.dev` or its tailnet alias `code.tail.j4k.dev`), so this variable does not, on its own, enable any other instance.
+This overrides only the API hostname. `pr-feedback` treats an origin as Forgejo only when `@j4k-oss/repoq` resolves it to the [Forge](https://code.j4k.dev/j4k-oss/pr-feedback/src/branch/main/CONTEXT.md#language), so this variable does not, on its own, enable any other instance.
 
 `@j4k-oss/repoq` classifies every parseable non-GitHub host as a candidate Forgejo instance, so the origin check in `src/lib/provider.ts` rejects any origin whose resolved API host is not the Forge's. Keep that check when upgrading `@j4k-oss/repoq`.
 
@@ -143,15 +143,45 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                  | Description                                              |
-| ------------------------ | -------------------------------------------------------- |
-| `summary`                | Get all PR feedback with semantic status                 |
-| `detail <id>`            | Fetch full untruncated content                           |
-| `start <id>`             | Mark as work-in-progress (adds eyes reaction)            |
-| `agree <id> -m "..."`    | Fixed (reply + thumbs_up + resolve)                      |
-| `disagree <id> -m "..."` | Won't fix (reply + thumbs_down; conversation stays open) |
-| `ask <id> -m "..."`      | Need clarification (reply + confused)                    |
-| `ack <id>`               | Acknowledge noise (rocket + resolve inline conversation) |
+| Command                                    | Description                                              |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `summary`                                  | Get all PR feedback with semantic status                 |
+| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot             |
+| `detail <id>`                              | Fetch full untruncated content                           |
+| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)            |
+| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up + resolve)                      |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open) |
+| `ask <id> -m "..."`                        | Need clarification (reply + confused)                    |
+| `ack <id>`                                 | Acknowledge noise (rocket + resolve inline conversation) |
+
+### Complete feedback snapshots
+
+`pr-feedback snapshot --repo owner/repo --pr 123` reads all review bodies, inline
+comments, issue comments, viewer reactions, and native conversation resolution
+metadata twice. With explicit `--repo`, no Git executable or checkout is required. The repository
+defaults to `origin`; API host selection and
+viewer identity use the existing authenticated Forgejo context, not command-line
+overrides.
+
+Stdout is one JSON document identified by `schema: "pr-feedback.snapshot"` and
+`version: 1`, with actual `host`, `slug`, `pr`, `viewer`, API `limit`, `stable`,
+`diagnostics`, `pull`, `reviews`, `issueComments`, `conversations`, and
+`unpublishedInlineComments`. Exit 0 means two complete equal passes; exit 3
+emits a valid but unstable document that must not be treated as settlement.
+Fetch or schema failures exit nonzero without a snapshot. Requests and token
+acquisition have a 15-second timeout; progress and errors use stderr.
+
+Published review bodies use the native backing comment ID from their PR-scoped
+`html_url`; the review entity ID is provenance, not an action target. Bodies with
+no backing anchor and unpublished records remain visible in snapshots but cannot
+be acted on. Summary projects the same complete snapshot and includes review
+bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
+provenance in JSON. Pretty output labels these bodies as nonactionable reviews;
+TSV retains them with an empty ID field and their pending status. An empty ID cannot
+be passed to mutation commands; filter it out when extracting actionable IDs. Inline findings remain independent even when they share a
+native conversation; only authenticated reply markers attach responses.
+
+Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.
 
 ### Summary Output
 
@@ -224,32 +254,3 @@ To install for Claude Code, download the file to your project's `.claude/command
 ## License
 
 MIT
-
-## Complete feedback snapshots
-
-`pr-feedback snapshot --repo owner/repo --pr 123` reads all review bodies, inline
-comments, issue comments, viewer reactions, and native conversation resolution
-metadata twice. With explicit `--repo`, no Git executable or checkout is required. The repository
-defaults to `origin`; API host selection and
-viewer identity use the existing authenticated Forgejo context, not command-line
-overrides.
-
-Stdout is one JSON document identified by `schema: "pr-feedback.snapshot"` and
-`version: 1`, with actual `host`, `slug`, `pr`, `viewer`, API `limit`, `stable`,
-`diagnostics`, `pull`, `reviews`, `issueComments`, `conversations`, and
-`unpublishedInlineComments`. Exit 0 means two complete equal passes; exit 3
-emits a valid but unstable document that must not be treated as settlement.
-Fetch or schema failures exit nonzero without a snapshot. Requests and token
-acquisition have a 15-second timeout; progress and errors use stderr.
-
-Published review bodies use the native backing comment ID from their PR-scoped
-`html_url`; the review entity ID is provenance, not an action target. Bodies with
-no backing anchor and unpublished records remain visible in snapshots but cannot
-be acted on. Summary projects the same complete snapshot and includes review
-bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
-provenance in JSON. Pretty output labels these bodies as nonactionable reviews;
-TSV retains them with an empty ID field and their pending status. An empty ID cannot
-be passed to mutation commands; filter it out when extracting actionable IDs. Inline findings remain independent even when they share a
-native conversation; only authenticated reply markers attach responses.
-
-Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.

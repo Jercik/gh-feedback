@@ -16,8 +16,8 @@ const reactionContents = new Set<string>([
 /**
  * Reaction endpoint for an item's native backing comment. Inline review
  * comments and PR issue comments share Forgejo's comment table, so both react
- * via `issues/comments/{id}/reactions` (verified against Forgejo's API routes —
- * there is no `pulls/comments/{id}/reactions`). Review bodies use their backing comment IDs.
+ * via `issues/comments/{id}/reactions`; there is no `pulls/comments/{id}/reactions`.
+ * Review bodies use their backing comment IDs.
  */
 export function reactionsPath(slug: string, id: number): string {
   return `repos/${slug}/issues/comments/${id}/reactions`;

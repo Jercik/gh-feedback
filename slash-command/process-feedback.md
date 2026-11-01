@@ -247,7 +247,27 @@ After processing feedback items, check whether the changes you made affect what 
 
 **Review the PR metadata:**
 
-Run `gh pr view --json title,body` to see the current title and description.
+Detect the forge from the checkout:
+
+```bash
+npx --yes --@j4k-oss:registry=https://code.j4k.dev/api/packages/j4k-oss/npm/ --package=@j4k-oss/repoq@latest -- repoq forge --json
+```
+
+Stop unless the returned `provider` is `forgejo` and `apiHost` is `code.j4k.dev`. Set `slug` from that JSON document. Run `pr-feedback summary --json` and set `prNumber` from its `prNumber` field. Bind metadata operations to a complete snapshot of that PR:
+
+```bash
+pr-feedback snapshot --repo "$slug" --pr "$prNumber"
+```
+
+Stop without editing metadata unless the snapshot exits 0. From the successful snapshot JSON, set `apiHost` from `host`, `slug` from `slug`, and `prNumber` from `pull.number`. Use this exact snapshot identity for every metadata read and edit below: `PR_FEEDBACK_FORGEJO_API_HOST` can select an effective API host different from the origin’s canonical host.
+
+Read the PR metadata:
+
+```bash
+fgj pr view "$prNumber" --hostname "$apiHost" -R "$slug" --json
+```
+
+Read the `title` and `body` fields from the returned PR document.
 
 **Update when changes alter described behavior:**
 
@@ -256,7 +276,15 @@ Run `gh pr view --json title,body` to see the current title and description.
 
 **Keep metadata accurate:**
 
-Use `gh pr edit --title "new title"` and/or `gh pr edit --body-file - <<'EOF' ... EOF` to update. Preserve the existing structure and update only the parts that changed.
+Use `fgj pr edit "$prNumber" --hostname "$apiHost" -R "$slug" --title "fix: updated purpose"` for title changes. For description changes, pass the body through stdin:
+
+```bash
+fgj pr edit "$prNumber" --hostname "$apiHost" -R "$slug" --body-file - <<'EOF'
+Updated PR description. Preserve the existing structure and change only inaccurate parts.
+EOF
+```
+
+Replace the example title and body with the actual metadata. Keep the heredoc delimiter quoted so backticks and `$...` remain literal.
 
 **Skip when changes don't affect accuracy:**
 
@@ -270,7 +298,7 @@ Run `pr-feedback summary --json` and confirm:
 - No actionable `in-progress` items remain (except active bot processes)
 - All actionable items are `agreed`, `disagreed`, `acknowledged`, or `awaiting-reply`
 - Every nonactionable body has been investigated and its outcome reported; its untrackable CLI status is not evidence of unfinished mutation work or successful settlement
-- No unresolved nonactionable claim is counted complete; report its blocker or applicable documented exemption
+- No unresolved nonactionable claim is counted complete; report its blocker
 
 ## 7. Handle continuous review stream
 

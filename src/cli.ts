@@ -2,15 +2,6 @@
 import { registerSnapshotCommand } from "./commands/snapshot.js";
 /**
  * pr-feedback - Semantic CLI for PR feedback workflow (Forgejo).
- *
- * Commands:
- *   summary    - Get all feedback context (TSV or pretty)
- *   detail     - Get full content of a single item
- *   start      - Mark item as work-in-progress
- *   agree      - Mark as agreed/fixed (reply + resolve)
- *   disagree   - Mark as disagreed/won't fix (reply; conversation stays open)
- *   ask        - Request clarification (reply, stays open)
- *   ack        - Acknowledge noise (resolve inline conversation)
  */
 
 import { createProgram } from "./lib/create-program.js";

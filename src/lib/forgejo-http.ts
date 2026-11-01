@@ -115,8 +115,8 @@ export function isForgejoNotFound(error: unknown): boolean {
 }
 
 /**
- * Call the Forgejo REST API and return the parsed JSON body.
- * Generic is return-only so callers supply the expected shape.
+ * Return a successful Forgejo REST response without consuming its body.
+ * Throw ForgejoHttpError for non-success HTTP status codes.
  */
 export async function forgejoResponse(request: ForgejoRequest): Promise<Response> {
   const token = fgjToken();
