@@ -2,26 +2,6 @@ import { describe, it, expect } from "vitest";
 import { detectProvider } from "./provider.js";
 
 describe("detectProvider", () => {
-  it("detects github from an https origin", () => {
-    expect(detectProvider("https://github.com/Jercik/gh-feedback.git")).toStrictEqual({
-      provider: "github",
-      host: "github.com",
-      owner: "Jercik",
-      repo: "gh-feedback",
-      slug: "Jercik/gh-feedback",
-    });
-  });
-
-  it("detects github from an scp-style origin", () => {
-    expect(detectProvider("git@github.com:Jercik/gh-feedback.git")).toStrictEqual({
-      provider: "github",
-      host: "github.com",
-      owner: "Jercik",
-      repo: "gh-feedback",
-      slug: "Jercik/gh-feedback",
-    });
-  });
-
   it("detects forgejo from the canonical host", () => {
     expect(detectProvider("https://code.j4k.dev/j4k/cluster.git")).toStrictEqual({
       provider: "forgejo",
@@ -43,30 +23,24 @@ describe("detectProvider", () => {
   });
 
   it("strips a trailing .git only at the end of the slug", () => {
-    expect(detectProvider("https://github.com/owner/repo.git-tools.git")).toStrictEqual({
-      provider: "github",
-      host: "github.com",
+    expect(detectProvider("https://code.j4k.dev/owner/repo.git-tools.git")).toStrictEqual({
+      provider: "forgejo",
+      host: "code.j4k.dev",
       owner: "owner",
       repo: "repo.git-tools",
       slug: "owner/repo.git-tools",
     });
-    expect(detectProvider("https://github.com/owner/repo")).toStrictEqual({
-      provider: "github",
-      host: "github.com",
+    expect(detectProvider("https://code.j4k.dev/owner/repo")).toStrictEqual({
+      provider: "forgejo",
+      host: "code.j4k.dev",
       owner: "owner",
       repo: "repo",
       slug: "owner/repo",
     });
   });
 
-  it("detects github from the SSH-over-443 host", () => {
-    expect(detectProvider("ssh://git@ssh.github.com:443/Jercik/gh-feedback.git")).toStrictEqual({
-      provider: "github",
-      host: "github.com",
-      owner: "Jercik",
-      repo: "gh-feedback",
-      slug: "Jercik/gh-feedback",
-    });
+  it("rejects GitHub origins", () => {
+    expect(detectProvider("https://github.com/example/unsupported.git")).toBeUndefined();
   });
 
   it("returns undefined for an unrecognized host", () => {

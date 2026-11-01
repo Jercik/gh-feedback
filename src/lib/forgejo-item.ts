@@ -1,6 +1,7 @@
 /**
  * Forgejo item resolution: map a per-repo id to the kind of feedback it is.
  *
+ * Reviews are identified by backing comment anchors, never by review table IDs.
  * The probes are PR-scoped or ownership-checked so a stale/mistyped id from
  * another PR is never acted on. Forgejo has no repo-scoped review-comment-by-id
  * endpoint and its issue-comment endpoint rejects non-issue comments, so inline
@@ -8,15 +9,17 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetch, forgejoFetchReviews, isForgejoNotFound } from "./forgejo-cli.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
+import { parseBackingCommentId } from "./feedback-values.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 
 export type ForgejoItemKind = "review-comment" | "issue-comment" | "review";
 
 export interface ForgejoItemMeta {
   kind: ForgejoItemKind;
+  review?: ForgejoReview;
   prNumber: number;
   /** Present for review-comment kind; carries the review id + line a threaded reply targets. */
   reviewComment?: ForgejoReviewComment;
@@ -59,6 +62,18 @@ export async function resolveItemMeta(
   prNumber: number,
   itemId: number,
 ): Promise<ResolvedForgejoItem | undefined> {
+  const reviewsRaw = await forgejoFetchReviews(`repos/${slug}/pulls/${prNumber}/reviews`);
+  const reviews = reviewsRaw.map((raw) => ForgejoReview.parse(raw));
+  const review = reviews.find(
+    (candidate) => parseBackingCommentId(candidate.html_url ?? null) === itemId,
+  );
+  if (review) {
+    if (review.state === "PENDING") {
+      return undefined;
+    }
+    return { meta: { kind: "review", prNumber, review }, review };
+  }
+
   // Issue comment: repo-scoped, so confirm it belongs to this PR before
   // accepting; otherwise fall through to the PR-scoped probes below. A PR's
   // conversation comments populate `pull_request_url` and leave `issue_url`
@@ -77,19 +92,6 @@ export async function resolveItemMeta(
         return { meta: { kind: "issue-comment", prNumber }, issueComment };
       }
     }
-  } catch (error) {
-    if (!isForgejoNotFound(error)) {
-      throw error;
-    }
-  }
-
-  // Review: the path is PR-scoped, so a review from another PR 404s.
-  try {
-    const raw = await forgejoFetch<unknown>({
-      path: `repos/${slug}/pulls/${prNumber}/reviews/${itemId}`,
-    });
-    const review = ForgejoReview.parse(raw);
-    return { meta: { kind: "review", prNumber }, review };
   } catch (error) {
     if (!isForgejoNotFound(error)) {
       throw error;

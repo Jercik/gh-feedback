@@ -1,17 +1,7 @@
-/**
- * Resolve the active forge backend from the origin remote.
- *
- * github.com  -> gh + GraphQL backend (unchanged)
- * code.j4k.dev / code.tail.j4k.dev -> Forgejo REST backend
- * anything else -> exit with a clear message (no backend to fake)
- */
-
 import { git, exitWithMessage } from "./git-helpers.js";
 import { detectProvider } from "./provider.js";
-import { createGithubBackend } from "./github-backend.js";
 import { createForgejoBackend } from "./forgejo-backend.js";
 import { findForgejoPullByBranch } from "./forgejo-environment.js";
-import { getPullRequestNumber } from "./github-environment.js";
 import type { FeedbackBackend } from "./feedback-backend.js";
 
 interface ResolvedBackend {
@@ -27,15 +17,8 @@ export function resolveBackend(): ResolvedBackend {
   if (!info) {
     return exitWithMessage(
       `Error: Unsupported git host for origin '${originUrl}'. ` +
-        `Supported: github.com, code.j4k.dev, code.tail.j4k.dev.`,
+        `Supported: code.j4k.dev, code.tail.j4k.dev.`,
     );
-  }
-
-  if (info.provider === "github") {
-    return {
-      backend: createGithubBackend(info.owner, info.repo),
-      currentPrNumber: () => Promise.resolve(getPullRequestNumber()),
-    };
   }
 
   const slug = info.slug;

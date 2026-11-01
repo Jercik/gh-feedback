@@ -33,7 +33,6 @@ import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
 import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
-import { REACTION_TO_GRAPHQL } from "./constants.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
 import { completeForgejoItem, reopenForgejoItem } from "./forgejo-completion.js";
 
@@ -57,15 +56,6 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
         `Error: Could not find item #${itemId} in the current Forgejo PR #${prNumber}.`,
       );
     }
-    if (resolved.meta.kind === "review") {
-      // A Forgejo review has no reaction or resolve endpoint, so no status
-      // command could leave a marker that summary reads back. Reject it before
-      // any reply/reaction is posted rather than report a hollow success.
-      return exitWithMessage(
-        `Error: Forgejo review #${itemId} can't be tracked — a review has no reaction or resolve endpoint, so start/agree/disagree/ask/ack can't record a status. Act on its inline comments or the PR conversation instead; see the forge UI for the review body.`,
-      );
-    }
-
     // Canonicalize a review comment to its conversation root, so a reply id the
     // user may have targeted resolves to the finding — every later reaction read
     // and write then lands on the same comment summary reports.
@@ -114,8 +104,6 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
   }
 
   return {
-    provider: "forgejo",
-
     fetchSummary(prNumber: number, options: SummaryOptions): Promise<FeedbackSummary> {
       return buildSummary(slug, prNumber, options);
     },
@@ -147,10 +135,6 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     async addReaction(item: FeedbackItemRef, reaction: ReactionContent): Promise<void> {
       const meta = await metaFor(item);
       const path = reactionsPath(slug, meta.kind, item.id);
-      if (!path) {
-        // Reviews have no reaction endpoint in Forgejo; nothing to apply.
-        return;
-      }
       await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } });
     },
 
@@ -161,13 +145,8 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     ): Promise<void> {
       const meta = await metaFor(item);
       const path = reactionsPath(slug, meta.kind, item.id);
-      if (!path) {
-        return;
-      }
 
-      const reactionsToRemove = toRemove.filter(
-        (r) => viewerReactions.includes(r) && r in REACTION_TO_GRAPHQL,
-      );
+      const reactionsToRemove = toRemove.filter((r) => viewerReactions.includes(r));
       for (const reaction of reactionsToRemove) {
         await forgejoFetch<unknown>({ method: "DELETE", path, body: { content: reaction } });
       }
@@ -177,13 +156,8 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       return completeForgejoItem(slug, item, outcome);
     },
 
-    async unresolve(item: FeedbackItemRef, _isMinimized: boolean): Promise<CapabilityResult> {
+    async unresolve(item: FeedbackItemRef): Promise<CapabilityResult> {
       return reopenForgejoItem(slug, item);
-    },
-
-    blockIfUnresolvedSiblings(_item, _actionVerb): Promise<void> {
-      // Shared Forgejo conversations defer completion until sibling findings settle, so no preflight block is needed.
-      return Promise.resolve();
     },
   };
 }

@@ -5,7 +5,7 @@ argument-hint: optional focus area or specific instructions
 
 # Goal
 
-Process every review comment on the current PR using `gh-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, disagreed with evidence, acknowledged, or waiting for clarification.
+Process every review comment on the current PR using `pr-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, disagreed with evidence, acknowledged, or waiting for clarification. Report bodies that have no action target separately; their CLI status cannot be settled.
 
 # Inputs
 
@@ -38,22 +38,22 @@ Code reviews focus on implementation details: correctness, error handling, perfo
 
 Approach reviews are usually high-level reviews questioning whether the PR uses the best solution to the problem. Unlike code reviews (which are mostly objectively correct or not), approach alternatives are judgment calls. **These should be taken seriously and they require user decision:**
 
-- If the review says "approach looks good" with no suggestions → `gh-feedback ack` (positive confirmation, no action needed)
+- If the review says "approach looks good" with no suggestions → `pr-feedback ack` (positive confirmation, no action needed)
 - If the review proposes an alternative approach:
   1. Summarize the suggestion to the user
   2. Ask: "The approach review suggests [X]. Should we implement this change?"
   3. Wait for user decision before proceeding
-  4. Based on user response: implement the change, or `gh-feedback disagree` with explanation
+  4. Based on user response: implement the change, or `pr-feedback disagree` with explanation
 
 ## Resolution commands
 
 | Scenario               | Command                                                          |
 | :--------------------- | :--------------------------------------------------------------- |
-| **Valid issue**        | Fix code, push, then: `gh-feedback agree <id> -m "Fixed in SHA"` |
-| **Already fixed**      | `gh-feedback agree <id> -m "Already fixed in SHA"`               |
+| **Valid issue**        | Fix code, push, then: `pr-feedback agree <id> -m "Fixed in SHA"` |
+| **Already fixed**      | `pr-feedback agree <id> -m "Already fixed in SHA"`               |
 | **Disagree**           | See "Disagreement with proactive improvement" below              |
-| **Need clarification** | `gh-feedback ask <id> -m "<your question>"`                      |
-| **Bot noise/summary**  | `gh-feedback ack <id>`                                           |
+| **Need clarification** | `pr-feedback ask <id> -m "<your question>"`                      |
+| **Bot noise/summary**  | `pr-feedback ack <id>`                                           |
 | **Duplicate**          | Same action and reply as original item                           |
 | **Out of scope**       | See "Scope decisions" below                                      |
 
@@ -82,13 +82,13 @@ When you disagree with a reviewer's assessment, their confusion signals that the
 After making any improvements, run:
 
 ```
-gh-feedback disagree <id> -m "<explanation>. Added clarification in <location> to prevent future confusion."
+pr-feedback disagree <id> -m "<explanation>. Added clarification in <location> to prevent future confusion."
 ```
 
 Or if no improvement was warranted:
 
 ```
-gh-feedback disagree <id> -m "<evidence/reasoning>"
+pr-feedback disagree <id> -m "<evidence/reasoning>"
 ```
 
 ## Scope decisions
@@ -125,7 +125,7 @@ When uncertain, ask: "Would a thorough developer include this in the same PR?" I
 
 ## Workflow rules
 
-- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `gh-feedback start <id>` to reopen it
+- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `pr-feedback start <id>` to reopen it
 - Never mark an item `agreed` until the fix is pushed—the commit SHA proves the work is done
 - When marking an item `disagreed`, cite evidence: command output, doc links, or test results
 
@@ -146,14 +146,16 @@ Approach reviewer feedback with healthy skepticism. Reviewers often lack critica
 
 ## 1. Learn the tool
 
-At the start of the session, run `gh-feedback --help` to understand available commands and options.
+At the start of the session, run `pr-feedback --help` to understand available commands and options.
 
 ## 2. Get context
 
-Run `gh-feedback summary` to see all feedback items with their current status.
+Run `pr-feedback summary --json` to read all feedback items with their current status and actionability.
+
+Items with `id: null` or `actionable: false` have no mutation target. Read their full `body`, investigate their claims, and fix valid issues alongside actionable feedback. Report their outcome using `reviewId` as provenance, including any remaining untrackable status. Never pass them to `start`, `detail`, or resolution commands, and never substitute the review entity ID for a missing comment ID. The mutation queue and completion checks below apply only to items with a non-null ID and `actionable` not false. If a nonactionable claim remains unresolved or needs clarification, report processing blocked on that claim; absence of an action target does not settle it.
 
 - **No PR for current branch:** Stop and inform the user.
-- **No actionable items:** If no `pending`, `in-progress`, or `awaiting-reply` items remain, report that feedback processing is complete.
+- **No actionable items:** After investigating any nonactionable bodies, if no actionable `pending`, `in-progress`, or `awaiting-reply` items remain, report actionable feedback processing complete and list the nonactionable outcomes separately.
 
 ## 3. Process items
 
@@ -171,7 +173,7 @@ These may be active work, interrupted from a previous session, or resolved incor
 
 Check if the reviewer has responded since the question was asked:
 
-- **New reply found**: Run `gh-feedback start <id>` to reopen, then process based on the new information.
+- **New reply found**: Run `pr-feedback start <id>` to reopen, then process based on the new information.
 - **No reply yet**: Leave as `awaiting-reply` and move on.
 
 ### Priority 3: `pending` items
@@ -182,11 +184,11 @@ Standard processing—these are new and need full attention.
 
 ### Start work
 
-Run `gh-feedback start <id>` to mark the item as `in-progress`.
+Run `pr-feedback start <id>` to mark the item as `in-progress`.
 
 ### Analyze
 
-1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `gh-feedback detail <id>` to fetch full content.
+1. **Check for truncation:** If the body shows `[TRUNCATED]`, run `pr-feedback detail <id>` to fetch full content.
 
 2. **Verify claims with extreme skepticism:**
 
@@ -262,16 +264,18 @@ No update needed for internal refactors, bug fixes, or improvements that don't c
 
 ## 6. Verify completion
 
-Run `gh-feedback summary` and confirm:
+Run `pr-feedback summary --json` and confirm:
 
-- No `pending` items remain
-- No `in-progress` items remain (except active bot processes)
-- All items are `agreed`, `disagreed`, `acknowledged`, or `awaiting-reply`
+- No actionable `pending` items remain
+- No actionable `in-progress` items remain (except active bot processes)
+- All actionable items are `agreed`, `disagreed`, `acknowledged`, or `awaiting-reply`
+- Every nonactionable body has been investigated and its outcome reported; its untrackable CLI status is not evidence of unfinished mutation work or successful settlement
+- No unresolved nonactionable claim is counted complete; report its blocker or applicable documented exemption
 
 ## 7. Handle continuous review stream
 
-CI reviews may post new feedback while you're processing existing items—especially after pushing fixes. This is expected behavior. Re-run `gh-feedback summary`; if new `pending` items appear, process them, then repeat step 6 verification until no new items remain.
+CI reviews may post new feedback while you're processing existing items—especially after pushing fixes. This is expected behavior. Re-run `pr-feedback summary --json`; process new actionable items and investigate new or changed nonactionable bodies, then repeat step 6 verification until no new work remains.
 
 # Output
 
-Summary of actions taken: items processed, fixes made, disagreements along with any proactive clarifications added, PR metadata updates (if any), and items left awaiting reply.
+Summary of actions taken: items processed, fixes made, disagreements along with any proactive clarifications added, PR metadata updates (if any), items left awaiting reply, and nonactionable review bodies with their outcomes and remaining untrackable statuses.

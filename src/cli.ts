@@ -1,15 +1,16 @@
 #!/usr/bin/env node
+import { registerSnapshotCommand } from "./commands/snapshot.js";
 /**
- * gh-feedback - Semantic CLI for PR feedback workflow (GitHub or Forgejo).
+ * pr-feedback - Semantic CLI for PR feedback workflow (Forgejo).
  *
  * Commands:
  *   summary    - Get all feedback context (TSV or pretty)
  *   detail     - Get full content of a single item
  *   start      - Mark item as work-in-progress
  *   agree      - Mark as agreed/fixed (reply + resolve)
- *   disagree   - Mark as disagreed/won't fix (reply + resolve; Forgejo stays open)
+ *   disagree   - Mark as disagreed/won't fix (reply; conversation stays open)
  *   ask        - Request clarification (reply, stays open)
- *   ack        - Acknowledge noise (hide/resolve)
+ *   ack        - Acknowledge noise (resolve inline conversation)
  */
 
 import { createProgram } from "./lib/create-program.js";
@@ -43,20 +44,20 @@ program.addHelpText(
   "after",
   String.raw`
 Example workflow:
-  $ gh-feedback summary              # Get all feedback (pretty format)
-  $ gh-feedback summary --porcelain  # Get all feedback (TSV for scripting)
-  $ gh-feedback start 456            # Mark #456 as in-progress
-  $ gh-feedback agree 456 -m 'Fixed in abc123'
-  $ gh-feedback disagree 456 -m 'Intentional, see docs'
-  $ gh-feedback ask 456 -m 'Could you clarify?'
-  $ gh-feedback ack 789              # Acknowledge bot noise
-  $ gh-feedback detail 456           # Get full untruncated content
+  $ pr-feedback summary              # Get all feedback (pretty format)
+  $ pr-feedback summary --porcelain  # Get all feedback (TSV for scripting)
+  $ pr-feedback start 456            # Mark #456 as in-progress
+  $ pr-feedback agree 456 -m 'Fixed in abc123'
+  $ pr-feedback disagree 456 -m 'Intentional, see docs'
+  $ pr-feedback ask 456 -m 'Could you clarify?'
+  $ pr-feedback ack 789              # Acknowledge bot noise
+  $ pr-feedback detail 456           # Get full untruncated content
 
 Unix pipeline examples:
-  $ gh-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
-  $ gh-feedback summary | awk -F'\t' '$1 ~ /^123456$/'  # Filter by ID (use ~ not ==)
-  $ gh-feedback summary | tail -n +2 | sort -t$'\t' -k3  # Sort by status
-  $ gh-feedback summary --json 2>/dev/null | jq '.items[0]'  # JSON with jq
+  $ pr-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
+  $ pr-feedback summary | awk -F'\t' '$1 ~ /^123456$/'  # Filter by ID (use ~ not ==)
+  $ pr-feedback summary | tail -n +2 | sort -t$'\t' -k3  # Sort by status
+  $ pr-feedback summary --json 2>/dev/null | jq '.items[0]'  # JSON with jq
 `,
 );
 
@@ -67,44 +68,36 @@ Unix pipeline examples:
 program
   .command("summary")
   .description("Get all PR feedback with semantic status")
-  .option("--hide-hidden", "Exclude minimized items")
   .option("--hide-resolved", "Exclude resolved items")
   .option("-p, --porcelain", "Output as TSV (auto-detected when stdout is not a TTY)")
   .option("-j, --json", "Output as JSON")
-  .action(
-    async (options: {
-      hideHidden?: boolean;
-      hideResolved?: boolean;
-      porcelain?: boolean;
-      json?: boolean;
-    }) => {
-      try {
-        const { backend, currentPrNumber } = resolveBackend();
-        const prNumber = await currentPrNumber();
+  .action(async (options: { hideResolved?: boolean; porcelain?: boolean; json?: boolean }) => {
+    try {
+      const { backend, currentPrNumber } = resolveBackend();
+      const prNumber = await currentPrNumber();
 
-        verboseLog(`Fetching feedback for PR #${prNumber}...`);
-        const summary = await backend.fetchSummary(prNumber, {
-          hideHidden: options.hideHidden,
-          hideResolved: options.hideResolved,
-        });
+      verboseLog(`Fetching feedback for PR #${prNumber}...`);
+      const summary = await backend.fetchSummary(prNumber, {
+        hideResolved: options.hideResolved,
+      });
 
-        if (options.json) {
-          console.log(JSON.stringify(summary, undefined, 2));
-        } else {
-          // Auto-detect: use TSV if not TTY or if --porcelain
-          const useTsv = options.porcelain ?? !process.stdout.isTTY;
-          console.log(formatSummary(summary, { porcelain: useTsv }));
-        }
-      } catch (error: unknown) {
-        exitWithMessage(error instanceof Error ? error.message : String(error));
+      if (options.json) {
+        console.log(JSON.stringify(summary, undefined, 2));
+      } else {
+        // Auto-detect: use TSV if not TTY or if --porcelain
+        const useTsv = options.porcelain ?? !process.stdout.isTTY;
+        console.log(formatSummary(summary, { porcelain: useTsv }));
       }
-    },
-  );
+    } catch (error: unknown) {
+      exitWithMessage(error instanceof Error ? error.message : String(error));
+    }
+  });
 
 // -----------------------------------------------------------------------------
 // Register Semantic Commands
 // -----------------------------------------------------------------------------
 
+registerSnapshotCommand(program);
 registerDetailCommand(program);
 registerStartCommand(program);
 registerAgreeCommand(program);

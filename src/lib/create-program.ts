@@ -1,75 +1,33 @@
 import { Command } from "@commander-js/extra-typings";
 import packageJson from "../../package.json" with { type: "json" };
-import { verifyPrerequisites } from "./github-environment.js";
-import {
-  enableRateLimitTracking,
-  formatRateLimitSummary,
-  getRateLimitCalls,
-} from "./rate-limit-tracker.js";
+import { verifyPrerequisites } from "./feedback-environment.js";
 import { enableVerboseMode } from "./verbose-mode.js";
-import { GH_PATH_ENV_VAR } from "./github-cli.js";
 import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
 import { FGJ_PATH_ENV_VAR, FORGEJO_API_HOST_ENV_VAR } from "./forgejo-cli.js";
 
-/**
- * Create a Commander program with common configuration and preAction hooks.
- * Imports version and description from package.json; the program name is pinned to the unscoped CLI name.
- *
- * Global options:
- * - -v, --verbose: Show progress messages (quiet by default)
- * - --debug-rate-limit: Track and display GitHub API rate limit consumption
- *
- * Hooks:
- * - preAction: Verify the forge prerequisites for origin, enable verbose/rate-limit modes
- * - postAction: Display rate limit summary if tracking was enabled
- */
 export function createProgram(): Command {
   const program = new Command()
-    .name("gh-feedback")
+    .name("pr-feedback")
     .description(packageJson.description)
     .version(packageJson.version)
     .showHelpAfterError("(add --help for additional information)")
     .showSuggestionAfterError()
     .helpCommand(false)
-    .option("-v, --verbose", "Show progress messages (quiet by default)")
-    .option("--debug-rate-limit", "Show GitHub API rate limit usage after command");
-
+    .option("-v, --verbose", "Show progress messages (quiet by default)");
   program.addHelpText(
     "before",
-    `Requires: git, plus gh (GitHub CLI) or fgj (Forgejo CLI) for the forge backing origin\n` +
-      `Override paths: ${GIT_PATH_ENV_VAR}, ${GH_PATH_ENV_VAR}, ${FGJ_PATH_ENV_VAR}\n` +
-      `Forgejo API host: ${FORGEJO_API_HOST_ENV_VAR}\n\n`,
+    `Requires: fgj (Forgejo CLI) for code.j4k.dev; git unless snapshot --repo is explicit\nOverride paths: ${GIT_PATH_ENV_VAR}, ${FGJ_PATH_ENV_VAR}\nForgejo API host: ${FORGEJO_API_HOST_ENV_VAR}\n\n`,
   );
-
-  // preAction: runs before every subcommand
-  program.hook("preAction", (thisCommand) => {
-    // Verify git plus the forge CLI/auth for the provider backing origin
-    verifyPrerequisites();
-
-    const options = thisCommand.opts() as {
-      verbose?: boolean;
-      debugRateLimit?: boolean;
-    };
-
-    // Enable verbose mode if --verbose flag is present
-    if (options.verbose) {
+  program.hook("preAction", (command, actionCommand) => {
+    const explicitSnapshot =
+      actionCommand.name() === "snapshot" &&
+      typeof (actionCommand.opts() as { repo?: string }).repo === "string";
+    if (!explicitSnapshot) {
+      verifyPrerequisites();
+    }
+    if ((command.opts() as { verbose?: boolean }).verbose) {
       enableVerboseMode();
     }
-
-    // Enable rate limit tracking if --debug-rate-limit flag is present
-    if (options.debugRateLimit) {
-      enableRateLimitTracking();
-    }
   });
-
-  // postAction: runs after every subcommand completes
-  program.hook("postAction", () => {
-    // If we recorded any API calls, display the rate limit summary
-    if (getRateLimitCalls().length > 0) {
-      // Output to stderr so it doesn't interfere with piped stdout
-      console.error(formatRateLimitSummary());
-    }
-  });
-
   return program;
 }

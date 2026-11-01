@@ -1,20 +1,20 @@
 {
-  "name": "@j4k-oss/gh-feedback",
+  "name": "@j4k-oss/pr-feedback",
   "version": "1.0.0",
-  "description": "Read, reply, react, and resolve pull request feedback on the current branch (GitHub or Forgejo)",
+  "description": "Read, reply, react, and resolve pull request feedback on the current branch (Forgejo)",
   "keywords": [],
-  "homepage": "https://code.j4k.dev/j4k-oss/gh-feedback#readme",
+  "homepage": "https://code.j4k.dev/j4k-oss/pr-feedback#readme",
   "bugs": {
-    "url": "https://code.j4k.dev/j4k-oss/gh-feedback/issues"
+    "url": "https://code.j4k.dev/j4k-oss/pr-feedback/issues"
   },
   "license": "MIT",
   "author": "Łukasz Jerciński",
   "repository": {
     "type": "git",
-    "url": "https://code.j4k.dev/j4k-oss/gh-feedback.git"
+    "url": "https://code.j4k.dev/j4k-oss/pr-feedback.git"
   },
   "bin": {
-    "gh-feedback": "bin/gh-feedback"
+    "pr-feedback": "bin/pr-feedback"
   },
   "files": [
     "bin/",
@@ -38,7 +38,7 @@
     "prepack": "pnpm run rebuild",
     "prepare": "if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then hooks_path=$(git config --local --get-all core.hooksPath 2>/dev/null && echo .) && [ \"$hooks_path\" = \"$(echo .githooks; echo .)\" ] || git config core.hooksPath .githooks; fi",
     "rebuild": "pnpm run clean && pnpm run build",
-    "start": "pnpm -s run rebuild && node --env-file=.env bin/gh-feedback",
+    "start": "pnpm -s run rebuild && node --env-file=.env bin/pr-feedback",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",

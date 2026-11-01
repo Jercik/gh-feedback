@@ -17,16 +17,13 @@ interface NormalizedReaction {
 }
 
 /**
- * Reaction endpoint for an item, or undefined where none exists. Inline review
+ * Reaction endpoint for an item's native backing comment. Inline review
  * comments and PR issue comments share Forgejo's comment table, so both react
  * via `issues/comments/{id}/reactions` (verified against Forgejo's API routes —
- * there is no `pulls/comments/{id}/reactions`). Reviews have no endpoint.
+ * there is no `pulls/comments/{id}/reactions`). Review bodies use their backing comment IDs.
  */
-export function reactionsPath(slug: string, kind: ForgejoItemKind, id: number): string | undefined {
-  if (kind === "issue-comment" || kind === "review-comment") {
-    return `repos/${slug}/issues/comments/${id}/reactions`;
-  }
-  return undefined;
+export function reactionsPath(slug: string, _kind: ForgejoItemKind, id: number): string {
+  return `repos/${slug}/issues/comments/${id}/reactions`;
 }
 
 export async function fetchReactions(
@@ -35,10 +32,6 @@ export async function fetchReactions(
   id: number,
 ): Promise<ForgejoReaction[]> {
   const path = reactionsPath(slug, kind, id);
-  if (!path) {
-    return [];
-  }
-
   try {
     const raw = await forgejoFetch<unknown[]>({ path });
     if (!Array.isArray(raw)) {

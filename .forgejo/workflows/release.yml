@@ -144,7 +144,7 @@ jobs:
         env:
           PUBLISH_AUDIENCE: ${{ vars.NPM_PUBLISH_OSS_AUDIENCE }}
           EXPECTED_OWNER: "j4k-oss"
-          EXPECTED_NAME: "gh-feedback"
+          EXPECTED_NAME: "pr-feedback"
           EXPECTED_REGISTRY: "https://code.j4k.dev/api/packages/j4k-oss/npm/"
           NPM_READ_AUDIENCE: ${{ vars.NPM_READ_AUDIENCE }}
         run: |
@@ -179,7 +179,7 @@ jobs:
           fi
           # A curl-fetched token is not auto-masked like a secrets.* value; register it so no later step can print it.
           echo "::add-mask::${NODE_AUTH_TOKEN}"
-          # The oss-publisher integration mints for every repository on its claim list and the token writes any package in the org, so assert that this run is the package it is about to publish before the token is used: a repository that is not j4k-oss/gh-feedback, or a package.json that names another package or registry, must fail here, before anything is tagged or published.
+          # The oss-publisher integration mints for every repository on its claim list and the token writes any package in the org, so assert that this run is the package it is about to publish before the token is used: a repository that is not j4k-oss/pr-feedback, or a package.json that names another package or registry, must fail here, before anything is tagged or published.
           OIDC_TOKEN="${NODE_AUTH_TOKEN}" node --input-type=module - <<'EOF'
           import { readFileSync } from "node:fs";
 

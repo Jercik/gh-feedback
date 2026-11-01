@@ -1,5 +1,5 @@
 /**
- * Normalize the GH_FEEDBACK_FORGEJO_API_HOST override to a bare host[:port].
+ * Normalize the PR_FEEDBACK_FORGEJO_API_HOST override to a bare host[:port].
  *
  * The documented form is a bare host, but a value carrying a scheme (e.g.
  * `https://code.j4k.dev`) would otherwise be interpolated into `https://https://…`,

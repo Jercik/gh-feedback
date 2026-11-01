@@ -7,11 +7,10 @@ export async function startItem(
   backend: FeedbackBackend,
   item: FeedbackItemRef,
   viewerReactions: ReactionContent[],
-  isMinimized: boolean,
   needsReopen: boolean,
 ): Promise<void> {
   if (needsReopen) {
-    const result = await backend.unresolve(item, isMinimized);
+    const result = await backend.unresolve(item);
     if (!result.supported) {
       throw new Error(`Reopen skipped: ${result.reason}`);
     }

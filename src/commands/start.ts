@@ -2,7 +2,7 @@
  * Start command - mark item as "working on it"
  *
  * Adds 👀 (eyes) reaction to indicate work in progress.
- * Also reopens the item if it was resolved/hidden.
+ * Also reopens the item if it was resolved.
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -30,13 +30,9 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isMinimized, isResolved, viewerMayReopen } =
-          await backend.getItemStatus(item);
+        const { viewerReactions, isResolved, viewerMayReopen } = await backend.getItemStatus(item);
 
-        // Reopen only when the backend says this viewer may do so. On Forgejo
-        // that preserves another user's resolution; on GitHub every resolved
-        // thread is reopenable. For non-thread items, hiding is a separate axis.
-        const needsReopen = viewerMayReopen || (item.type !== "thread" && isMinimized);
+        const needsReopen = viewerMayReopen;
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {
@@ -62,7 +58,7 @@ export function registerStartCommand(program: Command): void {
         if (needsReopen) {
           verboseLog("Reopening...");
         }
-        await startItem(backend, item, viewerReactions, isMinimized, needsReopen);
+        await startItem(backend, item, viewerReactions, needsReopen);
         verboseLog(`${SUCCESS} Marked #${itemId} as in-progress.`);
       } catch (error) {
         exitWithMessage(error instanceof Error ? error.message : String(error));

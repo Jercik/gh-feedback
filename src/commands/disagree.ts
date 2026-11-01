@@ -1,7 +1,7 @@
 /**
  * Disagree command - mark item as "won't fix"
  *
- * Performs: reply + 👎 (thumbs_down), then resolves on GitHub only
+ * Performs: reply + 👎 (thumbs_down), leaving the conversation open
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -15,7 +15,7 @@ export function registerDisagreeCommand(program: Command): void {
   program
     .command("disagree")
     .description(
-      "Mark feedback as disagreed/won't fix (reply + thumbs_down + resolve; Forgejo stays open)",
+      "Mark feedback as disagreed/won't fix (reply + thumbs_down; conversation stays open)",
     )
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
@@ -63,9 +63,6 @@ export function registerDisagreeCommand(program: Command): void {
           verboseLog("---");
           verboseLog(message);
           verboseLog("---");
-
-          // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "disagree with");
 
           verboseLog("");
           verboseLog("Actions: reply + thumbs_down + apply conversation policy");

@@ -25,7 +25,7 @@ describe("startItem", () => {
       Promise.resolve({ supported: false, reason: "upgrade fgj" }),
     );
 
-    await expect(startItem(backend, item, ["+1"], false, true)).rejects.toThrow(
+    await expect(startItem(backend, item, ["+1"], true)).rejects.toThrow(
       "Reopen skipped: upgrade fgj",
     );
     expect(backend.removeReactions).not.toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe("startItem", () => {
       }),
     );
 
-    await expect(startItem(backend, item, ["+1"], false, true)).rejects.toThrow(
+    await expect(startItem(backend, item, ["+1"], true)).rejects.toThrow(
       "Reopen failed: conversation reopen did not apply",
     );
     expect(backend.removeReactions).not.toHaveBeenCalled();
@@ -65,14 +65,14 @@ describe("startItem", () => {
       }),
     } as unknown as FeedbackBackend;
 
-    await startItem(backend, item, ["+1"], false, true);
+    await startItem(backend, item, ["+1"], true);
     expect(events).toStrictEqual(["unresolve", "remove", "add:eyes"]);
   });
 
   it("preserves reactions when reopening throws", async () => {
     const backend = backendWithUnresolve(() => Promise.reject(new Error("network failed")));
 
-    await expect(startItem(backend, item, ["+1"], false, true)).rejects.toThrow("network failed");
+    await expect(startItem(backend, item, ["+1"], true)).rejects.toThrow("network failed");
     expect(backend.removeReactions).not.toHaveBeenCalled();
     expect(backend.addReaction).not.toHaveBeenCalled();
   });
@@ -80,7 +80,7 @@ describe("startItem", () => {
   it("swaps reactions without reopening an open item", async () => {
     const backend = backendWithUnresolve(() => Promise.resolve({ supported: true, applied: true }));
 
-    await startItem(backend, item, ["confused"], false, false);
+    await startItem(backend, item, ["confused"], false);
     expect(backend.unresolve).not.toHaveBeenCalled();
     expect(backend.removeReactions).toHaveBeenCalledWith(
       item,

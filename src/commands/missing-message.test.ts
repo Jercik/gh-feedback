@@ -1,4 +1,4 @@
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
@@ -10,11 +10,7 @@ const cliPath = path.join(repoRoot, "dist/cli.js");
 let checkout: string;
 
 beforeAll(() => {
-  // Spawning the compiled CLI is the only way to observe the real stdin behavior.
-  execFileSync(path.join(repoRoot, "node_modules/.bin/tsc"), ["-p", "tsconfig.build.json"], {
-    cwd: repoRoot,
-  });
-  checkout = fs.mkdtempSync(path.join(os.tmpdir(), "gh-feedback-test-"));
+  checkout = fs.mkdtempSync(path.join(os.tmpdir(), "pr-feedback-test-"));
   const git = (...args: string[]): void => {
     execFileSync("git", args, { cwd: checkout });
   };
@@ -76,5 +72,21 @@ describe("reply commands without a message", () => {
     expect(result.timedOut).toBe(false);
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("Empty reply message");
+  });
+});
+
+describe("prerequisite failures", () => {
+  it("reports an invalid git override without a Node stack", () => {
+    const result = spawnSync(process.execPath, [cliPath, "summary"], {
+      cwd: checkout,
+      encoding: "utf8",
+      env: { ...process.env, PR_FEEDBACK_GIT_PATH: "/pr-feedback-nonexistent-git" },
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("Required dependency 'git' not found.");
+    expect(result.stderr).toContain("PR_FEEDBACK_GIT_PATH=/path/to/git");
+    expect(result.stderr).not.toContain("at verifyPrerequisites");
   });
 });

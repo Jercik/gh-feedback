@@ -66,7 +66,7 @@ function formatSummaryTsv(summary: FeedbackSummary): string {
     const responses = formatResponsesTsv(item.responses);
 
     return [
-      String(item.id),
+      item.id === null || item.actionable === false ? "" : String(item.id),
       item.timestamp,
       item.status,
       item.author,
@@ -101,7 +101,11 @@ function formatItemPretty(item: FeedbackItem): string[] {
 
   // Item header
   const location = item.location ? `  ${item.location}` : "";
-  lines.push(`#${item.id}  ${item.timestamp}  ${item.status}  @${item.author}${location}`);
+  const identity =
+    item.id === null || item.actionable === false
+      ? `nonactionable review #${item.reviewId}`
+      : `#${item.id}`;
+  lines.push(`${identity}  ${item.timestamp}  ${item.status}  @${item.author}${location}`);
 
   // Body (indented)
   const body = truncateMiddle(item.body, MAX_BODY_LENGTH);

@@ -18,8 +18,10 @@ describe("reactionsPath", () => {
     );
   });
 
-  it("has no reaction endpoint for reviews", () => {
-    expect(reactionsPath("j4k/cluster", "review", 1)).toBeUndefined();
+  it("uses the native backing comment reaction endpoint for reviews", () => {
+    expect(reactionsPath("j4k/cluster", "review", 1)).toBe(
+      "repos/j4k/cluster/issues/comments/1/reactions",
+    );
   });
 });
 

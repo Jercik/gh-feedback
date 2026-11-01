@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { resolveDependencyPath } from "./resolve-dependency-path.js";
 
-export const GIT_PATH_ENV_VAR = "GH_FEEDBACK_GIT_PATH";
+export const GIT_PATH_ENV_VAR = "PR_FEEDBACK_GIT_PATH";
 
 function getGitBinaryPath(): string {
   return resolveDependencyPath({
@@ -57,7 +57,7 @@ export function git(...arguments_: [...string[], { cwd?: string }] | string[]): 
  */
 export function exitWithMessage(message: string): never {
   console.error(message);
-  console.error(`Try 'gh-feedback --help' for details.`);
+  console.error(`Try 'pr-feedback --help' for details.`);
   // eslint-disable-next-line unicorn/no-process-exit
   process.exit(1);
 }

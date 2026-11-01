@@ -1,7 +1,7 @@
 /**
  * Ack command - acknowledge informational item
  *
- * Performs: 🚀 (rocket) + hide/resolve
+ * Performs: 🚀 (rocket) + resolve inline conversation
  * Used for bot summaries, status updates, or noise.
  */
 
@@ -15,7 +15,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description("Acknowledge informational item (rocket + hide/resolve)")
+    .description("Acknowledge informational item (rocket + resolve inline conversation)")
     .argument("<id>", "The feedback item ID", (value) => {
       const id = Math.trunc(Number(value));
       if (Number.isNaN(id) || id <= 0) {
@@ -45,11 +45,8 @@ export function registerAckCommand(program: Command): void {
           verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
         }
 
-        // Check for unresolved sibling threads in multi-thread reviews
-        await backend.blockIfUnresolvedSiblings(item, "ACK");
-
         verboseLog("");
-        verboseLog("Actions: rocket + hide/resolve (acknowledge noise)");
+        verboseLog("Actions: rocket + resolve inline conversation (acknowledge noise)");
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");

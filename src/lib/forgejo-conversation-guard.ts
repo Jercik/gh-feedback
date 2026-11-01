@@ -5,7 +5,7 @@ import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
 import { reviewCommentDisplayLine } from "./forgejo-review-comment-line.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
-import { isIgnoredAuthor } from "./github-environment.js";
+import { isIgnoredAuthor } from "./feedback-environment.js";
 
 export function isForgejoSiblingSettledForResolution(reactions: readonly string[]): boolean {
   const finals = reactions.filter((reaction) => ["+1", "-1", "rocket"].includes(reaction));

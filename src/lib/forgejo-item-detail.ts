@@ -2,9 +2,10 @@
  * Forgejo item detail: full untruncated content for a single feedback item.
  *
  * The j4k Forgejo fork exposes the inline conversation resolver. Forgejo still
- * has no outdated axis, and reviews report a fixed COMMENTED state.
+ * has no outdated axis. Published review bodies use their native backing comment.
  */
 
+import type { ReviewState } from "./types.js";
 import type { ItemDetail } from "./fetch-item-detail.js";
 import { resolveItemMeta } from "./forgejo-item.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
@@ -29,7 +30,7 @@ export async function buildItemDetail(
     const target = resolved.reviewComment;
     // Group the whole PR's review comments (already fetched while resolving the
     // id) so detail returns every comment in the conversation — matching summary's
-    // grouping and the GitHub thread path — rather than just the root. The id may
+    // grouping — rather than just the root. The id may
     // be a reply, so match it on either side.
     const viewer = await getForgejoViewer();
     const conversations = groupReviewCommentConversations(resolved.reviewComments ?? [], viewer);
@@ -78,13 +79,13 @@ export async function buildItemDetail(
   if (review) {
     return {
       type: "review",
-      id: review.id,
+      id: itemId,
       author: review.user?.login ?? "ghost",
-      state: "COMMENTED",
+      state: review.state as ReviewState,
       url: review.html_url ?? "",
       submittedAt: review.submitted_at,
       body: review.body,
-      reactions: [],
+      reactions: toReactionSummary(await fetchReactions(slug, "review", itemId)),
     };
   }
 

@@ -61,8 +61,6 @@ export function registerAgreeCommand(program: Command): void {
           verboseLog("---");
           verboseLog(message);
           verboseLog("---");
-          // Check for unresolved sibling threads in multi-thread reviews
-          await backend.blockIfUnresolvedSiblings(item, "agree with");
 
           verboseLog("");
           verboseLog("Actions: reply + thumbs_up + apply conversation policy");

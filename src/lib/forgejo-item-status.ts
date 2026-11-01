@@ -16,16 +16,6 @@ export async function getForgejoItemStatus(
   meta: ForgejoItemMeta,
   itemId: number,
 ): Promise<ItemStatus> {
-  if (meta.kind === "review") {
-    return {
-      doneStatus: undefined,
-      viewerReactions: [],
-      isMinimized: false,
-      isResolved: false,
-      viewerMayReopen: false,
-    };
-  }
-
   const viewer = await getForgejoViewer();
   const reactions = await fetchReactions(slug, meta.kind, itemId);
   // Non-final labels belong to summary; this surface returns native resolution separately below.
@@ -44,7 +34,6 @@ export async function getForgejoItemStatus(
   return {
     doneStatus,
     viewerReactions: viewerReactionStrings(reactions, viewer),
-    isMinimized: false,
     isResolved: Boolean(resolver),
     viewerMayReopen: isForgejoConversationResolvedBy(resolver, viewer),
   };

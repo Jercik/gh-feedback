@@ -6,15 +6,17 @@
  * concurrently to avoid an N+1 waterfall.
  */
 
-import { forgejoFetchAll, forgejoFetchList } from "./forgejo-cli.js";
+import { forgejoFetchReviews, forgejoFetchList } from "./forgejo-cli.js";
 import { ForgejoReview, ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export async function fetchPullReviewComments(
   slug: string,
   prNumber: number,
 ): Promise<ForgejoReviewComment[]> {
-  const reviewsRaw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls/${prNumber}/reviews`);
-  const reviews = reviewsRaw.map((r) => ForgejoReview.parse(r));
+  const reviewsRaw = await forgejoFetchReviews(`repos/${slug}/pulls/${prNumber}/reviews`);
+  const reviews = reviewsRaw
+    .map((r) => ForgejoReview.parse(r))
+    .filter((r) => r.state !== "PENDING");
 
   const commentLists = await Promise.all(
     reviews.map((review) =>

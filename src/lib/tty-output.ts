@@ -11,6 +11,3 @@ const colorize = (label: string, code: string): string =>
 
 /** Success indicator */
 export const SUCCESS = colorize("[OK]", "32");
-
-/** Warning indicator */
-export const WARNING = colorize("[WARN]", "33");

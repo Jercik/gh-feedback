@@ -21,7 +21,7 @@ type FeedbackStatus =
   | "awaiting-reply" // 😕 confused, not resolved - blocked on reviewer
   | "agreed" // 👍 thumbs_up + resolved - fixed
   | "disagreed" // 👎 thumbs_down + resolved - won't fix
-  | "acknowledged"; // 🚀 rocket + hidden - noted, no action
+  | "acknowledged"; // 🚀 rocket + settled - noted, no action
 
 /**
  * A response/reply to a feedback item.
@@ -37,7 +37,9 @@ export interface FeedbackResponse {
  * Combines threads, comments, and reviews into one type.
  */
 export interface FeedbackItem {
-  readonly id: number;
+  readonly id: number | null;
+  readonly actionable?: boolean;
+  readonly reviewId?: number;
   readonly timestamp: string;
   readonly status: FeedbackStatus;
   readonly author: string;
@@ -61,7 +63,7 @@ export interface FeedbackSummary {
  * Map GraphQL reaction content + resolution state to semantic status.
  *
  * Logic:
- * - If resolved/hidden: show final status (agreed, disagreed, acknowledged)
+ * - If settled: show final status (agreed, disagreed, acknowledged)
  * - If NOT resolved: show work status (pending, in-progress, awaiting-reply)
  *
  * This ensures status alone tells you if action is needed.
@@ -86,7 +88,7 @@ export function reactionToStatus(
   }
 
   if (isDone) {
-    // Item is resolved/hidden - show final status if properly reacted
+    // Item is settled - show final status if properly reacted
     if (hasThumbsUp) {
       return "agreed";
     }
@@ -100,7 +102,7 @@ export function reactionToStatus(
     return "in-progress";
   }
 
-  // Item is NOT resolved/hidden - show work-in-progress status
+  // Item is NOT settled - show work-in-progress status
   if (viewerReactions.has("CONFUSED")) {
     return "awaiting-reply";
   }
@@ -132,17 +134,4 @@ export function truncateMiddle(text: string, maxLength: number): string {
   const endLength = Math.floor(availableLength / 2);
 
   return text.slice(0, startLength) + ellipsis + text.slice(-endLength);
-}
-
-/**
- * Format location from path and line.
- */
-export function formatLocation(
-  path: string | null | undefined,
-  line: number | null | undefined,
-): string {
-  if (!path) {
-    return "";
-  }
-  return line ? `${path}:${line}` : path;
 }

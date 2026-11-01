@@ -1,5 +1,5 @@
 /**
- * Constants for GitHub PR feedback operations.
+ * Reaction names used for semantic status normalization.
  */
 
 import type { ReactionContent } from "./types.js";
@@ -14,16 +14,4 @@ export const REACTION_TO_GRAPHQL: Record<ReactionContent, string> = {
   hooray: "HOORAY",
   rocket: "ROCKET",
   eyes: "EYES",
-};
-
-/** Map from GraphQL enum to CLI reaction format */
-export const GRAPHQL_TO_REACTION: Record<string, ReactionContent> = {
-  THUMBS_UP: "+1",
-  THUMBS_DOWN: "-1",
-  LAUGH: "laugh",
-  CONFUSED: "confused",
-  HEART: "heart",
-  HOORAY: "hooray",
-  ROCKET: "rocket",
-  EYES: "eyes",
 };

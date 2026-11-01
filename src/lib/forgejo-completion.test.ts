@@ -54,16 +54,16 @@ describe("forgejo transition state refresh", () => {
     mocks.fetchComments.mockResolvedValue([comment({ resolver: { login: "codex" } })]);
 
     await expect(
-      completeForgejoItem("Jercik/gh-feedback", thread, "disagreed"),
+      completeForgejoItem("j4k-oss/pr-feedback", thread, "disagreed"),
     ).resolves.toStrictEqual({ supported: true, applied: true });
     expect(mocks.fetchComments).toHaveBeenCalledTimes(1);
-    expect(mocks.changeResolution).toHaveBeenCalledWith("Jercik/gh-feedback", 36, 1, "unresolve");
+    expect(mocks.changeResolution).toHaveBeenCalledWith("j4k-oss/pr-feedback", 36, 1, "unresolve");
   });
 
   it("preserves a conversation freshly resolved by another user", async () => {
     mocks.fetchComments.mockResolvedValue([comment({ resolver: { login: "reviewer" } })]);
 
-    await expect(reopenForgejoItem("Jercik/gh-feedback", thread)).resolves.toStrictEqual({
+    await expect(reopenForgejoItem("j4k-oss/pr-feedback", thread)).resolves.toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution belongs to another user and was preserved",
@@ -76,14 +76,14 @@ describe("forgejo transition state refresh", () => {
     mocks.fetchComments.mockResolvedValue([comment(), comment({ id: 2 })]);
 
     await expect(
-      completeForgejoItem("Jercik/gh-feedback", thread, "agreed"),
+      completeForgejoItem("j4k-oss/pr-feedback", thread, "agreed"),
     ).resolves.toStrictEqual({
       supported: true,
       applied: false,
       reason: "conversation resolution deferred until its other findings settle",
     });
     expect(mocks.fetchComments).toHaveBeenCalledTimes(1);
-    expect(mocks.fetchReactions).toHaveBeenCalledWith("Jercik/gh-feedback", "review-comment", 2);
+    expect(mocks.fetchReactions).toHaveBeenCalledWith("j4k-oss/pr-feedback", "review-comment", 2);
     expect(mocks.changeResolution).not.toHaveBeenCalled();
   });
 
@@ -94,15 +94,15 @@ describe("forgejo transition state refresh", () => {
     ]);
 
     await expect(
-      completeForgejoItem("Jercik/gh-feedback", thread, "agreed"),
+      completeForgejoItem("j4k-oss/pr-feedback", thread, "agreed"),
     ).resolves.toStrictEqual({ supported: true, applied: true });
     expect(mocks.fetchComments).toHaveBeenCalledTimes(1);
-    expect(mocks.changeResolution).toHaveBeenCalledWith("Jercik/gh-feedback", 36, 1, "resolve");
+    expect(mocks.changeResolution).toHaveBeenCalledWith("j4k-oss/pr-feedback", 36, 1, "resolve");
   });
 
   it("does not fetch review comments for a plain comment", async () => {
     await expect(
-      completeForgejoItem("Jercik/gh-feedback", { ...thread, type: "comment" }, "acknowledged"),
+      completeForgejoItem("j4k-oss/pr-feedback", { ...thread, type: "comment" }, "acknowledged"),
     ).resolves.toStrictEqual({
       supported: false,
       reason: "Forgejo has no comment-hide API; status is tracked by reaction only.",
