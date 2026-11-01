@@ -1,3 +1,4 @@
+import { deriveStatus } from "./feedback-values.js";
 import type { FeedbackItemRef } from "./feedback-backend.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
@@ -8,8 +9,8 @@ import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
 
 export function isForgejoSiblingSettledForResolution(reactions: readonly string[]): boolean {
-  const finals = reactions.filter((reaction) => ["+1", "-1", "rocket"].includes(reaction));
-  return finals.length === 1 && (finals[0] === "+1" || finals[0] === "rocket");
+  const { status } = deriveStatus([...reactions]);
+  return status === "agreed" || status === "acknowledged";
 }
 
 export function sameForgejoNativeConversation(
@@ -142,7 +143,7 @@ export async function getForgejoConversationResolutionReadiness(
     };
   }
   for (const root of siblings) {
-    const reactions = await fetchReactions(slug, "review-comment", root.id);
+    const reactions = await fetchReactions(slug, root.id);
     if (!isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer))) {
       return {
         ready: false,

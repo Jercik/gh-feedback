@@ -66,7 +66,14 @@ describe("compiled snapshot CLI", () => {
         distinctCount: 3,
         countGap: 1,
         records: [
-          { id: 10, backingCommentId: 100, body: "Overall finding", status: "agreed" },
+          {
+            id: 10,
+            backingCommentId: 100,
+            body: "Overall finding",
+            status: "agreed",
+            user: { id: 2, login: "reviewer" },
+            commitId: "fixture-commit",
+          },
           {
             id: 11,
             unpublished: true,
@@ -74,7 +81,7 @@ describe("compiled snapshot CLI", () => {
             status: null,
             viewerReactions: null,
           },
-          { id: 12, backingCommentId: null, status: null },
+          { id: 12, backingCommentId: null, status: null, submittedAt: null, commitId: null },
         ],
       },
       unpublishedInlineComments: [{ id: 301, status: null, viewerReactions: null }],
@@ -93,7 +100,13 @@ describe("compiled snapshot CLI", () => {
           anchorId: 201,
           displayLine: 9,
           comments: [
-            { id: 201, kind: "finding" },
+            {
+              id: 201,
+              kind: "finding",
+              user: { id: 2, login: "reviewer" },
+              htmlUrl: null,
+              resolver: null,
+            },
             { id: 202, kind: "finding" },
             { id: 203, kind: "reply", replyTo: 201 },
           ],
@@ -125,15 +138,19 @@ describe("compiled snapshot CLI", () => {
     });
   });
 
-  it.each(["malformed", "bad-count", "issue-gap"])(
-    "fails closed without snapshot stdout for %s",
-    (mode) => {
-      const result = run(mode);
-      expect(result.status).toBe(1);
-      expect(result.stdout).toBe("");
-      expect(result.stderr).not.toBe("");
-    },
-  );
+  it.each([
+    ["malformed", "Forgejo repos/owner/repo/pulls/7/reviews: expected a review array"],
+    ["bad-count", "GET repos/owner/repo/pulls/7/reviews: missing or invalid X-Total-Count"],
+    [
+      "issue-gap",
+      "GET repos/owner/repo/issues/7/comments: 1 distinct comment ids vs X-Total-Count 2 — completeness unproven",
+    ],
+  ])("fails closed without snapshot stdout for %s", (mode, diagnostic) => {
+    const result = run(mode);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(diagnostic);
+  });
 
   it("projects same-line findings individually and attaches authenticated marker replies", () => {
     const result = run("stable", ["summary", "--json"]);

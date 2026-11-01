@@ -13,7 +13,19 @@ export interface UserRef {
   login: string | null;
 }
 
-export interface ReviewRecord {
+export interface FindingState {
+  viewerReactions: string[];
+  status: FindingStatus;
+  conflictingFinalReactions: boolean;
+}
+
+interface NullableFindingState {
+  viewerReactions: string[] | null;
+  status: FindingStatus | null;
+  conflictingFinalReactions: boolean;
+}
+
+export interface ReviewRecord extends NullableFindingState {
   id: number;
   state: string;
   unpublished: boolean;
@@ -23,12 +35,9 @@ export interface ReviewRecord {
   commitId: string | null;
   htmlUrl: string | null;
   backingCommentId: number | null;
-  viewerReactions: string[] | null;
-  status: FindingStatus | null;
-  conflictingFinalReactions: boolean;
 }
 
-export interface CommentRecord {
+export interface CommentRecord extends NullableFindingState {
   id: number;
   kind: "finding" | "reply";
   replyTo: number | null;
@@ -44,9 +53,6 @@ export interface CommentRecord {
   pullRequestReviewId: number;
   htmlUrl: string | null;
   resolver: UserRef | null;
-  viewerReactions: string[] | null;
-  status: FindingStatus | null;
-  conflictingFinalReactions: boolean;
 }
 
 export interface ConversationRecord {
@@ -59,10 +65,7 @@ export interface ConversationRecord {
   comments: CommentRecord[];
 }
 
-export interface IssueCommentRecord {
-  viewerReactions: string[];
-  status: FindingStatus;
-  conflictingFinalReactions: boolean;
+export interface IssueCommentRecord extends FindingState {
   id: number;
   user: UserRef;
   body: string;

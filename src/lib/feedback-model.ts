@@ -1,7 +1,7 @@
 import type { CommentRecord, ConversationRecord, Side } from "./feedback-types.js";
 
-import { integerOrZero, userRef } from "./feedback-values.js";
-import { stringOrNull } from "./forgejo-json-values.js";
+import { deriveStatus, integerOrZero, userRef } from "./feedback-values.js";
+import type { ForgejoSnapshotReviewComment } from "./forgejo-schemas.js";
 
 import { threadReplyParentId } from "./forgejo-thread-reply.js";
 
@@ -13,21 +13,19 @@ function inlineCommentSide(position: number, originalPosition: number): Side {
 }
 
 export function normalizeInlineComment(
-  raw: Record<string, unknown>,
+  raw: ForgejoSnapshotReviewComment,
   listingReviewId: number,
   viewer: string,
   diagnostics: string[],
 ): CommentRecord {
   const id = raw.id;
-  if (typeof id !== "number") {
-    throw new TypeError(`review ${listingReviewId}: inline comment without a numeric id`);
-  }
+
   const position = integerOrZero(raw.position);
   const originalPosition = integerOrZero(raw.original_position);
   const side = inlineCommentSide(position, originalPosition);
   const extraLinesCount = integerOrZero(raw.extra_lines_count);
   const displayLine = (position === 0 ? originalPosition : position) + extraLinesCount;
-  const body = typeof raw.body === "string" ? raw.body : "";
+  const body = raw.body;
   const user = userRef(raw.user) ?? { id: null, login: null };
   const parentId = user.login === viewer ? threadReplyParentId(body) : undefined;
   const isReply = parentId !== undefined;
@@ -45,19 +43,17 @@ export function normalizeInlineComment(
     replyTo,
     user,
     body,
-    createdAt: stringOrNull(raw.created_at),
-    path: typeof raw.path === "string" ? raw.path : "",
+    createdAt: raw.created_at ?? null,
+    path: raw.path ?? "",
     position,
     originalPosition,
     extraLinesCount,
     side,
     displayLine,
-    pullRequestReviewId: typeof reviewIdField === "number" ? reviewIdField : listingReviewId,
-    htmlUrl: stringOrNull(raw.html_url),
+    pullRequestReviewId: reviewIdField ?? listingReviewId,
+    htmlUrl: raw.html_url ?? null,
     resolver: userRef(raw.resolver),
-    viewerReactions: null,
-    status: null,
-    conflictingFinalReactions: false,
+    ...deriveStatus(null),
   };
 }
 

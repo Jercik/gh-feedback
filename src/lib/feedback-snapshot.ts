@@ -1,5 +1,5 @@
 import { runPass } from "./feedback-sweep.js";
-import { fetchApiLimit } from "./snapshot-api.js";
+import { fetchApiLimit } from "./forgejo-review-pages.js";
 import { forgejoApiHost, forgejoFetch } from "./forgejo-cli.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { ForgejoPull } from "./forgejo-schemas.js";
@@ -7,7 +7,7 @@ import { ForgejoPull } from "./forgejo-schemas.js";
 export async function fetchFeedbackSnapshot(slug: string, pr: number) {
   const host = forgejoApiHost();
   const viewer = await getForgejoViewer();
-  const limit = await fetchApiLimit(host);
+  const limit = await fetchApiLimit();
   async function pass(number: number) {
     const pull = ForgejoPull.parse(
       await forgejoFetch<unknown>({ path: `repos/${slug}/pulls/${pr}` }),
@@ -15,7 +15,7 @@ export async function fetchFeedbackSnapshot(slug: string, pr: number) {
     if (pull.number !== pr) {
       throw new Error("Forgejo returned a different pull request");
     }
-    const result = await runPass(host, slug, pr, viewer, limit, number);
+    const result = await runPass(slug, pr, viewer, limit, number);
     return { ...result, snapshot: { ...result.snapshot, pull } };
   }
   const first = await pass(1);

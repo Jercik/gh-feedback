@@ -133,8 +133,8 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
     },
 
     async addReaction(item: FeedbackItemRef, reaction: ReactionContent): Promise<void> {
-      const meta = await metaFor(item);
-      const path = reactionsPath(slug, meta.kind, item.id);
+      await metaFor(item);
+      const path = reactionsPath(slug, item.id);
       await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } });
     },
 
@@ -143,8 +143,8 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       viewerReactions: ReactionContent[],
       toRemove: ReactionContent[],
     ): Promise<void> {
-      const meta = await metaFor(item);
-      const path = reactionsPath(slug, meta.kind, item.id);
+      await metaFor(item);
+      const path = reactionsPath(slug, item.id);
 
       const reactionsToRemove = toRemove.filter((r) => viewerReactions.includes(r));
       for (const reaction of reactionsToRemove) {

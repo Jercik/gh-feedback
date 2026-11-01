@@ -44,7 +44,7 @@ export async function buildItemDetail(
         author: m.user?.login ?? "ghost",
         body: stripThreadReplyMarker(m.body),
         createdAt: m.created_at,
-        reactions: toReactionSummary(await fetchReactions(slug, "review-comment", m.id)),
+        reactions: toReactionSummary(await fetchReactions(slug, m.id)),
       })),
     );
 
@@ -63,7 +63,7 @@ export async function buildItemDetail(
 
   if (resolved.issueComment) {
     const c = resolved.issueComment;
-    const reactions = await fetchReactions(slug, "issue-comment", c.id);
+    const reactions = await fetchReactions(slug, c.id);
     return {
       type: "comment",
       id: c.id,
@@ -85,7 +85,7 @@ export async function buildItemDetail(
       url: review.html_url ?? "",
       submittedAt: review.submitted_at,
       body: review.body,
-      reactions: toReactionSummary(await fetchReactions(slug, "review", itemId)),
+      reactions: toReactionSummary(await fetchReactions(slug, itemId)),
     };
   }
 

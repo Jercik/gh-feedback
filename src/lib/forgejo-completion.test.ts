@@ -83,7 +83,7 @@ describe("forgejo transition state refresh", () => {
       reason: "conversation resolution deferred until its other findings settle",
     });
     expect(mocks.fetchComments).toHaveBeenCalledTimes(1);
-    expect(mocks.fetchReactions).toHaveBeenCalledWith("j4k-oss/pr-feedback", "review-comment", 2);
+    expect(mocks.fetchReactions).toHaveBeenCalledWith("j4k-oss/pr-feedback", 2);
     expect(mocks.changeResolution).not.toHaveBeenCalled();
   });
 

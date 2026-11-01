@@ -1,15 +1,11 @@
 import type { ItemStatus } from "./feedback-backend.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
-import {
-  deriveIsDone,
-  fetchReactions,
-  normalizeForgejoReactions,
-  viewerReactionStrings,
-} from "./forgejo-reactions.js";
+import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
+import { deriveStatus } from "./feedback-values.js";
 import { isForgejoConversationResolvedBy } from "./forgejo-resolution.js";
 import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
-import { isStatusDone, reactionToStatus } from "./summary-types.js";
+import { isStatusDone } from "./summary-types.js";
 
 export async function getForgejoItemStatus(
   slug: string,
@@ -17,12 +13,9 @@ export async function getForgejoItemStatus(
   itemId: number,
 ): Promise<ItemStatus> {
   const viewer = await getForgejoViewer();
-  const reactions = await fetchReactions(slug, meta.kind, itemId);
-  // Non-final labels belong to summary; this surface returns native resolution separately below.
-  const status = reactionToStatus(
-    normalizeForgejoReactions(reactions, viewer),
-    deriveIsDone(reactions, viewer),
-  );
+  const reactions = await fetchReactions(slug, itemId);
+  const viewerReactions = viewerReactionStrings(reactions, viewer);
+  const { status } = deriveStatus(viewerReactions);
   const doneStatus = isStatusDone(status)
     ? (status as "agreed" | "disagreed" | "acknowledged")
     : undefined;
@@ -33,7 +26,7 @@ export async function getForgejoItemStatus(
   )?.resolver;
   return {
     doneStatus,
-    viewerReactions: viewerReactionStrings(reactions, viewer),
+    viewerReactions,
     isResolved: Boolean(resolver),
     viewerMayReopen: isForgejoConversationResolvedBy(resolver, viewer),
   };

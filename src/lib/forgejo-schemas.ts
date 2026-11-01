@@ -109,3 +109,28 @@ export const ForgejoReaction = z.object({
   user: ForgejoUser.nullish(),
 });
 export type ForgejoReaction = z.infer<typeof ForgejoReaction>;
+
+const ForgejoSnapshotUser = ForgejoUser.extend({ id: z.number().nullish() });
+
+export const ForgejoSnapshotReview = ForgejoReview.extend({
+  user: ForgejoSnapshotUser.nullish(),
+  submitted_at: z.string().nullish(),
+  commit_id: z.string().nullish(),
+});
+export type ForgejoSnapshotReview = z.infer<typeof ForgejoSnapshotReview>;
+
+export const ForgejoSnapshotReviewComment = ForgejoReviewComment.extend({
+  user: ForgejoSnapshotUser.nullish(),
+  resolver: ForgejoSnapshotUser.nullish(),
+  created_at: z.string().nullish(),
+  html_url: z.string().nullish(),
+});
+export type ForgejoSnapshotReviewComment = z.infer<typeof ForgejoSnapshotReviewComment>;
+
+export const ForgejoSnapshotIssueComment = ForgejoIssueComment.extend({
+  user: ForgejoSnapshotUser.nullish(),
+  created_at: z.string().nullish(),
+  updated_at: z.string().nullish(),
+  html_url: z.string().nullish(),
+});
+export type ForgejoSnapshotIssueComment = z.infer<typeof ForgejoSnapshotIssueComment>;

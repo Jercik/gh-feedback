@@ -1,20 +1,17 @@
-/**
- * Forgejo reactions: raw strings ("+1", "rocket") via the REST reactions
- * endpoints. To reuse the shared status derivation (which keys on GraphQL enum
- * names), convert raw reactions into the { content, viewerHasReacted } shape
- * reactionToStatus expects.
- */
-
-import { REACTION_TO_GRAPHQL } from "./constants.js";
 import type { ReactionContent, Reaction } from "./types.js";
 import { ForgejoReaction } from "./forgejo-schemas.js";
 import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
-import type { ForgejoItemKind } from "./forgejo-item.js";
 
-interface NormalizedReaction {
-  content: string;
-  viewerHasReacted: boolean;
-}
+const reactionContents = new Set<string>([
+  "+1",
+  "-1",
+  "laugh",
+  "confused",
+  "heart",
+  "hooray",
+  "rocket",
+  "eyes",
+]);
 
 /**
  * Reaction endpoint for an item's native backing comment. Inline review
@@ -22,16 +19,12 @@ interface NormalizedReaction {
  * via `issues/comments/{id}/reactions` (verified against Forgejo's API routes —
  * there is no `pulls/comments/{id}/reactions`). Review bodies use their backing comment IDs.
  */
-export function reactionsPath(slug: string, _kind: ForgejoItemKind, id: number): string {
+export function reactionsPath(slug: string, id: number): string {
   return `repos/${slug}/issues/comments/${id}/reactions`;
 }
 
-export async function fetchReactions(
-  slug: string,
-  kind: ForgejoItemKind,
-  id: number,
-): Promise<ForgejoReaction[]> {
-  const path = reactionsPath(slug, kind, id);
+export async function fetchReactions(slug: string, id: number): Promise<ForgejoReaction[]> {
+  const path = reactionsPath(slug, id);
   try {
     const raw = await forgejoFetch<unknown[]>({ path });
     if (!Array.isArray(raw)) {
@@ -44,14 +37,6 @@ export async function fetchReactions(
     }
     throw error;
   }
-}
-
-function isFinalStatusReaction(content: string): boolean {
-  return content === "+1" || content === "-1" || content === "rocket";
-}
-
-export function deriveIsDone(reactions: readonly ForgejoReaction[], viewer: string): boolean {
-  return reactions.some((r) => r.user?.login === viewer && isFinalStatusReaction(r.content));
 }
 
 export function toReactionSummary(reactions: readonly ForgejoReaction[]): Reaction[] {
@@ -73,32 +58,6 @@ export function toReactionSummary(reactions: readonly ForgejoReaction[]): Reacti
 }
 
 /**
- * Convert raw Forgejo reactions into GraphQL-enum-keyed groups so the shared
- * reactionToStatus can consume them. `viewer` is the authenticated login used
- * to decide viewerHasReacted.
- */
-export function normalizeForgejoReactions(
-  reactions: readonly ForgejoReaction[],
-  viewer: string,
-): NormalizedReaction[] {
-  const groups = new Map<string, boolean>();
-
-  for (const reaction of reactions) {
-    const enumName = REACTION_TO_GRAPHQL[reaction.content as ReactionContent];
-    if (!enumName) {
-      continue;
-    }
-    const viewerReacted = reaction.user?.login === viewer;
-    groups.set(enumName, (groups.get(enumName) ?? false) || viewerReacted);
-  }
-
-  return [...groups.entries()].map(([content, viewerHasReacted]) => ({
-    content,
-    viewerHasReacted,
-  }));
-}
-
-/**
  * Reactions the viewer added, as CLI reaction strings, for status reconciliation.
  */
 export function viewerReactionStrings(
@@ -110,7 +69,7 @@ export function viewerReactionStrings(
     if (reaction.user?.login !== viewer) {
       continue;
     }
-    if (reaction.content in REACTION_TO_GRAPHQL) {
+    if (reactionContents.has(reaction.content)) {
       result.add(reaction.content as ReactionContent);
     }
   }

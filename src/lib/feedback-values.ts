@@ -1,5 +1,4 @@
-import { asRecord } from "./forgejo-json-values.js";
-import type { FindingStatus, UserRef } from "./feedback-types.js";
+import type { FindingState, FindingStatus, UserRef } from "./feedback-types.js";
 
 const finalReactionStatuses = new Map<string, FindingStatus>([
   ["+1", "agreed"],
@@ -11,40 +10,44 @@ export function integerOrZero(value: unknown): number {
   return typeof value === "number" && Number.isInteger(value) ? value : 0;
 }
 
-export function userRef(value: unknown): UserRef | null {
-  const record = asRecord(value);
-  if (record === null) {
-    return null;
-  }
-  const id = record.id;
-  const login = record.login;
-  return {
-    id: typeof id === "number" ? id : null,
-    login: typeof login === "string" ? login : null,
-  };
+export function userRef(
+  value: { id?: number | null; login: string } | null | undefined,
+): UserRef | null {
+  return value === null || value === undefined
+    ? null
+    : { id: value.id ?? null, login: value.login };
 }
 
-export function deriveStatus(viewerReactions: string[]): {
-  status: FindingStatus;
-  conflictingFinalReactions: boolean;
-} {
+interface UnavailableReactionStatus {
+  viewerReactions: null;
+  status: null;
+  conflictingFinalReactions: false;
+}
+export function deriveStatus(viewerReactions: null): UnavailableReactionStatus;
+export function deriveStatus(viewerReactions: string[]): FindingState;
+export function deriveStatus(
+  viewerReactions: string[] | null,
+): FindingState | UnavailableReactionStatus {
+  if (viewerReactions === null) {
+    return { viewerReactions, status: null, conflictingFinalReactions: false };
+  }
   const finals = [...new Set(viewerReactions)].filter((content) =>
     finalReactionStatuses.has(content),
   );
   if (finals.length > 1) {
-    return { status: "in-progress", conflictingFinalReactions: true };
+    return { viewerReactions, status: "in-progress", conflictingFinalReactions: true };
   }
   const final = finals[0] === undefined ? undefined : finalReactionStatuses.get(finals[0]);
   if (final !== undefined) {
-    return { status: final, conflictingFinalReactions: false };
+    return { viewerReactions, status: final, conflictingFinalReactions: false };
   }
   if (viewerReactions.includes("confused")) {
-    return { status: "awaiting-reply", conflictingFinalReactions: false };
+    return { viewerReactions, status: "awaiting-reply", conflictingFinalReactions: false };
   }
   if (viewerReactions.includes("eyes")) {
-    return { status: "in-progress", conflictingFinalReactions: false };
+    return { viewerReactions, status: "in-progress", conflictingFinalReactions: false };
   }
-  return { status: "pending", conflictingFinalReactions: false };
+  return { viewerReactions, status: "pending", conflictingFinalReactions: false };
 }
 
 export function parseBackingCommentId(htmlUrl: string | null): number | null {

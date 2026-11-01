@@ -2,12 +2,12 @@ import {
   fetchIssueComments,
   fetchRawReviews,
   fetchReviewComments,
-  fetchViewerReactions,
+  fetchFindingStatus,
   progress,
 } from "./snapshot-api.js";
 import { deriveConversations, normalizeInlineComment } from "./feedback-model.js";
 import { deriveStatus, parseBackingCommentId, userRef } from "./feedback-values.js";
-import { stringOrNull } from "./forgejo-json-values.js";
+import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
 import type { CommentRecord, PassSnapshot, ReviewRecord } from "./feedback-types.js";
 
 function reportCountGap(totalCount: number, distinctCount: number, diagnostics: string[]): void {
@@ -26,7 +26,6 @@ function reportCountGap(totalCount: number, distinctCount: number, diagnostics: 
 
 async function applyFindingStatuses(
   comments: CommentRecord[],
-  host: string,
   slug: string,
   viewer: string,
 ): Promise<void> {
@@ -34,10 +33,7 @@ async function applyFindingStatuses(
     if (comment.kind !== "finding") {
       continue;
     }
-    comment.viewerReactions = await fetchViewerReactions(host, slug, viewer, comment.id);
-    const derived = deriveStatus(comment.viewerReactions);
-    comment.status = derived.status;
-    comment.conflictingFinalReactions = derived.conflictingFinalReactions;
+    Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id));
   }
 }
 
@@ -56,9 +52,8 @@ function reportMissingReplies(comments: CommentRecord[], diagnostics: string[]):
 }
 
 async function normalizeReview(
-  raw: Record<string, unknown>,
+  raw: ForgejoSnapshotReview,
   reviewId: number,
-  host: string,
   slug: string,
   pr: number,
   viewer: string,
@@ -66,19 +61,20 @@ async function normalizeReview(
   publishedComments: CommentRecord[],
   unpublishedComments: CommentRecord[],
 ): Promise<ReviewRecord> {
-  const state = typeof raw.state === "string" ? raw.state : "";
+  const state = raw.state;
   const unpublished = state === "PENDING";
-  const htmlUrl = stringOrNull(raw.html_url);
-  const rawComments = await fetchReviewComments(host, slug, pr, reviewId);
+  const htmlUrl = raw.html_url ?? null;
+  const rawComments = await fetchReviewComments(slug, pr, reviewId);
   for (const entry of rawComments) {
     const comment = normalizeInlineComment(entry, reviewId, viewer, diagnostics);
     (unpublished ? unpublishedComments : publishedComments).push(comment);
   }
 
   let backingCommentId: number | null = null;
-  let viewerReactions: string[] | null = null;
-  let status: ReviewRecord["status"] = null;
-  let conflictingFinalReactions = false;
+  let reactionStatus: Pick<
+    ReviewRecord,
+    "viewerReactions" | "status" | "conflictingFinalReactions"
+  > = deriveStatus(null);
   if (!unpublished) {
     backingCommentId = parseBackingCommentId(htmlUrl);
     if (backingCommentId === null) {
@@ -86,8 +82,7 @@ async function normalizeReview(
         `review ${reviewId}: html_url carries no #issuecomment anchor, so its status is underivable`,
       );
     } else {
-      viewerReactions = await fetchViewerReactions(host, slug, viewer, backingCommentId);
-      ({ status, conflictingFinalReactions } = deriveStatus(viewerReactions));
+      reactionStatus = await fetchFindingStatus(slug, viewer, backingCommentId);
     }
   }
   return {
@@ -95,19 +90,16 @@ async function normalizeReview(
     state,
     unpublished,
     user: userRef(raw.user) ?? { id: null, login: null },
-    body: typeof raw.body === "string" ? raw.body : "",
-    submittedAt: stringOrNull(raw.submitted_at),
-    commitId: stringOrNull(raw.commit_id),
+    body: raw.body,
+    submittedAt: raw.submitted_at ?? null,
+    commitId: raw.commit_id ?? null,
     htmlUrl,
     backingCommentId,
-    viewerReactions,
-    status,
-    conflictingFinalReactions,
+    ...reactionStatus,
   };
 }
 
 export async function runPass(
-  host: string,
   slug: string,
   pr: number,
   viewer: string,
@@ -115,7 +107,7 @@ export async function runPass(
   pass: number,
 ): Promise<{ snapshot: PassSnapshot; diagnostics: string[] }> {
   const diagnostics: string[] = [];
-  const { totalCount, rawById } = await fetchRawReviews(host, slug, pr, limit, pass);
+  const { totalCount, rawById } = await fetchRawReviews(slug, pr, limit, pass);
   const reviewRecords: ReviewRecord[] = [];
   const publishedComments: CommentRecord[] = [];
   const unpublishedComments: CommentRecord[] = [];
@@ -129,7 +121,6 @@ export async function runPass(
       await normalizeReview(
         raw,
         reviewId,
-        host,
         slug,
         pr,
         viewer,
@@ -139,14 +130,10 @@ export async function runPass(
       ),
     );
   }
-  await applyFindingStatuses(publishedComments, host, slug, viewer);
+  await applyFindingStatuses(publishedComments, slug, viewer);
   reportMissingReplies(publishedComments, diagnostics);
   const conversations = deriveConversations(publishedComments);
-  const issueComments = await fetchIssueComments(host, slug, pr);
-  for (const comment of issueComments.records) {
-    comment.viewerReactions = await fetchViewerReactions(host, slug, viewer, comment.id);
-    Object.assign(comment, deriveStatus(comment.viewerReactions));
-  }
+  const issueComments = await fetchIssueComments(slug, pr, viewer);
   const distinctCount = reviewRecords.length;
   const countGap = totalCount - distinctCount;
   reportCountGap(totalCount, distinctCount, diagnostics);

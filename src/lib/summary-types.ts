@@ -60,59 +60,6 @@ export interface FeedbackSummary {
 }
 
 /**
- * Map GraphQL reaction content + resolution state to semantic status.
- *
- * Logic:
- * - If settled: show final status (agreed, disagreed, acknowledged)
- * - If NOT resolved: show work status (pending, in-progress, awaiting-reply)
- *
- * This ensures status alone tells you if action is needed.
- */
-export function reactionToStatus(
-  reactions: readonly { content: string; viewerHasReacted: boolean }[],
-  isDone: boolean,
-): FeedbackStatus {
-  const viewerReactions = new Set(
-    reactions.filter((r) => r.viewerHasReacted).map((r) => r.content),
-  );
-
-  // Check for conflicting final status reactions - indicates workflow issue
-  const hasThumbsUp = viewerReactions.has("THUMBS_UP");
-  const hasThumbsDown = viewerReactions.has("THUMBS_DOWN");
-  const hasRocket = viewerReactions.has("ROCKET");
-  const finalStatusCount = [hasThumbsUp, hasThumbsDown, hasRocket].filter(Boolean).length;
-
-  // Conflicting reactions = in-progress (something went wrong, needs review)
-  if (finalStatusCount > 1) {
-    return "in-progress";
-  }
-
-  if (isDone) {
-    // Item is settled - show final status if properly reacted
-    if (hasThumbsUp) {
-      return "agreed";
-    }
-    if (hasThumbsDown) {
-      return "disagreed";
-    }
-    if (hasRocket) {
-      return "acknowledged";
-    }
-    // Resolved without proper reaction - treat as in-progress so agent revisits
-    return "in-progress";
-  }
-
-  // Item is NOT settled - show work-in-progress status
-  if (viewerReactions.has("CONFUSED")) {
-    return "awaiting-reply";
-  }
-  if (viewerReactions.size > 0) {
-    return "in-progress";
-  }
-  return "pending";
-}
-
-/**
  * Check if a status represents a "done" state.
  */
 export function isStatusDone(status: FeedbackStatus): boolean {

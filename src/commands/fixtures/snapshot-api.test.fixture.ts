@@ -15,6 +15,7 @@ const reviews = [
     user: reviewer,
     body: "Overall finding",
     submitted_at: "2026-01-01T00:00:00Z",
+    commit_id: "fixture-commit",
     html_url: `${pull.html_url}#issuecomment-100`,
   },
   { id: 11, state: "PENDING", user: viewer, body: "Private draft", html_url: pull.html_url },
