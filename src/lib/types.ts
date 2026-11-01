@@ -1,12 +1,14 @@
-export type ReactionContent =
-  | "+1"
-  | "-1"
-  | "laugh"
-  | "confused"
-  | "heart"
-  | "hooray"
-  | "rocket"
-  | "eyes";
+export const REACTION_CONTENTS = [
+  "+1",
+  "-1",
+  "laugh",
+  "confused",
+  "heart",
+  "hooray",
+  "rocket",
+  "eyes",
+] as const;
+export type ReactionContent = (typeof REACTION_CONTENTS)[number];
 
 export interface Reaction {
   readonly content: string;

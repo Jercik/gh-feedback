@@ -3,16 +3,8 @@ import { describe, it, expect } from "vitest";
 import { viewerReactionStrings, reactionsPath } from "./forgejo-reactions.js";
 
 describe("reactionsPath", () => {
-  it("routes inline review comments through the shared issue-comments endpoint", () => {
+  it("uses the native backing comment reaction endpoint", () => {
     expect(reactionsPath("j4k/cluster", 42)).toBe("repos/j4k/cluster/issues/comments/42/reactions");
-  });
-
-  it("routes PR issue comments through the issue-comments endpoint", () => {
-    expect(reactionsPath("j4k/cluster", 7)).toBe("repos/j4k/cluster/issues/comments/7/reactions");
-  });
-
-  it("uses the native backing comment reaction endpoint for reviews", () => {
-    expect(reactionsPath("j4k/cluster", 1)).toBe("repos/j4k/cluster/issues/comments/1/reactions");
   });
 });
 

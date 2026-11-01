@@ -1,4 +1,9 @@
-import type { FindingState, FindingStatus, UserRef } from "./feedback-types.js";
+import type {
+  FindingState,
+  FindingStatus,
+  NullableFindingState,
+  UserRef,
+} from "./feedback-types.js";
 
 const finalReactionStatuses = new Map<string, FindingStatus>([
   ["+1", "agreed"],
@@ -18,19 +23,13 @@ export function userRef(
     : { id: value.id ?? null, login: value.login };
 }
 
-interface UnavailableReactionStatus {
-  viewerReactions: null;
-  status: null;
-  conflictingFinalReactions: false;
-}
-export function deriveStatus(viewerReactions: null): UnavailableReactionStatus;
-export function deriveStatus(viewerReactions: string[]): FindingState;
-export function deriveStatus(
-  viewerReactions: string[] | null,
-): FindingState | UnavailableReactionStatus {
-  if (viewerReactions === null) {
-    return { viewerReactions, status: null, conflictingFinalReactions: false };
-  }
+export const unfetchedFindingState: NullableFindingState = {
+  viewerReactions: null,
+  status: null,
+  conflictingFinalReactions: false,
+};
+
+export function deriveStatus(viewerReactions: string[]): FindingState {
   const finals = [...new Set(viewerReactions)].filter((content) =>
     finalReactionStatuses.has(content),
   );

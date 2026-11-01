@@ -7,6 +7,7 @@ import {
 import type { FindingState, IssueCommentRecord } from "./feedback-types.js";
 import { verboseLog } from "./verbose-mode.js";
 
+import { reactionsPath } from "./forgejo-reactions.js";
 import { deriveStatus, userRef } from "./feedback-values.js";
 import { forgejoResponse } from "./forgejo-cli.js";
 import { fetchReviewListing, requireTotalCount } from "./forgejo-review-pages.js";
@@ -20,7 +21,7 @@ export async function fetchFindingStatus(
   viewer: string,
   commentId: number,
 ): Promise<FindingState> {
-  const path = `repos/${slug}/issues/comments/${commentId}/reactions`;
+  const path = reactionsPath(slug, commentId);
   const response = await forgejoResponse({ path });
   const parsed = await response.json();
   // Forgejo answers JSON null for a comment with no reactions.
@@ -37,6 +38,7 @@ export async function fetchFindingStatus(
       contents.push(reaction.content);
     }
   }
+  // Snapshot evidence retains unknown names and duplicates, sorted for stable comparisons.
   return deriveStatus(contents.toSorted());
 }
 

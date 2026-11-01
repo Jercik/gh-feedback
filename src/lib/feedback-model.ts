@@ -1,6 +1,6 @@
 import type { CommentRecord, ConversationRecord, Side } from "./feedback-types.js";
 
-import { deriveStatus, integerOrZero, userRef } from "./feedback-values.js";
+import { unfetchedFindingState, integerOrZero, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReviewComment } from "./forgejo-schemas.js";
 
 import { threadReplyParentId } from "./forgejo-thread-reply.js";
@@ -53,7 +53,7 @@ export function normalizeInlineComment(
     pullRequestReviewId: reviewIdField ?? listingReviewId,
     htmlUrl: raw.html_url ?? null,
     resolver: userRef(raw.resolver),
-    ...deriveStatus(null),
+    ...unfetchedFindingState,
   };
 }
 

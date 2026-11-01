@@ -1,17 +1,8 @@
-import type { ReactionContent, Reaction } from "./types.js";
+import { REACTION_CONTENTS, type ReactionContent, type Reaction } from "./types.js";
 import { ForgejoReaction } from "./forgejo-schemas.js";
 import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
 
-const reactionContents = new Set<string>([
-  "+1",
-  "-1",
-  "laugh",
-  "confused",
-  "heart",
-  "hooray",
-  "rocket",
-  "eyes",
-]);
+const reactionContents = new Set<string>(REACTION_CONTENTS);
 
 /**
  * Reaction endpoint for an item's native backing comment. Inline review
@@ -58,7 +49,7 @@ export function toReactionSummary(reactions: readonly ForgejoReaction[]): Reacti
 }
 
 /**
- * Reactions the viewer added, as CLI reaction strings, for status reconciliation.
+ * Returns the viewer's supported reaction names without duplicates.
  */
 export function viewerReactionStrings(
   reactions: readonly ForgejoReaction[],

@@ -6,7 +6,7 @@ import {
   progress,
 } from "./snapshot-api.js";
 import { deriveConversations, normalizeInlineComment } from "./feedback-model.js";
-import { deriveStatus, parseBackingCommentId, userRef } from "./feedback-values.js";
+import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
 import type { CommentRecord, PassSnapshot, ReviewRecord } from "./feedback-types.js";
 
@@ -74,7 +74,7 @@ async function normalizeReview(
   let reactionStatus: Pick<
     ReviewRecord,
     "viewerReactions" | "status" | "conflictingFinalReactions"
-  > = deriveStatus(null);
+  > = unfetchedFindingState;
   if (!unpublished) {
     backingCommentId = parseBackingCommentId(htmlUrl);
     if (backingCommentId === null) {

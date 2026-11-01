@@ -110,6 +110,8 @@ export const ForgejoReaction = z.object({
 });
 export type ForgejoReaction = z.infer<typeof ForgejoReaction>;
 
+// Snapshot schemas retain evidence for completeness and stability checks that
+// command projections may normalize or omit.
 const ForgejoSnapshotUser = ForgejoUser.extend({ id: z.number().nullish() });
 
 export const ForgejoSnapshotReview = ForgejoReview.extend({

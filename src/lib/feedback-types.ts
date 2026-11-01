@@ -19,7 +19,7 @@ export interface FindingState {
   conflictingFinalReactions: boolean;
 }
 
-interface NullableFindingState {
+export interface NullableFindingState {
   viewerReactions: string[] | null;
   status: FindingStatus | null;
   conflictingFinalReactions: boolean;
