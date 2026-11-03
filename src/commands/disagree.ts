@@ -1,7 +1,5 @@
 /**
  * Disagree command - mark item as "won't fix"
- *
- * Performs: reply + 👎 (thumbs_down), leaving the conversation open
  */
 
 import type { Command } from "@commander-js/extra-typings";

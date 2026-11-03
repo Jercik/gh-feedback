@@ -2,7 +2,7 @@
  * Start command - mark item as "working on it"
  *
  * Adds 👀 (eyes) reaction to indicate work in progress.
- * Also reopens the item if it was resolved.
+ * Also reopens its conversation if you resolved it.
  */
 
 import type { Command } from "@commander-js/extra-typings";
