@@ -9,6 +9,7 @@ import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { acknowledgeItem } from "../lib/acknowledge-item.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
+import { parseItemId } from "../lib/parse-item-id.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
@@ -17,13 +18,7 @@ export function registerAckCommand(program: Command): void {
   program
     .command("ack")
     .description("Acknowledge informational item (rocket + resolve inline conversation)")
-    .argument("<id>", "The feedback item ID", (value) => {
-      const id = Math.trunc(Number(value));
-      if (Number.isNaN(id) || id <= 0) {
-        exitWithMessage(`Error: Invalid ID "${value}".`);
-      }
-      return id;
-    })
+    .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
     .action(async (itemId: number, options: { dryRun?: boolean }) => {
       try {
