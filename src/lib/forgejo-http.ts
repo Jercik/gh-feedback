@@ -1,11 +1,12 @@
 /**
  * Forgejo REST access layer.
  *
- * fgj is the gh-equivalent CLI but has NO `api` passthrough, so for every
- * endpoint we mint a token with `fgj auth token` and call the REST API
- * directly with fetch. The API host defaults to repoq's canonical FORGEJO_API_HOST
- * (the tailnet SSH alias is never an HTTP host) and can be pointed at another
- * Forgejo instance with PR_FEEDBACK_FORGEJO_API_HOST.
+ * Every endpoint is called in-process with fetch, using a token from
+ * `fgj auth token`, rather than through `fgj api`: callers then read the HTTP
+ * status (isForgejoNotFound) and headers (X-Total-Count) as values instead of
+ * parsing them from a subprocess's output. The API host defaults to repoq's
+ * canonical FORGEJO_API_HOST (the tailnet SSH alias is never an HTTP host) and
+ * can be pointed at another Forgejo instance with PR_FEEDBACK_FORGEJO_API_HOST.
  */
 
 import { spawnSync } from "node:child_process";
