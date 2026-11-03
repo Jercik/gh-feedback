@@ -1,7 +1,6 @@
 import type { CapabilityResult, FeedbackBackend, FeedbackItemRef } from "./feedback-backend.js";
+import { otherStatusReactions, setStatusReaction } from "./set-status-reaction.js";
 import type { ReactionContent } from "./types.js";
-
-const WORKFLOW_REACTIONS: ReactionContent[] = ["eyes", "+1", "-1", "confused"];
 
 export async function acknowledgeItem(
   backend: FeedbackBackend,
@@ -11,8 +10,7 @@ export async function acknowledgeItem(
   const hadRocket = viewerReactions.includes("rocket");
   let rocketAdded = false;
   try {
-    await backend.removeReactions(item, viewerReactions, WORKFLOW_REACTIONS);
-    await backend.addReaction(item, "rocket");
+    await setStatusReaction(backend, item, viewerReactions, "rocket");
     rocketAdded = !hadRocket;
     return await backend.complete(item, "acknowledged");
   } catch (completionError) {
@@ -20,9 +18,8 @@ export async function acknowledgeItem(
       if (rocketAdded) {
         await backend.removeReactions(item, ["rocket"], ["rocket"]);
       }
-      for (const reaction of viewerReactions.filter((value) =>
-        WORKFLOW_REACTIONS.includes(value),
-      )) {
+      const replaced = otherStatusReactions("rocket");
+      for (const reaction of viewerReactions.filter((value) => replaced.includes(value))) {
         await backend.addReaction(item, reaction);
       }
     } catch (rollbackError) {

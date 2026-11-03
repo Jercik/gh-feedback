@@ -1,7 +1,6 @@
 import type { FeedbackBackend, FeedbackItemRef } from "./feedback-backend.js";
+import { setStatusReaction } from "./set-status-reaction.js";
 import type { ReactionContent } from "./types.js";
-
-const CONFLICTING_REACTIONS: ReactionContent[] = ["+1", "-1", "rocket", "confused"];
 
 export async function startItem(
   backend: FeedbackBackend,
@@ -19,6 +18,5 @@ export async function startItem(
     }
   }
 
-  await backend.removeReactions(item, viewerReactions, CONFLICTING_REACTIONS);
-  await backend.addReaction(item, "eyes");
+  await setStatusReaction(backend, item, viewerReactions, "eyes");
 }

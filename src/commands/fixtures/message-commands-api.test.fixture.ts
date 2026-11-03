@@ -7,7 +7,7 @@ const pull = {
   title: "Fixture PR",
   head: { ref: "fixture", sha: "head", repo: { full_name: "owner/repo" } },
 };
-const viewerReactions: Record<string, string[]> = { "401": [], "402": ["+1"] };
+const viewerReactions: Record<string, string[]> = { "401": [], "402": ["+1"], "403": [] };
 
 const mutationLogEnv = process.env.FIXTURE_MUTATION_LOG;
 if (!mutationLogEnv) {
@@ -42,7 +42,10 @@ globalThis.fetch = async (input, options): Promise<Response> => {
         { status: 201 },
       );
     }
-    if (/^repos\/owner\/repo\/issues\/comments\/40[12]\/reactions$/u.test(route)) {
+    if (method === "POST" && route === "repos/owner/repo/issues/comments/403/reactions") {
+      return Response.json({ message: "reaction rejected" }, { status: 500 });
+    }
+    if (/^repos\/owner\/repo\/issues\/comments\/40[1-3]\/reactions$/u.test(route)) {
       return new Response(null, { status: 204 });
     }
     throw new Error(`Unexpected fixture mutation: ${method} ${route}`);
@@ -59,7 +62,7 @@ globalThis.fetch = async (input, options): Promise<Response> => {
   if (route === "repos/owner/repo/pulls/7/reviews") {
     return Response.json([], { headers: { "X-Total-Count": "0" } });
   }
-  const comment = /^repos\/owner\/repo\/issues\/comments\/(?<id>40[12])$/u.exec(route);
+  const comment = /^repos\/owner\/repo\/issues\/comments\/(?<id>40[1-3])$/u.exec(route);
   if (comment) {
     return Response.json({
       id: Number(comment.groups?.id),
@@ -67,7 +70,9 @@ globalThis.fetch = async (input, options): Promise<Response> => {
       user: { login: "reviewer" },
     });
   }
-  const reactions = /^repos\/owner\/repo\/issues\/comments\/(?<id>40[12])\/reactions$/u.exec(route);
+  const reactions = /^repos\/owner\/repo\/issues\/comments\/(?<id>40[1-3])\/reactions$/u.exec(
+    route,
+  );
   if (reactions) {
     const contents = viewerReactions[reactions.groups?.id ?? ""] ?? [];
     return Response.json(

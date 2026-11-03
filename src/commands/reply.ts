@@ -6,9 +6,9 @@ export function registerReplyCommand(program: Command): void {
     name: "reply",
     description: "Reply to an item without changing its status (no reaction or resolution change)",
     messageHelp: "Reply message",
-    prompt: "reply",
+    messageNoun: "reply",
     actions: "reply (status unchanged)",
     done: (itemId) => `Replied to #${itemId}.`,
-    changeStatus: undefined,
+    status: undefined,
   });
 }

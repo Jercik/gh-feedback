@@ -8,6 +8,7 @@
 import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { acknowledgeItem } from "../lib/acknowledge-item.js";
+import { getOpenItemReactions } from "../lib/get-open-item-reactions.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { parseItemId } from "../lib/parse-item-id.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
@@ -27,14 +28,7 @@ export function registerAckCommand(program: Command): void {
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
 
-        // Check if already in a done status - must use 'start' first
-        const { doneStatus, viewerReactions } = await backend.getItemStatus(item);
-        if (doneStatus) {
-          exitWithMessage(
-            `Error: Item #${itemId} is already "${doneStatus}". ` +
-              `Use 'start' first to re-open it before changing status.`,
-          );
-        }
+        const viewerReactions = await getOpenItemReactions(backend, item);
 
         verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
         if (item.path) {

@@ -113,8 +113,13 @@ describe("message commands on a pending issue comment", () => {
 });
 
 describe("message commands on an agreed issue comment", () => {
-  it.each(["agree", "disagree", "ask"])("%s refuses the item and changes nothing", (command) => {
-    const result = run([command, "402", "-m", "Noted"]);
+  it.each([
+    ["agree", ["agree", "402", "-m", "Noted"]],
+    ["disagree", ["disagree", "402", "-m", "Noted"]],
+    ["ask", ["ask", "402", "-m", "Noted"]],
+    ["ack", ["ack", "402"]],
+  ])("%s refuses the item and changes nothing", (_command, argv) => {
+    const result = run(argv);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(`Error: Item #402 is already "agreed".`);
@@ -133,5 +138,22 @@ describe("message commands on an agreed issue comment", () => {
         body: { body: "> Replying to comment #402\n\nNoted" },
       },
     ]);
+  });
+});
+
+describe("message commands whose status reaction fails", () => {
+  it.each([
+    ["agree", "Warning: Reply posted, but status update failed: "],
+    ["disagree", "Warning: Reply posted, but status update failed: "],
+    ["ask", "Warning: Question posted, but status update failed: "],
+  ])("%s exits 1 and reports the posted reply on stderr", (command, warning) => {
+    const result = run([command, "403", "-m", "Noted"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(warning);
+    expect(result.stderr).toContain(
+      "Reply URL: https://code.j4k.dev/owner/repo/pulls/7#issuecomment-501\n",
+    );
   });
 });
