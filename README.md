@@ -76,8 +76,8 @@ Settled siblings keep their final reactions, and the conversation resolves
 again once every finding is agreed or acknowledged.
 `summary --hide-resolved` hides an agreed or acknowledged item as soon as its
 own final reaction is recorded, even when an unsettled sibling defers the
-native conversation resolution. Disagreed and awaiting-reply findings remain
-visible while their native conversation is open. A conversation resolved by
+native conversation resolution. Every other inline finding remains visible
+while its native conversation is open. A conversation resolved by
 another user hides all of its findings because `start` and `disagree` preserve
 that user's resolution. Plain PR comments have no conversation axis, so their
 final reaction still controls that filter.
