@@ -116,7 +116,7 @@ pr-feedback detail 123456
 # Mark item as work-in-progress
 pr-feedback start 123456
 
-# Mark as agreed/fixed (reply + resolve)
+# Mark as agreed/fixed
 pr-feedback agree 123456 -m 'Fixed in commit abc123'
 
 # Same, but read the message from stdin; stdin is read only for -f - or --interactive
@@ -134,7 +134,7 @@ pr-feedback disagree 123456 -m 'Intentional, see docs'
 # Request clarification
 pr-feedback ask 123456 -m 'Could you clarify the expected behavior?'
 
-# Acknowledge noise (react; resolves a settled inline conversation)
+# Acknowledge noise
 pr-feedback ack 123456
 
 # Reply without changing status (no reaction or resolution change); prints the reply URL
@@ -146,17 +146,17 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                                    | Description                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------ |
-| `summary`                                  | Get all PR feedback with semantic status                           |
-| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                       |
-| `detail <id>`                              | Fetch full untruncated content                                     |
-| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                      |
-| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves a settled inline conversation)  |
-| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open)           |
-| `ask <id> -m "..."`                        | Need clarification (reply + confused)                              |
-| `ack <id>`                                 | Acknowledge noise (rocket; resolves a settled inline conversation) |
-| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)          |
+| Command                                    | Description                                                                                                  |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `summary`                                  | Get all PR feedback with semantic status                                                                     |
+| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                 |
+| `detail <id>`                              | Fetch full untruncated content                                                                               |
+| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                |
+| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves the inline conversation once every item in it is agreed or acknowledged)  |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open)                                                     |
+| `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                        |
+| `ack <id>`                                 | Acknowledge noise (rocket; resolves the inline conversation once every item in it is agreed or acknowledged) |
+| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                    |
 
 ### Complete feedback snapshots
 

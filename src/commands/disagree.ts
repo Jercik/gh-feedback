@@ -14,7 +14,8 @@ export function registerDisagreeCommand(program: Command): void {
       "Mark feedback as disagreed/won't fix (reply + thumbs_down; conversation stays open)",
     messageHelp: "Reply message explaining why",
     messageNoun: "reply",
-    actions: "reply + thumbs_down + apply conversation policy",
+    actions:
+      "reply + thumbs_down; keep the inline conversation open, reopening it if you resolved it",
     done: (itemId) => `Marked #${itemId} as disagreed.`,
     status: "disagreed",
   });

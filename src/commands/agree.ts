@@ -9,10 +9,11 @@ export function registerAgreeCommand(program: Command): void {
   registerMessageCommand(program, {
     name: "agree",
     description:
-      "Mark feedback as agreed/fixed (reply + thumbs_up; resolves a settled inline conversation)",
+      "Mark feedback as agreed/fixed (reply + thumbs_up; resolves its inline conversation once every item in it is agreed or acknowledged)",
     messageHelp: "Reply message (e.g., commit SHA)",
     messageNoun: "reply",
-    actions: "reply + thumbs_up + apply conversation policy",
+    actions:
+      "reply + thumbs_up; resolve the inline conversation once every item in it is agreed or acknowledged",
     done: (itemId) => `Marked #${itemId} as agreed.`,
     status: "agreed",
   });

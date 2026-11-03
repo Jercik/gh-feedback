@@ -17,7 +17,9 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description("Acknowledge informational item (rocket; resolves a settled inline conversation)")
+    .description(
+      "Acknowledge informational item (rocket; resolves its inline conversation once every item in it is agreed or acknowledged)",
+    )
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
     .action(async (itemId: number, options: { dryRun?: boolean }) => {
@@ -35,7 +37,9 @@ export function registerAckCommand(program: Command): void {
         }
 
         verboseLog("");
-        verboseLog("Actions: rocket + apply conversation policy (acknowledge noise)");
+        verboseLog(
+          "Actions: rocket; resolve the inline conversation once every item in it is agreed or acknowledged (acknowledge noise)",
+        );
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
