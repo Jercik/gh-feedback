@@ -1,10 +1,10 @@
 export type FindingStatus =
-  | "pending"
-  | "in-progress"
-  | "awaiting-reply"
-  | "agreed"
-  | "disagreed"
-  | "acknowledged";
+  | "pending" // Needs attention
+  | "in-progress" // Work started, or the recorded state is inconsistent - treat carefully
+  | "awaiting-reply" // Asked a question - blocked on reviewer
+  | "agreed" // Fixed
+  | "disagreed" // Won't fix
+  | "acknowledged"; // Noted, no action
 
 export type Side = "new" | "old" | "zero";
 
@@ -61,6 +61,7 @@ export interface ConversationRecord {
   side: Side;
   displayLine: number;
   anchorId: number;
+  // Not folded into its comments' status, which reflects their viewerReactions alone.
   resolver: UserRef | null;
   comments: CommentRecord[];
 }

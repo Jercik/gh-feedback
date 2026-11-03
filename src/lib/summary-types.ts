@@ -5,23 +5,7 @@
  * to a single FeedbackItem type with semantic status.
  */
 
-/**
- * Semantic status derived from viewer's reactions AND resolution state.
- * Combines workflow state with done/not-done into a single field.
- *
- * IMPORTANT: "in-progress" items need careful attention - they may represent:
- * 1. Work actively being done (started with `start`)
- * 2. Work interrupted from a previous session (needs continuation)
- * 3. Items resolved outside our workflow (e.g., by someone else or accidentally)
- *    - treat as new feedback and decide appropriate action
- */
-type FeedbackStatus =
-  | "pending" // No reaction, not resolved - needs attention
-  | "in-progress" // Active work OR interrupted/incomplete - treat carefully
-  | "awaiting-reply" // Asked a question, not resolved - blocked on reviewer
-  | "agreed" // Fixed
-  | "disagreed" // Won't fix
-  | "acknowledged"; // Noted, no action
+import type { FindingStatus } from "./feedback-types.js";
 
 /**
  * A response/reply to a feedback item.
@@ -41,7 +25,12 @@ export interface FeedbackItem {
   readonly actionable?: boolean;
   readonly reviewId?: number;
   readonly timestamp: string;
-  readonly status: FeedbackStatus;
+  /**
+   * The viewer's reaction status with resolution folded in: a resolved item without a final
+   * reaction reads "in-progress". Such an item may be active work, work interrupted in a previous
+   * session, or a resolution made outside this workflow; treat the last as new feedback.
+   */
+  readonly status: FindingStatus;
   readonly author: string;
   /** File path and line for code comments, empty for general comments */
   readonly location: string;
@@ -62,7 +51,7 @@ export interface FeedbackSummary {
 /**
  * Check if a status represents a "done" state.
  */
-export function isStatusDone(status: FeedbackStatus): boolean {
+export function isStatusDone(status: FindingStatus): boolean {
   return status === "agreed" || status === "disagreed" || status === "acknowledged";
 }
 
