@@ -248,7 +248,7 @@ Add to your `CLAUDE.md` or `AGENTS.md`:
 ```markdown
 # Rule: pr-feedback CLI Usage
 
-`pr-feedback` is a globally available CLI. Prefer it over raw `fgj` commands for PR feedback operations. Use it to get PR feedback summaries, mark items as in-progress/agreed/disagreed, request clarifications, and acknowledge feedback. Always operates on the current branch's PR.
+`pr-feedback` is a globally available CLI. Prefer it over raw `fgj` commands for PR feedback operations: reading a PR's feedback, and replying to and settling each item. Every command except `snapshot` operates on the current branch's PR.
 
 Before first use in a session, run `pr-feedback --help` and subcommand help (e.g., `pr-feedback agree --help`) to learn available commands and options.
 ```
