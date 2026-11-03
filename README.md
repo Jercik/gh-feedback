@@ -51,8 +51,7 @@ All of these provide the same `pr-feedback` command.
 - the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
 
 The j4k Forgejo fork resolves inline review conversations through the local
-`fgj` CLI. `agree` and `ack` resolve settled inline conversations, while
-`disagree` deliberately leaves them open for the reviewer to settle. Plain PR
+`fgj` CLI; the [Commands](#commands) table says when each command resolves one. Plain PR
 comments have no hide API, so their status remains reaction-backed. Published review bodies are tracked through their native backing comment IDs.
 Inline review comments and plain PR comments (Forgejo issue comments) are surfaced and tracked normally.
 `start` reopens only conversations resolved by the authenticated account; a
@@ -67,12 +66,11 @@ the reply. Inspect the native anchor and retry only `fgj pr review resolve` or
 `fgj pr review unresolve` when the expected transition did not land.
 
 When one native Forgejo conversation contains several feedback items, each
-item's reaction is recorded independently. `agree` and `ack` defer the shared
-conversation resolution until every item is agreed or acknowledged; a
-disagreed or awaiting-reply item keeps the conversation open.
+item's reaction is recorded independently, so any item that is not yet agreed
+or acknowledged defers the shared conversation's resolution.
 Because native resolution belongs to the whole conversation, `start` or a
 viewer-owned `disagree` on any finding reopens that shared conversation.
-Settled siblings keep their final reactions, and the conversation resolves
+Siblings keep their final reactions, and the conversation resolves
 again once every finding is agreed or acknowledged.
 `summary --hide-resolved` hides an agreed or acknowledged item as soon as its
 own final reaction is recorded, even when an unsettled sibling defers the
@@ -146,17 +144,17 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                                    | Description                                                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `summary`                                  | Get all PR feedback with semantic status                                                                     |
-| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                 |
-| `detail <id>`                              | Fetch full untruncated content                                                                               |
-| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                |
-| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves the inline conversation once every item in it is agreed or acknowledged)  |
-| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open)                                                     |
-| `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                        |
-| `ack <id>`                                 | Acknowledge noise (rocket; resolves the inline conversation once every item in it is agreed or acknowledged) |
-| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                    |
+| Command                                    | Description                                                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `summary`                                  | Get all PR feedback with semantic status                                                                              |
+| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                          |
+| `detail <id>`                              | Fetch full untruncated content                                                                                        |
+| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                         |
+| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is agreed or acknowledged)  |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; reopens its inline conversation only if you resolved it)                              |
+| `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                                 |
+| `ack <id>`                                 | Acknowledge noise (rocket; resolves its inline conversation, if any, once every item in it is agreed or acknowledged) |
+| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                             |
 
 ### Complete feedback snapshots
 
@@ -195,7 +193,7 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `in-progress`    | Work started, or reactions and resolution disagree (e.g. conflicting final reactions, resolved with no final reaction) |
 | `awaiting-reply` | Asked a question (😕), not resolved; a reply does not clear it                                                         |
 | `agreed`         | Fixed (👍; the conversation may stay open, see [Prerequisites](#prerequisites))                                        |
-| `disagreed`      | Won't fix (👎; the conversation stays open)                                                                            |
+| `disagreed`      | Won't fix (👎; `disagree` never resolves the conversation)                                                             |
 | `acknowledged`   | Noted, no action (🚀; the conversation may stay open)                                                                  |
 
 `summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review

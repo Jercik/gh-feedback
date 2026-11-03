@@ -7,15 +7,15 @@
 import type { Command } from "@commander-js/extra-typings";
 import { registerMessageCommand } from "../lib/register-message-command.js";
 
+const actions = "reply + thumbs_down; reopens its inline conversation only if you resolved it";
+
 export function registerDisagreeCommand(program: Command): void {
   registerMessageCommand(program, {
     name: "disagree",
-    description:
-      "Mark feedback as disagreed/won't fix (reply + thumbs_down; conversation stays open)",
+    description: `Mark feedback as disagreed/won't fix (${actions})`,
     messageHelp: "Reply message explaining why",
     messageNoun: "reply",
-    actions:
-      "reply + thumbs_down; keep the inline conversation open, reopening it if you resolved it",
+    actions,
     done: (itemId) => `Marked #${itemId} as disagreed.`,
     status: "disagreed",
   });

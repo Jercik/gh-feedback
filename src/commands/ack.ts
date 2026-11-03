@@ -14,12 +14,13 @@ import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
+const actions =
+  "rocket; resolves its inline conversation, if any, once every item in it is agreed or acknowledged";
+
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description(
-      "Acknowledge informational item (rocket; resolves its inline conversation once every item in it is agreed or acknowledged)",
-    )
+    .description(`Acknowledge informational item (${actions})`)
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
     .action(async (itemId: number, options: { dryRun?: boolean }) => {
@@ -37,9 +38,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         verboseLog("");
-        verboseLog(
-          "Actions: rocket; resolve the inline conversation once every item in it is agreed or acknowledged (acknowledge noise)",
-        );
+        verboseLog(`Actions: ${actions}`);
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");
