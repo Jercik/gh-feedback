@@ -5,7 +5,8 @@
 import type { Command } from "@commander-js/extra-typings";
 import { registerMessageCommand } from "../lib/register-message-command.js";
 
-const actions = "reply + thumbs_down; reopens its inline conversation only if you resolved it";
+const actions =
+  "reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to settle, reopening it only if you resolved it";
 
 export function registerDisagreeCommand(program: Command): void {
   registerMessageCommand(program, {
