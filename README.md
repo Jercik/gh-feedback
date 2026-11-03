@@ -45,7 +45,7 @@ All of these provide the same `pr-feedback` command.
 
 ## Prerequisites
 
-- Node.js 24.15.0+
+- Node.js 26.0.0+
 - Git repository with `origin` remote
 - Git installed (`git`), with `user.name` and `user.email` configured
 - the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
