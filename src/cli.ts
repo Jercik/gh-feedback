@@ -13,6 +13,7 @@ import { registerAgreeCommand } from "./commands/agree.js";
 import { registerDisagreeCommand } from "./commands/disagree.js";
 import { registerAskCommand } from "./commands/ask.js";
 import { registerAckCommand } from "./commands/ack.js";
+import { registerReplyCommand } from "./commands/reply.js";
 import { registerDetailCommand } from "./commands/detail.js";
 import { verboseLog } from "./lib/verbose-mode.js";
 
@@ -42,6 +43,7 @@ Example workflow:
   $ pr-feedback disagree 456 -m 'Intentional, see docs'
   $ pr-feedback ask 456 -m 'Could you clarify?'
   $ pr-feedback ack 789              # Acknowledge bot noise
+  $ pr-feedback reply 456 -m 'Tracked in #12'  # Reply without changing status
   $ pr-feedback detail 456           # Get full untruncated content
 
 Unix pipeline examples:
@@ -95,6 +97,7 @@ registerAgreeCommand(program);
 registerDisagreeCommand(program);
 registerAskCommand(program);
 registerAckCommand(program);
+registerReplyCommand(program);
 
 async function main(): Promise<void> {
   await program.parseAsync(process.argv);

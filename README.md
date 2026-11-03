@@ -137,22 +137,26 @@ pr-feedback ask 123456 -m 'Could you clarify the expected behavior?'
 # Acknowledge noise (react and resolve inline conversation)
 pr-feedback ack 123456
 
+# Reply without changing status (no reaction or resolution change); prints the reply URL
+pr-feedback reply 123456 -m 'Tracked in https://code.j4k.dev/owner/repo/pulls/12'
+
 # Preview any action without executing
 pr-feedback agree 123456 -m 'Fixed' --dry-run
 ```
 
 ## Commands
 
-| Command                                    | Description                                              |
-| ------------------------------------------ | -------------------------------------------------------- |
-| `summary`                                  | Get all PR feedback with semantic status                 |
-| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot             |
-| `detail <id>`                              | Fetch full untruncated content                           |
-| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)            |
-| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up + resolve)                      |
-| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open) |
-| `ask <id> -m "..."`                        | Need clarification (reply + confused)                    |
-| `ack <id>`                                 | Acknowledge noise (rocket + resolve inline conversation) |
+| Command                                    | Description                                               |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `summary`                                  | Get all PR feedback with semantic status                  |
+| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot              |
+| `detail <id>`                              | Fetch full untruncated content                            |
+| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)             |
+| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up + resolve)                       |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; conversation stays open)  |
+| `ask <id> -m "..."`                        | Need clarification (reply + confused)                     |
+| `ack <id>`                                 | Acknowledge noise (rocket + resolve inline conversation)  |
+| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged) |
 
 ### Complete feedback snapshots
 

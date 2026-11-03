@@ -55,7 +55,7 @@ function runWithOpenStdin(args: string[]): Promise<RunResult> {
 }
 
 describe("reply commands without a message", () => {
-  it.each(["agree", "disagree", "ask"])(
+  it.each(["agree", "disagree", "ask", "reply"])(
     "%s fails at once with a usage error while stdin stays open",
     async (command) => {
       const result = await runWithOpenStdin([command, "123"]);
