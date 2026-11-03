@@ -139,17 +139,12 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
       await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } });
     },
 
-    async removeReactions(
-      item: FeedbackItemRef,
-      viewerReactions: ReactionContent[],
-      toRemove: ReactionContent[],
-    ): Promise<void> {
+    async removeReactions(item: FeedbackItemRef, reactions: ReactionContent[]): Promise<void> {
       // Keep the PR-membership guard; cache hits reuse metadata verified on insertion.
       await metaFor(item);
       const path = reactionsPath(slug, item.id);
 
-      const reactionsToRemove = toRemove.filter((r) => viewerReactions.includes(r));
-      for (const reaction of reactionsToRemove) {
+      for (const reaction of reactions) {
         await forgejoFetch<unknown>({ method: "DELETE", path, body: { content: reaction } });
       }
     },

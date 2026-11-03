@@ -14,15 +14,10 @@ import { verboseLog } from "./verbose-mode.js";
 
 type MessageStatus = Extract<FindingStatus, "agreed" | "disagreed" | "awaiting-reply">;
 
-interface StatusChange {
-  reactionName: string;
-  outcome: FeedbackOutcome | undefined;
-}
-
-const statusChanges: Record<MessageStatus, StatusChange> = {
-  agreed: { reactionName: "thumbs-up", outcome: "agreed" },
-  disagreed: { reactionName: "thumbs-down", outcome: "disagreed" },
-  "awaiting-reply": { reactionName: "confused", outcome: undefined },
+const completionOutcomes: Record<MessageStatus, FeedbackOutcome | undefined> = {
+  agreed: "agreed",
+  disagreed: "disagreed",
+  "awaiting-reply": undefined,
 };
 
 interface MessageCommand {
@@ -69,7 +64,7 @@ async function changeStatus(
   command: MessageCommand,
   status: MessageStatus,
 ): Promise<boolean> {
-  const { reactionName, outcome } = statusChanges[status];
+  const outcome = completionOutcomes[status];
   const posted = capitalize(command.messageNoun);
   try {
     verboseLog("Adding reaction...");
@@ -90,7 +85,7 @@ async function changeStatus(
     return true;
   } catch (error) {
     console.error(
-      `Warning: ${posted} and ${reactionName} reaction were recorded, but the conversation state for this outcome is unconfirmed: ${errorMessage(error)}`,
+      `Warning: ${posted} posted and status set to ${status}, but the conversation state for this outcome is unconfirmed: ${errorMessage(error)}`,
     );
     console.error(
       `Do not repeat ${command.name}; inspect the item in the forge and retry only its expected conversation transition if needed.`,

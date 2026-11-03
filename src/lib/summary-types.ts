@@ -10,7 +10,7 @@
  * Combines workflow state with done/not-done into a single field.
  *
  * IMPORTANT: "in-progress" items need careful attention - they may represent:
- * 1. Work actively being done (eyes reaction)
+ * 1. Work actively being done (started with `start`)
  * 2. Work interrupted from a previous session (needs continuation)
  * 3. Items resolved outside our workflow (e.g., by someone else or accidentally)
  *    - treat as new feedback and decide appropriate action
@@ -18,10 +18,10 @@
 type FeedbackStatus =
   | "pending" // No reaction, not resolved - needs attention
   | "in-progress" // Active work OR interrupted/incomplete - treat carefully
-  | "awaiting-reply" // 😕 confused, not resolved - blocked on reviewer
-  | "agreed" // 👍 thumbs_up - fixed
-  | "disagreed" // 👎 thumbs_down - won't fix
-  | "acknowledged"; // 🚀 rocket - noted, no action
+  | "awaiting-reply" // Asked a question, not resolved - blocked on reviewer
+  | "agreed" // Fixed
+  | "disagreed" // Won't fix
+  | "acknowledged"; // Noted, no action
 
 /**
  * A response/reply to a feedback item.

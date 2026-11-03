@@ -41,12 +41,9 @@ export interface FeedbackBackend {
   getItemStatus: (item: FeedbackItemRef) => Promise<ItemStatus>;
 
   reply: (item: FeedbackItemRef, message: string) => Promise<ReplyResult>;
+  // Adding a reaction the viewer already has, or removing one they lack, succeeds unchanged.
   addReaction: (item: FeedbackItemRef, reaction: ReactionContent) => Promise<void>;
-  removeReactions: (
-    item: FeedbackItemRef,
-    viewerReactions: ReactionContent[],
-    toRemove: ReactionContent[],
-  ) => Promise<void>;
+  removeReactions: (item: FeedbackItemRef, reactions: ReactionContent[]) => Promise<void>;
 
   complete: (item: FeedbackItemRef, outcome: FeedbackOutcome) => Promise<CapabilityResult>;
   unresolve: (item: FeedbackItemRef) => Promise<CapabilityResult>;

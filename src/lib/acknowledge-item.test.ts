@@ -18,24 +18,18 @@ function reactionBackend(
   complete: () => Promise<unknown>,
 ): FeedbackBackend {
   return {
-    removeReactions: vi.fn(
-      (
-        _item: FeedbackItemRef,
-        _viewerReactions: ReactionContent[],
-        toRemove: ReactionContent[],
-      ): Promise<void> => {
-        for (const reaction of toRemove) {
-          if (!reactions.has(reaction)) {
-            continue;
-          }
-          if (reaction === failingRemoval) {
-            return Promise.reject(new Error("second removal failed"));
-          }
-          reactions.delete(reaction);
+    removeReactions: vi.fn((_item: FeedbackItemRef, toRemove: ReactionContent[]): Promise<void> => {
+      for (const reaction of toRemove) {
+        if (!reactions.has(reaction)) {
+          continue;
         }
-        return Promise.resolve();
-      },
-    ),
+        if (reaction === failingRemoval) {
+          return Promise.reject(new Error("second removal failed"));
+        }
+        reactions.delete(reaction);
+      }
+      return Promise.resolve();
+    }),
     addReaction: vi.fn((_item: FeedbackItemRef, reaction: ReactionContent) => {
       reactions.add(reaction);
       return Promise.resolve();

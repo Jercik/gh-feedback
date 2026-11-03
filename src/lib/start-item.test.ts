@@ -82,11 +82,7 @@ describe("startItem", () => {
 
     await startItem(backend, item, ["confused"], false);
     expect(backend.unresolve).not.toHaveBeenCalled();
-    expect(backend.removeReactions).toHaveBeenCalledWith(
-      item,
-      ["confused"],
-      ["+1", "-1", "rocket", "confused"],
-    );
+    expect(backend.removeReactions).toHaveBeenCalledWith(item, ["confused"]);
     expect(backend.addReaction).toHaveBeenCalledWith(item, "eyes");
   });
 });
