@@ -80,7 +80,7 @@ describe("startItem", () => {
   it("swaps reactions without reopening an open item", async () => {
     const backend = backendWithUnresolve(() => Promise.resolve({ supported: true, applied: true }));
 
-    await startItem(backend, item, ["confused"], false);
+    await startItem(backend, item, ["confused", "eyes", "heart"], false);
     expect(backend.unresolve).not.toHaveBeenCalled();
     expect(backend.removeReactions).toHaveBeenCalledWith(item, ["confused"]);
     expect(backend.addReaction).toHaveBeenCalledWith(item, "eyes");
