@@ -1,7 +1,6 @@
 /**
  * Ack command - acknowledge informational item
  *
- * Performs: 🚀 (rocket) + resolve inline conversation
  * Used for bot summaries, status updates, or noise.
  */
 
@@ -18,7 +17,7 @@ import { verboseLog } from "../lib/verbose-mode.js";
 export function registerAckCommand(program: Command): void {
   program
     .command("ack")
-    .description("Acknowledge informational item (rocket + resolve inline conversation)")
+    .description("Acknowledge informational item (rocket; resolves a settled inline conversation)")
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
     .action(async (itemId: number, options: { dryRun?: boolean }) => {
@@ -36,7 +35,7 @@ export function registerAckCommand(program: Command): void {
         }
 
         verboseLog("");
-        verboseLog("Actions: rocket + resolve inline conversation (acknowledge noise)");
+        verboseLog("Actions: rocket + apply conversation policy (acknowledge noise)");
 
         if (options.dryRun) {
           console.error("Dry run: no changes made.");

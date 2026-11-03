@@ -19,9 +19,9 @@ type FeedbackStatus =
   | "pending" // No reaction, not resolved - needs attention
   | "in-progress" // Active work OR interrupted/incomplete - treat carefully
   | "awaiting-reply" // 😕 confused, not resolved - blocked on reviewer
-  | "agreed" // 👍 thumbs_up + resolved - fixed
-  | "disagreed" // 👎 thumbs_down + resolved - won't fix
-  | "acknowledged"; // 🚀 rocket + settled - noted, no action
+  | "agreed" // 👍 thumbs_up - fixed
+  | "disagreed" // 👎 thumbs_down - won't fix
+  | "acknowledged"; // 🚀 rocket - noted, no action
 
 /**
  * A response/reply to a feedback item.
