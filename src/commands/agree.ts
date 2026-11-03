@@ -3,10 +3,10 @@
  */
 
 import type { Command } from "@commander-js/extra-typings";
+import { RESOLVES_CONVERSATION_WHEN_SETTLED } from "../lib/forgejo-conversation-guard.js";
 import { registerMessageCommand } from "../lib/register-message-command.js";
 
-const actions =
-  "reply + thumbs_up; resolves its inline conversation, if any, once every item in it is agreed or acknowledged";
+const actions = `reply + thumbs_up; ${RESOLVES_CONVERSATION_WHEN_SETTLED}`;
 
 export function registerAgreeCommand(program: Command): void {
   registerMessageCommand(program, {

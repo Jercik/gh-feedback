@@ -8,14 +8,14 @@ import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { acknowledgeItem } from "../lib/acknowledge-item.js";
 import { getOpenItemReactions } from "../lib/get-open-item-reactions.js";
+import { RESOLVES_CONVERSATION_WHEN_SETTLED } from "../lib/forgejo-conversation-guard.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { parseItemId } from "../lib/parse-item-id.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
 
-const actions =
-  "rocket; resolves its inline conversation, if any, once every item in it is agreed or acknowledged";
+const actions = `rocket; ${RESOLVES_CONVERSATION_WHEN_SETTLED}`;
 
 export function registerAckCommand(program: Command): void {
   program
