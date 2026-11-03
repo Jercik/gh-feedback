@@ -4,12 +4,19 @@ import type {
   NullableFindingState,
   UserRef,
 } from "./feedback-types.js";
+import type { ReactionContent } from "./types.js";
 
-const finalReactionStatuses = new Map<string, FindingStatus>([
-  ["+1", "agreed"],
-  ["-1", "disagreed"],
-  ["rocket", "acknowledged"],
-]);
+export type ReactedStatus = Exclude<FindingStatus, "pending">;
+
+export const statusReactions: Record<ReactedStatus, ReactionContent> = {
+  "in-progress": "eyes",
+  agreed: "+1",
+  disagreed: "-1",
+  acknowledged: "rocket",
+  "awaiting-reply": "confused",
+};
+
+const finalStatuses = ["agreed", "disagreed", "acknowledged"] as const;
 
 export function integerOrZero(value: unknown): number {
   return typeof value === "number" && Number.isInteger(value) ? value : 0;
@@ -30,20 +37,20 @@ export const unfetchedFindingState: NullableFindingState = {
 };
 
 export function deriveStatus(viewerReactions: string[]): FindingState {
-  const finals = [...new Set(viewerReactions)].filter((content) =>
-    finalReactionStatuses.has(content),
+  const finals = finalStatuses.filter((status) =>
+    viewerReactions.includes(statusReactions[status]),
   );
   if (finals.length > 1) {
     return { viewerReactions, status: "in-progress", conflictingFinalReactions: true };
   }
-  const final = finals[0] === undefined ? undefined : finalReactionStatuses.get(finals[0]);
+  const [final] = finals;
   if (final !== undefined) {
     return { viewerReactions, status: final, conflictingFinalReactions: false };
   }
-  if (viewerReactions.includes("confused")) {
+  if (viewerReactions.includes(statusReactions["awaiting-reply"])) {
     return { viewerReactions, status: "awaiting-reply", conflictingFinalReactions: false };
   }
-  if (viewerReactions.includes("eyes")) {
+  if (viewerReactions.includes(statusReactions["in-progress"])) {
     return { viewerReactions, status: "in-progress", conflictingFinalReactions: false };
   }
   return { viewerReactions, status: "pending", conflictingFinalReactions: false };

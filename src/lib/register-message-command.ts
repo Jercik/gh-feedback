@@ -7,8 +7,7 @@ import { resolveMessage } from "./message-input.js";
 import { parseItemId } from "./parse-item-id.js";
 import { reportCompletionResult } from "./report-completion-result.js";
 import { resolveBackend } from "./resolve-backend.js";
-import type { StatusReaction } from "./set-status-reaction.js";
-import { setStatusReaction } from "./set-status-reaction.js";
+import { setStatus } from "./set-status.js";
 import { SUCCESS } from "./tty-output.js";
 import type { ReactionContent } from "./types.js";
 import { verboseLog } from "./verbose-mode.js";
@@ -16,22 +15,22 @@ import { verboseLog } from "./verbose-mode.js";
 type MessageStatus = Extract<FindingStatus, "agreed" | "disagreed" | "awaiting-reply">;
 
 interface StatusChange {
-  reaction: StatusReaction;
   reactionName: string;
   outcome: FeedbackOutcome | undefined;
 }
 
 const statusChanges: Record<MessageStatus, StatusChange> = {
-  agreed: { reaction: "+1", reactionName: "thumbs-up", outcome: "agreed" },
-  disagreed: { reaction: "-1", reactionName: "thumbs-down", outcome: "disagreed" },
-  "awaiting-reply": { reaction: "confused", reactionName: "confused", outcome: undefined },
+  agreed: { reactionName: "thumbs-up", outcome: "agreed" },
+  disagreed: { reactionName: "thumbs-down", outcome: "disagreed" },
+  "awaiting-reply": { reactionName: "confused", outcome: undefined },
 };
 
 interface MessageCommand {
   name: string;
   description: string;
   messageHelp: string;
-  // A lowercase singular noun: it fills "Enter your <noun>", the preview header and "Posting <noun>...".
+  // A lowercase singular noun ("reply", "question") that reads correctly mid-sentence and,
+  // capitalized, at the start of one.
   messageNoun: string;
   actions: string;
   done: (itemId: number) => string;
@@ -70,11 +69,11 @@ async function changeStatus(
   command: MessageCommand,
   status: MessageStatus,
 ): Promise<boolean> {
-  const { reaction, reactionName, outcome } = statusChanges[status];
+  const { reactionName, outcome } = statusChanges[status];
   const posted = capitalize(command.messageNoun);
   try {
     verboseLog("Adding reaction...");
-    await setStatusReaction(backend, item, viewerReactions, reaction);
+    await setStatus(backend, item, viewerReactions, status);
   } catch (error) {
     console.error(`Warning: ${posted} posted, but status update failed: ${errorMessage(error)}`);
     console.error(

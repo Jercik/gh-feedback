@@ -1,5 +1,5 @@
 import type { FeedbackBackend, FeedbackItemRef } from "./feedback-backend.js";
-import { setStatusReaction } from "./set-status-reaction.js";
+import { setStatus } from "./set-status.js";
 import type { ReactionContent } from "./types.js";
 
 export async function startItem(
@@ -18,5 +18,5 @@ export async function startItem(
     }
   }
 
-  await setStatusReaction(backend, item, viewerReactions, "eyes");
+  await setStatus(backend, item, viewerReactions, "in-progress");
 }
