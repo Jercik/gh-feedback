@@ -5,16 +5,25 @@ export LC_ALL=C.UTF-8
 mode=commit
 if [[ "$#" -eq 1 && "$1" == --title ]]; then
   mode=title
+elif [[ "$#" -eq 1 && "$1" == --draft ]]; then
+  mode=draft
 elif [[ "$#" -ne 0 ]]; then
-  printf '%s\n' 'usage: check-msg.sh [--title] < message' >&2
+  printf '%s\n' 'usage: check-msg.sh [--title | --draft] < message' >&2
   exit 2
 fi
 
 message=$(git stripspace)
 header=${message%%$'\n'*}
-if [[ "$mode" == commit ]]; then
+if [[ "$mode" != title ]]; then
   case "$header" in
-    'Merge branch '*|'Merge remote-tracking branch '*|'Merge tag '*|'Merge pull request '*|'Merge commit '*|'Revert "'*|'Reapply "'*|'fixup! '*|'squash! '*|'amend! '*) exit 0 ;;
+    'Merge branch '*|'Merge remote-tracking branch '*|'Merge tag '*|'Merge pull request '*|'Merge commit '*|'Revert "'*|'Reapply "'*) exit 0 ;;
+    'fixup! '*|'squash! '*|'amend! '*)
+      if [[ "$mode" == draft ]]; then
+        exit 0
+      fi
+      printf 'commit-msg: autosquash commit must be squashed before it lands (git rebase --autosquash): %s\n' "$header" >&2
+      exit 1
+      ;;
   esac
 fi
 
