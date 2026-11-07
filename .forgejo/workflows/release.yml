@@ -1,4 +1,6 @@
 ---
+# Rendered by j4k-align from https://code.j4k.dev/j4k/align/src/branch/main/templates/workflows/release-forgejo.yml.hbs
+# Direct edits are drift and are overwritten on the next targeted `--fix`; edit the template.
 name: Release
 
 # Required PR status checks are intentionally disabled, so the release gate verifies

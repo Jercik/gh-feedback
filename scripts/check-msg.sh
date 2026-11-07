@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Rendered by j4k-align from https://code.j4k.dev/j4k/align/src/branch/main/templates/repo/check-msg.sh.hbs
+# Direct edits are drift and are overwritten on the next targeted `--fix`; edit the template.
 set -euo pipefail
 export LC_ALL=C.UTF-8
 
