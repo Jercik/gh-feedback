@@ -28,10 +28,7 @@ afterAll(() => {
 });
 
 function run(args: string[], fixtureEnv: Record<string, string> = {}) {
-  const mutationLog = path.join(
-    directory,
-    `mutations-${args.join("-").replaceAll("/", "_")}.jsonl`,
-  );
+  const mutationLog = path.join(fs.mkdtempSync(path.join(directory, "run-")), "mutations.jsonl");
   const result = spawnSync(
     process.execPath,
     [path.join(repoRoot, "dist/cli.js"), ...args, "--repo", "owner/repo", "--pr", "7"],
@@ -169,5 +166,56 @@ describe("start", () => {
         body: { content: "eyes" },
       },
     ]);
+  });
+});
+
+describe("reopen", () => {
+  it("refuses a finding that is not dismissed before any write", () => {
+    const result = run(["reopen", "301", "-m", "New evidence"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "Error: Item #301 is not dismissed; 'reopen' reconsiders a dismissal. Use 'start' for other items.",
+    );
+    expect(result.mutations).toStrictEqual([]);
+  });
+
+  it("finishes a rerun whose reopening is already recorded", () => {
+    const result = run(["reopen", "301", "-m", "New evidence"], {
+      FIXTURE_CURRENT_DISPOSITION: JSON.stringify({
+        id: "01M71ZA6QAKR3HA7G41W0553BT",
+        kind: "reopened",
+        rationale: "New evidence",
+        created_at: "2026-11-10T12:00:00Z",
+      }),
+    });
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(result.mutations).toStrictEqual([
+      {
+        method: "POST",
+        route: "repos/owner/repo/issues/comments/301/reactions",
+        body: { content: "eyes" },
+      },
+    ]);
+  });
+
+  it("refuses a rerun once a later decision agreed with the finding", () => {
+    const result = run(["reopen", "301", "-m", "New evidence"], {
+      FIXTURE_VIEWER_REACTIONS: JSON.stringify({ "301": ["+1"] }),
+      FIXTURE_CURRENT_DISPOSITION: JSON.stringify({
+        id: "01M71ZA6QAKR3HA7G41W0553BT",
+        kind: "reopened",
+        rationale: "New evidence",
+        created_at: "2026-11-10T12:00:00Z",
+      }),
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "Error: Item #301 is not dismissed; 'reopen' reconsiders a dismissal. Use 'start' for other items.",
+    );
+    expect(result.mutations).toStrictEqual([]);
   });
 });

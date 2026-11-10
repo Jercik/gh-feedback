@@ -31,7 +31,10 @@ interface DispositionVerb {
   kind: DispositionKind;
   notFindingMessage: (itemId: number) => string;
   // Throws when the item's status refuses this verb; "only-if-recorded" admits a rerun that only finishes.
-  admit: (itemId: number, doneStatus: DoneStatus | undefined) => "fresh" | "only-if-recorded";
+  admit: (
+    itemId: number,
+    doneStatus: DoneStatus | undefined,
+  ) => { mode: "fresh" } | { mode: "only-if-recorded"; refusal: string };
   finish: (backend: FeedbackBackend, item: FeedbackItemRef, status: ItemStatus) => Promise<void>;
   done: (itemId: number) => string;
 }
@@ -62,7 +65,7 @@ async function runDisposition(
     throw new Error(verb.notFindingMessage(item.id));
   }
   const status = await backend.getItemStatus(item);
-  const mode = verb.admit(item.id, status.doneStatus);
+  const admission = verb.admit(item.id, status.doneStatus);
 
   const host = forgejoApiHost();
   const { serviceUrl, token } = loadReviewServiceCredentials(host, target.slug);
@@ -79,10 +82,8 @@ async function runDisposition(
   }
 
   const recorded = isDispositionRecorded(claim.currentDisposition, verb.kind, message);
-  if (mode === "only-if-recorded" && !recorded) {
-    throw new Error(
-      `Error: Item #${item.id} is already "dismissed". Use 'reopen' to reconsider it.`,
-    );
+  if (admission.mode === "only-if-recorded" && !recorded) {
+    throw new Error(admission.refusal);
   }
 
   previewReply(item, { messageNoun: "reply", actions: verb.actions }, message);

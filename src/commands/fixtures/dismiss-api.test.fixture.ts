@@ -41,9 +41,12 @@ const viewerReactions: Record<string, string[]> = {
   "303": ["hooray"],
   "304": ["hooray"],
   "305": [],
+  ...(JSON.parse(process.env.FIXTURE_VIEWER_REACTIONS ?? "{}") as Record<string, string[]>),
 };
 
-let currentDisposition: object | null = null;
+let currentDisposition: object | null = process.env.FIXTURE_CURRENT_DISPOSITION
+  ? (JSON.parse(process.env.FIXTURE_CURRENT_DISPOSITION) as object)
+  : null;
 
 function serviceResponse(method: string, url: URL, body: unknown): Response {
   if (method === "GET" && url.pathname === `/v1/reviews/${reviewId}`) {

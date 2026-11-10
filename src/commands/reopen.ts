@@ -20,10 +20,14 @@ export function registerReopenCommand(program: Command): void {
     kind: "reopened",
     notFindingMessage: notDismissed,
     admit: (itemId, doneStatus) => {
-      if (doneStatus !== "dismissed") {
-        throw new Error(notDismissed(itemId));
+      if (doneStatus === "dismissed") {
+        return { mode: "fresh" };
       }
-      return "fresh";
+      // A reopening leaves no final status, so a later decision such as agree is never undone by a rerun.
+      if (doneStatus === undefined) {
+        return { mode: "only-if-recorded", refusal: notDismissed(itemId) };
+      }
+      throw new Error(notDismissed(itemId));
     },
     finish: (backend, item, status) =>
       startItem(backend, item, status.viewerReactions, status.viewerMayReopen),

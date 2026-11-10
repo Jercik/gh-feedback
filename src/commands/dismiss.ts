@@ -21,10 +21,13 @@ export function registerDismissCommand(program: Command): void {
       `Error: #${itemId} is not a review-service finding; use 'disagree'.`,
     admit: (itemId, doneStatus) => {
       if (doneStatus === undefined) {
-        return "fresh";
+        return { mode: "fresh" };
       }
       if (doneStatus === "dismissed") {
-        return "only-if-recorded";
+        return {
+          mode: "only-if-recorded",
+          refusal: `Error: Item #${itemId} is already "dismissed". Use 'reopen' to reconsider it.`,
+        };
       }
       throw new Error(doneItemMessage(itemId, doneStatus));
     },
