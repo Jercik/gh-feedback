@@ -1,24 +1,67 @@
 import { describe, expect, it } from "vitest";
-import { toPassFact } from "./build-review-document.js";
+import { classifyNewestPass, toReviewClaim, toSealedPassFact } from "./build-review-document.js";
 
-describe("toPassFact", () => {
-  it("maps no pass, a pending pass, and a sealed pass", () => {
-    expect(toPassFact(undefined, undefined)).toStrictEqual({ state: "none" });
-    expect(toPassFact({ id: "P1", sealedAt: null }, undefined)).toStrictEqual({
+describe("classifyNewestPass", () => {
+  it("reports none without a pass", () => {
+    expect(classifyNewestPass(undefined)).toStrictEqual({ state: "none" });
+  });
+
+  it("reports an unsealed pass as pending", () => {
+    expect(classifyNewestPass({ id: "NEW", sealedAt: null })).toStrictEqual({
       state: "pending",
-      id: "P1",
+      id: "NEW",
     });
+  });
+
+  it("reports a sealed pass with its seal time", () => {
+    expect(classifyNewestPass({ id: "P2", sealedAt: "2026-11-10T05:36:45.478Z" })).toStrictEqual({
+      state: "sealed",
+      id: "P2",
+      sealedAt: "2026-11-10T05:36:45.478Z",
+    });
+  });
+});
+
+describe("toSealedPassFact", () => {
+  it("adds the pass coverage", () => {
     expect(
-      toPassFact(
-        { id: "P2", sealedAt: "2026-11-10T05:36:45.478Z" },
-        { complete: false, slots: [] },
+      toSealedPassFact(
+        { state: "sealed", id: "P2", sealedAt: "2026-11-10T05:36:45.478Z" },
+        {
+          complete: false,
+          slots: [
+            {
+              lens: "general-bug",
+              part: "whole",
+              arm: "default",
+              unitStatus: "unit-failed",
+              completedWithLoss: true,
+            },
+          ],
+        },
       ),
     ).toStrictEqual({
       state: "sealed",
       id: "P2",
       sealedAt: "2026-11-10T05:36:45.478Z",
       complete: false,
-      slots: [],
+      slots: [
+        {
+          lens: "general-bug",
+          part: "whole",
+          arm: "default",
+          unitStatus: "unit-failed",
+          completedWithLoss: true,
+        },
+      ],
     });
+  });
+});
+
+describe("toReviewClaim", () => {
+  it("keeps the claim's identity, severity, title and path", () => {
+    expect(
+      toReviewClaim({ id: "C1", severity: "high", title: "Bug", path: "src/a.ts" }),
+    ).toStrictEqual({ id: "C1", severity: "high", title: "Bug", path: "src/a.ts" });
   });
 });

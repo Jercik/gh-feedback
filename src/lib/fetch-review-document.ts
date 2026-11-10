@@ -1,4 +1,4 @@
-import { toPassFact } from "./build-review-document.js";
+import { classifyNewestPass, toReviewClaim, toSealedPassFact } from "./build-review-document.js";
 import type { ReviewDocument, ReviewFacts } from "./build-review-document.js";
 import { forgejoApiHost, forgejoFetchList } from "./forgejo-cli.js";
 import { ForgejoSnapshotIssueComment } from "./forgejo-schemas.js";
@@ -18,11 +18,11 @@ async function fetchReviewFacts(
     token: credentials.token,
   });
   const id = stamp.reviewId;
-  const newest = await client.newestPass(id);
-  const coverage =
-    newest === undefined || newest.sealedAt === null
-      ? undefined
-      : await client.passCoverage(id, newest.id);
+  const newest = classifyNewestPass(await client.newestPass(id));
+  const pass =
+    newest.state === "sealed"
+      ? toSealedPassFact(newest, await client.passCoverage(id, newest.id))
+      : newest;
   const [unadjudicated, ungrounded, groundingPending] = await Promise.all([
     client.claimsByDestination(id, "unadjudicated"),
     client.claimsByDestination(id, "ungrounded"),
@@ -30,8 +30,12 @@ async function fetchReviewFacts(
   ]);
   return {
     id,
-    pass: toPassFact(newest, coverage),
-    claims: { unadjudicated, ungrounded, groundingPending },
+    pass,
+    claims: {
+      unadjudicated: unadjudicated.map((claim) => toReviewClaim(claim)),
+      ungrounded: ungrounded.map((claim) => toReviewClaim(claim)),
+      groundingPending: groundingPending.map((claim) => toReviewClaim(claim)),
+    },
   };
 }
 
