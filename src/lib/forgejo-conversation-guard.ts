@@ -11,16 +11,15 @@ import {
 } from "./forgejo-review-comment-line.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
-import { parseServiceFindingComment } from "./review-service-finding.js";
 import { isStatusSettled, settledStatuses } from "./summary-types.js";
 
 export const RESOLVES_CONVERSATION_WHEN_SETTLED = `resolves its inline conversation, if any, once every item in it is ${new Intl.ListFormat("en", { type: "disjunction" }).format(settledStatuses)}`;
 
 export function isForgejoSiblingSettledForResolution(
   reactions: readonly string[],
-  dismissible: boolean,
+  root: ForgejoReviewComment,
 ): boolean {
-  return isStatusSettled(deriveStatus([...reactions], dismissible).status);
+  return isStatusSettled(deriveStatus([...reactions], root).status);
 }
 
 export function sameForgejoNativeConversation(
@@ -136,10 +135,7 @@ export async function getForgejoConversationResolutionReadiness(
   }
   for (const root of siblings) {
     const reactions = await fetchReactions(slug, root.id);
-    const dismissible = parseServiceFindingComment(root) !== undefined;
-    if (
-      !isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer), dismissible)
-    ) {
+    if (!isForgejoSiblingSettledForResolution(viewerReactionStrings(reactions, viewer), root)) {
       return {
         ready: false,
         reason: "conversation resolution deferred until its other findings settle",

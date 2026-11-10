@@ -6,7 +6,6 @@ import { deriveStatus } from "./feedback-values.js";
 import { isForgejoConversationResolvedBy } from "./forgejo-resolution.js";
 import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 import { isStatusDone } from "./summary-types.js";
-import { parseServiceFindingComment } from "./review-service-finding.js";
 
 export async function getForgejoItemStatus(
   slug: string,
@@ -16,10 +15,7 @@ export async function getForgejoItemStatus(
   const viewer = await getForgejoViewer();
   const reactions = await fetchReactions(slug, itemId);
   const viewerReactions = viewerReactionStrings(reactions, viewer);
-  const dismissible =
-    meta.reviewComment !== undefined &&
-    parseServiceFindingComment(meta.reviewComment) !== undefined;
-  const { status } = deriveStatus(viewerReactions, dismissible);
+  const { status } = deriveStatus(viewerReactions, meta.reviewComment);
   const doneStatus = isStatusDone(status) ? status : undefined;
 
   const resolver = forgejoNativeConversationAnchor(

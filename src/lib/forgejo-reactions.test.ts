@@ -22,39 +22,50 @@ describe("viewerReactionStrings", () => {
   });
 });
 
+const reactedOn = {
+  finding: {
+    user: { id: -2 },
+    path: "src/a.ts",
+    body: "<!-- review:claim:01M71ZA6QAKR3HA7G41W0553BN -->\n**low** — Finding\n\nclaim `01M71ZA6QAKR3HA7G41W0553BN` of review `01M71ZA6QAKR3HA7G41W0553BP`",
+  },
+  other: undefined,
+};
+
 describe("native reaction status", () => {
-  it.each([
-    { reactions: [], dismissible: false, status: "pending", conflict: false },
-    { reactions: ["heart"], dismissible: false, status: "pending", conflict: false },
-    { reactions: ["fire"], dismissible: false, status: "pending", conflict: false },
-    { reactions: ["eyes"], dismissible: false, status: "in-progress", conflict: false },
+  it.each<{
+    reactions: string[];
+    on: keyof typeof reactedOn;
+    status: string;
+    conflict: boolean;
+  }>([
+    { reactions: [], on: "other", status: "pending", conflict: false },
+    { reactions: ["heart"], on: "other", status: "pending", conflict: false },
+    { reactions: ["fire"], on: "other", status: "pending", conflict: false },
+    { reactions: ["eyes"], on: "other", status: "in-progress", conflict: false },
     {
       reactions: ["confused", "eyes"],
-      dismissible: false,
+      on: "other",
       status: "awaiting-reply",
       conflict: false,
     },
-    { reactions: ["+1", "confused"], dismissible: false, status: "agreed", conflict: false },
-    { reactions: ["-1"], dismissible: false, status: "disagreed", conflict: false },
+    { reactions: ["+1", "confused"], on: "other", status: "agreed", conflict: false },
+    { reactions: ["-1"], on: "other", status: "disagreed", conflict: false },
     {
       reactions: ["rocket", "rocket"],
-      dismissible: false,
+      on: "other",
       status: "acknowledged",
       conflict: false,
     },
-    { reactions: ["+1", "rocket"], dismissible: false, status: "in-progress", conflict: true },
-    { reactions: ["hooray"], dismissible: true, status: "dismissed", conflict: false },
-    { reactions: ["hooray", "-1"], dismissible: true, status: "in-progress", conflict: true },
-    { reactions: ["hooray"], dismissible: false, status: "pending", conflict: false },
-    { reactions: ["hooray", "-1"], dismissible: false, status: "disagreed", conflict: false },
-  ])(
-    "projects $reactions (dismissible $dismissible) as $status",
-    ({ reactions, dismissible, status, conflict }) => {
-      expect(deriveStatus(reactions, dismissible)).toStrictEqual({
-        viewerReactions: reactions,
-        status,
-        conflictingFinalReactions: conflict,
-      });
-    },
-  );
+    { reactions: ["+1", "rocket"], on: "other", status: "in-progress", conflict: true },
+    { reactions: ["hooray"], on: "finding", status: "dismissed", conflict: false },
+    { reactions: ["hooray", "-1"], on: "finding", status: "in-progress", conflict: true },
+    { reactions: ["hooray"], on: "other", status: "pending", conflict: false },
+    { reactions: ["hooray", "-1"], on: "other", status: "disagreed", conflict: false },
+  ])("projects $reactions on $on as $status", ({ reactions, on, status, conflict }) => {
+    expect(deriveStatus(reactions, reactedOn[on])).toStrictEqual({
+      viewerReactions: reactions,
+      status,
+      conflictingFinalReactions: conflict,
+    });
+  });
 });

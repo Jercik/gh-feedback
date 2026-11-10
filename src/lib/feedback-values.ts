@@ -6,6 +6,8 @@ import type {
 } from "./feedback-types.js";
 import { doneStatuses } from "./feedback-types.js";
 import type { ReactionContent } from "./types.js";
+import { parseServiceFindingComment } from "./review-service-finding.js";
+import type { FindingComment } from "./review-service-finding.js";
 
 export type ReactedStatus = Exclude<FindingStatus, "pending">;
 
@@ -37,7 +39,12 @@ export const unfetchedFindingState: NullableFindingState = {
 };
 
 // Only a review-service finding can be dismissed, so a viewer hooray on anything else carries no status.
-export function deriveStatus(viewerReactions: string[], dismissible: boolean): FindingState {
+export function deriveStatus(
+  viewerReactions: string[],
+  reactedOn: FindingComment | undefined,
+): FindingState {
+  const dismissible =
+    reactedOn !== undefined && parseServiceFindingComment(reactedOn) !== undefined;
   const finals = doneStatuses.filter(
     (status) =>
       (dismissible || status !== "dismissed") && viewerReactions.includes(statusReactions[status]),

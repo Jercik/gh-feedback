@@ -18,7 +18,7 @@ interface AuthoredByUser {
   user?: { id?: number | null | undefined } | null | undefined;
 }
 
-type FindingComment = AuthoredByUser & { body: string; path?: string | null | undefined };
+export type FindingComment = AuthoredByUser & { body: string; path?: string | null | undefined };
 
 export function parseReviewServiceFinding(
   comment: FindingComment,

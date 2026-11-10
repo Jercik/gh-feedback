@@ -19,23 +19,28 @@ const comment = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   });
 
+const finding = comment({
+  user: { id: -2, login: "actions" },
+  body: "<!-- review:claim:01M71ZA6QAKR3HA7G41W0553BN -->\n**low** — Finding\n\nclaim `01M71ZA6QAKR3HA7G41W0553BN` of review `01M71ZA6QAKR3HA7G41W0553BP`",
+});
+
 describe("isForgejoSiblingSettledForResolution", () => {
   it.each([["+1"], ["rocket"]])("accepts one settled reaction: %s", (...reactions) => {
-    expect(isForgejoSiblingSettledForResolution(reactions, false)).toBe(true);
+    expect(isForgejoSiblingSettledForResolution(reactions, comment())).toBe(true);
   });
 
   it("accepts a dismissal on a review-service finding", () => {
-    expect(isForgejoSiblingSettledForResolution(["hooray"], true)).toBe(true);
+    expect(isForgejoSiblingSettledForResolution(["hooray"], finding)).toBe(true);
   });
 
   it("ignores a hooray on anything else", () => {
-    expect(isForgejoSiblingSettledForResolution(["hooray"], false)).toBe(false);
+    expect(isForgejoSiblingSettledForResolution(["hooray"], comment())).toBe(false);
   });
 
   it.each([[], ["eyes"], ["confused"], ["-1"], ["+1", "rocket"], ["hooray", "+1"]])(
     "rejects unsettled or conflicting reactions: %s",
     (...reactions) => {
-      expect(isForgejoSiblingSettledForResolution(reactions, true)).toBe(false);
+      expect(isForgejoSiblingSettledForResolution(reactions, finding)).toBe(false);
     },
   );
 });

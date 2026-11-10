@@ -9,6 +9,7 @@ import { verboseLog } from "./verbose-mode.js";
 
 import { reactionsPath } from "./forgejo-reactions.js";
 import { deriveStatus, userRef } from "./feedback-values.js";
+import type { FindingComment } from "./review-service-finding.js";
 import { forgejoResponse } from "./forgejo-cli.js";
 import { fetchPaginatedListing, requireTotalCount } from "./forgejo-review-pages.js";
 
@@ -16,14 +17,14 @@ export async function fetchFindingStatus(
   slug: string,
   viewer: string,
   commentId: number,
-  dismissible: boolean,
+  reactedOn: FindingComment | undefined,
 ): Promise<FindingState> {
   const path = reactionsPath(slug, commentId);
   const response = await forgejoResponse({ path });
   const parsed = await response.json();
   // Forgejo answers JSON null for a comment with no reactions.
   if (parsed === null) {
-    return deriveStatus([], dismissible);
+    return deriveStatus([], reactedOn);
   }
   if (!Array.isArray(parsed)) {
     throw new TypeError(`GET ${path}: expected a JSON array or null`);
@@ -36,7 +37,7 @@ export async function fetchFindingStatus(
     }
   }
   // Snapshot evidence retains unknown names and duplicates, sorted for stable comparisons.
-  return deriveStatus(contents.toSorted(), dismissible);
+  return deriveStatus(contents.toSorted(), reactedOn);
 }
 
 export async function fetchRawReviews(
@@ -95,7 +96,7 @@ export async function fetchIssueComments(
       createdAt: record.created_at ?? null,
       updatedAt: record.updated_at ?? null,
       htmlUrl: record.html_url ?? null,
-      ...(await fetchFindingStatus(slug, viewer, record.id, false)),
+      ...(await fetchFindingStatus(slug, viewer, record.id, record)),
     });
   }
   if (byId.size !== totalCount) {
