@@ -1,5 +1,6 @@
 import type { CapabilityResult } from "./feedback-backend.js";
 import type { FeedbackOutcome } from "./feedback-backend.js";
+import { isStatusSettled } from "./summary-types.js";
 
 export type ForgejoResolutionAction = "resolve" | "unresolve";
 
@@ -38,7 +39,7 @@ export function forgejoCompletionNeedsReadiness(
   outcome: FeedbackOutcome,
   resolvedByAnyone: boolean,
 ): boolean {
-  return outcome !== "disagreed" && !resolvedByAnyone;
+  return isStatusSettled(outcome) && !resolvedByAnyone;
 }
 
 export function decideForgejoReopen(
@@ -85,7 +86,7 @@ export function decideForgejoCompletion(
   resolvedByAnyone: boolean,
   notReadyReason: string | undefined,
 ): ForgejoCompletionDecision {
-  if (outcome === "disagreed") {
+  if (!isStatusSettled(outcome)) {
     return decideForgejoReopen(resolvedByViewer, resolvedByAnyone);
   }
   if (resolvedByAnyone) {
