@@ -154,7 +154,7 @@ Run `pr-feedback summary --json` to read all feedback items with their current s
 
 Items with `id: null` or `actionable: false` have no mutation target. Read their full `body`, investigate their claims, and fix valid issues alongside actionable feedback. Report their outcome using `reviewId` as provenance, including any remaining untrackable status. Never pass them to `start`, `detail`, or resolution commands, and never substitute the review entity ID for a missing comment ID. The mutation queue and completion checks below apply only to items with a non-null ID and `actionable` not false. If a nonactionable claim remains unresolved or needs clarification, report processing blocked on that claim; absence of an action target does not settle it.
 
-- **No PR for current branch:** Stop and inform the user, or ask for a PR number and pass `--pr <number>` to every `pr-feedback` command.
+- **No single PR for the current branch** (`pr-feedback` reports none, or lists several): ask the user which PR to process, then pass `--pr <number>` to every `pr-feedback` command. If the user names none, stop.
 - **No actionable items:** After investigating any nonactionable bodies, if no actionable `pending`, `in-progress`, or `awaiting-reply` items remain, report actionable feedback processing complete and list the nonactionable outcomes separately.
 
 ## 3. Process items
