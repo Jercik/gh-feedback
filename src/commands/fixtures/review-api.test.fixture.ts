@@ -23,6 +23,11 @@ globalThis.fetch = async (input): Promise<Response> => {
     if (process.env.REVIEW_FIXTURE_MODE === "no-summary") {
       throw new Error(`Review service must not be called: ${url.href}`);
     }
+    if (process.env.REVIEW_FIXTURE_MODE === "unreachable") {
+      throw new TypeError("fetch failed", {
+        cause: new Error("getaddrinfo ENOTFOUND review.example.test"),
+      });
+    }
     if (url.pathname === `/v1/reviews/${reviewId}/passes`) {
       return Response.json({
         passes: [

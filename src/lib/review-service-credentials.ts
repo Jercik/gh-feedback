@@ -13,6 +13,18 @@ const REVIEW_CAPABILITY_TOKEN_ENV_VAR = "REVIEW_CAPABILITY_TOKEN";
 
 const CredentialFile = z.object({ serviceUrl: z.string(), capabilityToken: z.string() });
 
+// Parse failures are reported without their messages, which can quote the file's contents.
+function parseCredentialFile(text: string): z.infer<typeof CredentialFile> | undefined {
+  let json: unknown;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+  const result = CredentialFile.safeParse(json);
+  return result.success ? result.data : undefined;
+}
+
 export function buildCredentialPath(configDir: string, host: string, slug: string): string {
   if (!/^[a-z0-9.-]+$/u.test(host) || host.split(".").includes("")) {
     throw new Error(`Invalid Forgejo host for a review credential path: ${host}`);
@@ -85,6 +97,11 @@ export function loadReviewServiceCredentials(host: string, slug: string): Review
   if (process.platform !== "win32" && stats.mode % 0o100 !== 0) {
     throw new Error(`Review credential ${file} is accessible to others; run: chmod 600 ${file}`);
   }
-  const parsed = CredentialFile.parse(JSON.parse(readFileSync(file, "utf8")));
+  const parsed = parseCredentialFile(readFileSync(file, "utf8"));
+  if (parsed === undefined) {
+    throw new Error(
+      `Review credential ${file} is not valid: expected JSON {"serviceUrl": "...", "capabilityToken": "..."}`,
+    );
+  }
   return { serviceUrl: parseServiceOrigin(parsed.serviceUrl), token: parsed.capabilityToken };
 }
