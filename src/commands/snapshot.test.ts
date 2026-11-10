@@ -232,6 +232,17 @@ describe("standalone explicit repository snapshot", () => {
     expect(result.stderr).not.toContain("Required dependency 'git'");
   });
 
+  it("rejects an invalid target before reading the message", () => {
+    const result = run(
+      "stable",
+      ["agree", "401", "-f", "/missing-message-file", "--repo", "owner/repo"],
+      true,
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("--repo requires --pr");
+    expect(result.stderr).not.toContain("Error reading file");
+  });
+
   it("rejects --repo without --pr", () => {
     const result = run("stable", ["ack", "401", "--repo", "owner/repo", "--dry-run"], true);
     expect(result.status).not.toBe(0);

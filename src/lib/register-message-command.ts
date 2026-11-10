@@ -3,7 +3,7 @@ import type { FeedbackBackend, FeedbackItemRef, FeedbackOutcome } from "./feedba
 import type { FindingStatus } from "./feedback-types.js";
 import { getOpenItemReactions } from "./get-open-item-reactions.js";
 import { exitWithMessage } from "./git-helpers.js";
-import { resolveMessage } from "./message-input.js";
+import { parseMessageSource, readMessage } from "./message-input.js";
 import { parseItemId } from "./parse-item-id.js";
 import { reportCompletionResult } from "./report-completion-result.js";
 import { prOption, repoOption } from "./feedback-target.js";
@@ -108,8 +108,9 @@ export function registerMessageCommand(program: Command, command: MessageCommand
     .addOption(prOption())
     .action(async (itemId, options) => {
       try {
-        const message = await resolveMessage(options, command.messageNoun);
+        const messageSource = parseMessageSource(options, command.messageNoun);
         const { backend } = await resolveBackend(options);
+        const message = await readMessage(messageSource, command.messageNoun);
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
