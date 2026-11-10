@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { CLAIMS_PAGE_LIMIT, createServiceRequest } from "./review-service-request.js";
+import { dispositionKinds } from "./service-disposition.js";
 import type { DispositionKind, RecordedDisposition } from "./service-disposition.js";
 
 interface ServiceDisposition {
@@ -24,7 +25,7 @@ export interface ReviewServiceDispositionClient {
   ) => Promise<RecordedDisposition>;
 }
 
-const DispositionKindWire = z.enum(["fixed", "dismissed", "wont-fix", "reopened"]);
+const DispositionKindWire = z.enum(dispositionKinds);
 
 const ReviewResponse = z.object({
   review: z.object({ repo: z.object({ forge_host: z.string(), slug: z.string() }) }),

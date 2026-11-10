@@ -1,4 +1,5 @@
-const ACTIONS_IDENTITY_ID = -2;
+import { isForgejoActionsUser } from "./forgejo-actions-identity.js";
+
 const SUMMARY_MARKER = "<!-- review:summary -->";
 const STAMP_LINE =
   /^\*\*Review\*\* `(?<reviewId>[0-9A-HJKMNP-TV-Z]{26})` — head `(?<head>[0-9a-f]{40})`$/u;
@@ -32,7 +33,7 @@ export function parseReviewStamp(body: string): ReviewStamp | null {
 
 export function findSummaryReport(comments: readonly SummaryCandidate[]): SummaryReport | null {
   const summary = comments
-    .filter((c) => c.user?.id === ACTIONS_IDENTITY_ID && c.body.startsWith(SUMMARY_MARKER))
+    .filter((c) => isForgejoActionsUser(c.user) && c.body.startsWith(SUMMARY_MARKER))
     .toSorted((a, b) => a.id - b.id)[0];
   if (summary === undefined) {
     return null;

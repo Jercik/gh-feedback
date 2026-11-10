@@ -29,23 +29,46 @@ function forgejoReplyPrefix(itemType: FeedbackItemRef["type"], itemId: number): 
   return `${FORGEJO_REPLY_MARKER}review #${itemId}\n\n`;
 }
 
+export function stripForgejoReplyPrefix(
+  body: string,
+  item: Pick<FeedbackItemRef, "type" | "id">,
+): string | undefined {
+  const prefix = forgejoReplyPrefix(item.type, item.id);
+  return body.startsWith(prefix) ? body.slice(prefix.length) : undefined;
+}
+
+type ForgejoReplyRoute =
+  | { kind: "thread"; reviewId: number; reviewComment: ForgejoReviewComment }
+  | { kind: "issue-comment" };
+
+export function forgejoReplyRoute(
+  item: Pick<FeedbackItemRef, "type">,
+  reviewComment: ForgejoReviewComment | undefined,
+): ForgejoReplyRoute {
+  const reviewId = reviewComment?.pull_request_review_id;
+  if (
+    item.type === "thread" &&
+    reviewComment !== undefined &&
+    typeof reviewId === "number" &&
+    hasThreadablePosition(reviewComment)
+  ) {
+    return { kind: "thread", reviewId, reviewComment };
+  }
+  return { kind: "issue-comment" };
+}
+
 export async function postForgejoReply(
   slug: string,
   item: FeedbackItemRef,
   message: string,
   reviewComment: ForgejoReviewComment | undefined,
 ): Promise<ReplyResult> {
-  const reviewId = reviewComment?.pull_request_review_id;
+  const route = forgejoReplyRoute(item, reviewComment);
   let path: string;
   let body: Record<string, string | number>;
-  if (
-    item.type === "thread" &&
-    reviewComment &&
-    typeof reviewId === "number" &&
-    hasThreadablePosition(reviewComment)
-  ) {
-    path = `repos/${slug}/pulls/${item.prNumber}/reviews/${reviewId}/comments`;
-    body = forgejoThreadReplyBody(reviewComment, message);
+  if (route.kind === "thread") {
+    path = `repos/${slug}/pulls/${item.prNumber}/reviews/${route.reviewId}/comments`;
+    body = forgejoThreadReplyBody(route.reviewComment, message);
   } else {
     path = `repos/${slug}/issues/${item.prNumber}/comments`;
     body = { body: forgejoReplyPrefix(item.type, item.id) + message };

@@ -2,10 +2,10 @@ import type { FeedbackItemRef } from "./feedback-backend.js";
 import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
-import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
+import { forgejoReplyRoute, stripForgejoReplyPrefix } from "./forgejo-reply.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
-import { hasThreadablePosition, stripThreadReplyMarker } from "./forgejo-thread-reply.js";
+import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { parseReviewServiceFinding } from "./review-service-finding.js";
 import type { ServiceFinding } from "./review-service-finding.js";
 import type { OwnReply } from "./select-reusable-reply.js";
@@ -37,7 +37,7 @@ export async function listForgejoOwnReplies(
     return [];
   }
   const viewer = await getForgejoViewer();
-  if (hasThreadablePosition(root)) {
+  if (forgejoReplyRoute(item, root).kind === "thread") {
     const conversation = groupReviewCommentConversations(reviewComments, viewer).find(
       (candidate) => candidate.root.id === root.id,
     );
@@ -48,17 +48,15 @@ export async function listForgejoOwnReplies(
       createdAt: reply.created_at,
     }));
   }
-  const prefix = `${FORGEJO_REPLY_MARKER}review comment #${root.id}\n\n`;
   const comments = await forgejoFetchList<unknown>(
     `repos/${slug}/issues/${item.prNumber}/comments`,
   );
   return comments
     .map((raw) => ForgejoIssueComment.parse(raw))
-    .filter((comment) => comment.user?.login === viewer && comment.body.startsWith(prefix))
-    .map((comment) => ({
-      id: comment.id,
-      url: comment.html_url,
-      text: comment.body.slice(prefix.length),
-      createdAt: comment.created_at,
-    }));
+    .flatMap((comment) => {
+      const text = stripForgejoReplyPrefix(comment.body, item);
+      return comment.user?.login === viewer && text !== undefined
+        ? [{ id: comment.id, url: comment.html_url, text, createdAt: comment.created_at }]
+        : [];
+    });
 }

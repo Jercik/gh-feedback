@@ -1,6 +1,8 @@
 const RATIONALE_MAX = 16_384;
 
-export type DispositionKind = "fixed" | "dismissed" | "wont-fix" | "reopened";
+export const dispositionKinds = ["fixed", "dismissed", "wont-fix", "reopened"] as const;
+
+export type DispositionKind = (typeof dispositionKinds)[number];
 
 export interface RecordedDisposition {
   id: string;

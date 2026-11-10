@@ -1,5 +1,7 @@
+import { isForgejoActionsUser } from "./forgejo-actions-identity.js";
+
 const ULID = "[0-9A-HJKMNP-TV-Z]{26}";
-const ACTIONS_USER_ID = -2;
+
 const claimMarker = new RegExp(`^<!-- review:claim:(?<claim>${ULID}) -->\\r?\\n`, "u");
 const identityLine = new RegExp(
   `^claim \`(?<claim>${ULID})\` of review \`(?<review>${ULID})\`$`,
@@ -21,8 +23,8 @@ export function parseReviewServiceFinding(
   review: AuthoredByUser & { state: string },
 ): ServiceFinding | undefined {
   if (
-    comment.user?.id !== ACTIONS_USER_ID ||
-    review.user?.id !== ACTIONS_USER_ID ||
+    !isForgejoActionsUser(comment.user) ||
+    !isForgejoActionsUser(review.user) ||
     review.state === "PENDING" ||
     !comment.path
   ) {
