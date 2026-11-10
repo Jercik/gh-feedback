@@ -55,14 +55,12 @@ export const ServiceClaim = z
     title: z.string(),
     anchor: z.object({ path: z.string().nullish() }),
   })
-  .transform(
-    (item): ServiceClaim => ({
-      id: item.id,
-      severity: item.severity,
-      title: item.title,
-      path: item.anchor.path ?? null,
-    }),
-  );
+  .transform((item): ServiceClaim => ({
+    id: item.id,
+    severity: item.severity,
+    title: item.title,
+    path: item.anchor.path ?? null,
+  }));
 
 // The service lists a review's passes oldest first (created_at, then id).
 export function parseNewestPass(body: unknown): ServicePass | undefined {
