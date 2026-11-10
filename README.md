@@ -207,9 +207,9 @@ Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existi
 
 Stdout is one JSON document identified by `schema: "pr-feedback.review"` and `version: 1`, with `host`, `slug`, `pr`, `summary`, and `review`:
 
-- `summary` is the PR's summary report comment (`commentId`, `updatedAt`, and its `stamp`), or `null` when the PR has none. `stamp` (`reviewId` and `head`) is `null` when the report names no commit, as in a skipped fork PR.
+- `summary` is the PR's summary report comment (`commentId`, `updatedAt`, and its `stamp`), or `null` when the PR has none. When the wrapper has posted more than one, the earliest counts. `stamp` (`reviewId` and `head`) is `null` when the report names no commit, as in a skipped fork PR.
 - `review` is `null` when `summary` or its `stamp` is `null`; the service is not contacted then. Otherwise it holds the review `id`, the newest dispatch `pass`, and the `claims` that post no thread on the PR (`unadjudicated`, `ungrounded`, `groundingPending`), each complete.
-- `pass.state` is `none` (no pass was asked), `pending` (asked, not yet planned), or `sealed`. A sealed pass adds `sealedAt`, `complete`, and one entry per `slots` item with `lens`, `part`, `arm`, `unitStatus`, and `completedWithLoss`.
+- `pass.state` is `none` (no pass was asked), `pending` (asked, not yet planned), or `sealed`. A pending or sealed pass carries its `id`. A sealed pass also adds `sealedAt`, `complete`, and one entry per `slots` item with `lens`, `part`, `arm`, `unitStatus`, and `completedWithLoss`.
 
 Exit 0 means a document was printed, including one with `summary: null`. A fetch, credential, or schema failure exits nonzero with no document. Progress and errors go to stderr, and the capability token is never printed.
 

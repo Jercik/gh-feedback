@@ -14,10 +14,10 @@ the native Forgejo group of inline review comments sharing one resolution and it
 code.j4k.dev; code.tail.j4k.dev is its tailnet origin alias.
 
 **Review service**:
-the service that runs the automated review of a PR and answers read requests about it with a capability token.
+the service that runs the automated review of a PR and answers read requests about it. Each request presents a capability token.
 
 **Summary report**:
-the PR comment the review wrapper posts from the Actions identity, starting with `<!-- review:summary -->`. The lowest-id such comment counts.
+the PR comment the review wrapper posts from the Actions identity, starting with `<!-- review:summary -->`.
 
 **Dismissal**:
 the permanent rejection of a review-service finding, made by `dismiss`. It is recorded twice, as a hooray reaction on the forge and as a `dismissed` disposition with the review service. `reopen` records a `reopened` disposition and takes the finding back to in-progress.
