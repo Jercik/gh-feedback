@@ -5,7 +5,7 @@ argument-hint: optional focus area or specific instructions
 
 # Goal
 
-Process every review comment on the current PR using `pr-feedback` CLI so nothing is dropped or left ambiguous: each item ends fixed, disagreed with evidence, acknowledged, or waiting for clarification. Report bodies that have no action target separately; their CLI status cannot be settled.
+Process every review comment on the current PR using `pr-feedback` CLI so nothing is dropped or left ambiguous: each item ends with a recorded outcome, every rejection backed by evidence, or waits for clarification. Report bodies that have no action target separately; their CLI status cannot be settled.
 
 # Inputs
 
@@ -48,15 +48,16 @@ Approach reviews are usually high-level reviews questioning whether the PR uses 
 
 ## Resolution commands
 
-| Scenario               | Command                                                          |
-| :--------------------- | :--------------------------------------------------------------- |
-| **Valid issue**        | Fix code, push, then: `pr-feedback agree <id> -m "Fixed in SHA"` |
-| **Already fixed**      | `pr-feedback agree <id> -m "Already fixed in SHA"`               |
-| **Disagree**           | See "Disagreement with proactive improvement" below              |
-| **Need clarification** | `pr-feedback ask <id> -m "<your question>"`                      |
-| **Bot noise/summary**  | `pr-feedback ack <id>`                                           |
-| **Duplicate**          | Same action and reply as original item                           |
-| **Out of scope**       | See "Scope decisions" below                                      |
+| Scenario                                                                                                           | Command                                                                                  |
+| :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
+| **Valid issue**                                                                                                    | Fix code, push, then: `pr-feedback agree <id> -m "Fixed in SHA"`                         |
+| **Already fixed**                                                                                                  | `pr-feedback agree <id> -m "Already fixed in SHA"`                                       |
+| **Disagree**                                                                                                       | See "Disagreement with proactive improvement" below                                      |
+| **Incorrect review-service finding** (inline comment from the Actions identity starting with `<!-- review:claim:`) | `pr-feedback dismiss <id> -m "<evidence>"`; the service keeps it closed in later reviews |
+| **Need clarification**                                                                                             | `pr-feedback ask <id> -m "<your question>"`                                              |
+| **Bot noise/summary**                                                                                              | `pr-feedback ack <id>`                                                                   |
+| **Duplicate**                                                                                                      | Same action and reply as original item                                                   |
+| **Out of scope**                                                                                                   | See "Scope decisions" below                                                              |
 
 ## Disagreement with proactive improvement
 
@@ -126,8 +127,7 @@ When uncertain, ask: "Would a thorough developer include this in the same PR?" I
 
 ## Workflow rules
 
-- To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `pr-feedback start <id>` to reopen it
-- To reject a review-service finding for good, run `pr-feedback dismiss <id> -m "<evidence>"` instead of `disagree`; to reconsider a `dismissed` item, run `pr-feedback reopen <id> -m "<why>"`
+- To re-resolve a done item, first run `pr-feedback start <id>` to reopen it; a `dismissed` item needs `pr-feedback reopen <id> -m "<why>"` instead
 - Never mark an item `agreed` until the fix is pushed—the commit SHA proves the work is done
 - When marking an item `disagreed`, cite evidence: command output, doc links, or test results
 
@@ -298,7 +298,6 @@ Run `pr-feedback summary --json` and confirm:
 
 - No actionable `pending` items remain
 - No actionable `in-progress` items remain (except active bot processes)
-- All actionable items are `agreed`, `disagreed`, `acknowledged`, `dismissed`, or `awaiting-reply`
 - Every nonactionable body has been investigated and its outcome reported; its untrackable CLI status is not evidence of unfinished mutation work or successful settlement
 - No unresolved nonactionable claim is counted complete; report its blocker
 
