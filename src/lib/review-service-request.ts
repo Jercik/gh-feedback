@@ -1,5 +1,3 @@
-export const CLAIMS_PAGE_LIMIT = 500;
-
 const REQUEST_TIMEOUT_MS = 20_000;
 
 function fetchFailureReason(error: unknown): string {
@@ -13,15 +11,17 @@ function fetchFailureReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function createServiceRequest(options: {
-  serviceUrl: string;
-  token: string;
-}): (
+export type ServiceRequest = (
   method: "GET" | "POST",
   route: string,
   query: Record<string, string>,
   body?: object,
-) => Promise<unknown> {
+) => Promise<unknown>;
+
+export function createServiceRequest(options: {
+  serviceUrl: string;
+  token: string;
+}): ServiceRequest {
   return async (method, route, query, body) => {
     const url = new URL(route, options.serviceUrl);
     for (const [key, value] of Object.entries(query)) {

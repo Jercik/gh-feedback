@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { CLAIMS_PAGE_LIMIT, createServiceRequest } from "./review-service-request.js";
+import { pageReviewClaims } from "./page-review-claims.js";
+import { createServiceRequest } from "./review-service-request.js";
 import { dispositionKinds } from "./service-disposition.js";
 import type { DispositionKind, RecordedDisposition } from "./service-disposition.js";
 
@@ -31,24 +32,19 @@ const ReviewResponse = z.object({
   review: z.object({ repo: z.object({ forge_host: z.string(), slug: z.string() }) }),
 });
 
-const ProjectedClaimsPage = z.object({
-  items: z.array(
-    z.object({
-      id: z.string(),
-      anchor: z.object({ path: z.string().nullish() }),
-      disposition: z.object({
-        current: z
-          .object({
-            id: z.string(),
-            kind: DispositionKindWire,
-            rationale: z.string(),
-            created_at: z.string(),
-          })
-          .nullable(),
-      }),
-    }),
-  ),
-  next_after: z.string().nullable(),
+const ProjectedClaim = z.object({
+  id: z.string(),
+  anchor: z.object({ path: z.string().nullish() }),
+  disposition: z.object({
+    current: z
+      .object({
+        id: z.string(),
+        kind: DispositionKindWire,
+        rationale: z.string(),
+        created_at: z.string(),
+      })
+      .nullable(),
+  }),
 });
 
 const DispositionResponse = z.object({
@@ -73,17 +69,8 @@ export function createReviewServiceDispositionClient(options: {
     },
 
     async claim(reviewId, claimId) {
-      const seen = new Set<string>();
-      let after: string | undefined;
-      do {
-        const page = ProjectedClaimsPage.parse(
-          await request("GET", `/v1/reviews/${reviewId}/claims`, {
-            limit: String(CLAIMS_PAGE_LIMIT),
-            ...(after !== undefined && { after }),
-          }),
-        );
-        const found = page.items.find((item) => item.id === claimId);
-        if (found !== undefined) {
+      for await (const found of pageReviewClaims(request, reviewId, {}, ProjectedClaim)) {
+        if (found.id === claimId) {
           const { current } = found.disposition;
           return {
             id: found.id,
@@ -99,14 +86,7 @@ export function createReviewServiceDispositionClient(options: {
                   },
           };
         }
-        after = page.next_after ?? undefined;
-        if (after !== undefined) {
-          if (seen.has(after)) {
-            throw new Error("Review service claims cursor repeated");
-          }
-          seen.add(after);
-        }
-      } while (after !== undefined);
+      }
       return undefined;
     },
 

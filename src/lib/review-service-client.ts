@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { CLAIMS_PAGE_LIMIT, createServiceRequest } from "./review-service-request.js";
+import { pageReviewClaims } from "./page-review-claims.js";
+import { createServiceRequest } from "./review-service-request.js";
 
 const UNIT_STATUSES = [
   "claims-emitted",
@@ -59,16 +60,11 @@ const CoverageResponse = z.object({
   ),
 });
 
-const ClaimsPage = z.object({
-  items: z.array(
-    z.object({
-      id: z.string(),
-      severity: z.string(),
-      title: z.string(),
-      anchor: z.object({ path: z.string().nullish() }),
-    }),
-  ),
-  next_after: z.string().nullable(),
+const ClaimItem = z.object({
+  id: z.string(),
+  severity: z.string(),
+  title: z.string(),
+  anchor: z.object({ path: z.string().nullish() }),
 });
 
 export function createReviewServiceClient(options: {
@@ -105,34 +101,15 @@ export function createReviewServiceClient(options: {
     },
 
     async claimsByDestination(reviewId, destination) {
-      const claims: ServiceClaim[] = [];
-      const seen = new Set<string>();
-      let after: string | undefined;
-      do {
-        const page = ClaimsPage.parse(
-          await get(`/v1/reviews/${reviewId}/claims`, {
-            destination,
-            limit: String(CLAIMS_PAGE_LIMIT),
-            ...(after !== undefined && { after }),
-          }),
-        );
-        for (const item of page.items) {
-          claims.push({
-            id: item.id,
-            severity: item.severity,
-            title: item.title,
-            path: item.anchor.path ?? null,
-          });
-        }
-        after = page.next_after ?? undefined;
-        if (after !== undefined) {
-          if (seen.has(after)) {
-            throw new Error(`Review service claims cursor repeated for ${destination}`);
-          }
-          seen.add(after);
-        }
-      } while (after !== undefined);
-      return claims;
+      const items = await Array.fromAsync(
+        pageReviewClaims(request, reviewId, { destination }, ClaimItem),
+      );
+      return items.map((item) => ({
+        id: item.id,
+        severity: item.severity,
+        title: item.title,
+        path: item.anchor.path ?? null,
+      }));
     },
   };
 }
