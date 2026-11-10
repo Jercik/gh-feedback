@@ -5,6 +5,10 @@ function fetchFailureReason(error: unknown): string {
     return `no response within ${REQUEST_TIMEOUT_MS / 1000} seconds`;
   }
   // Node's fetch rejects with a bare "fetch failed" and puts the network error in its cause.
+  // A host with several addresses fails with an AggregateError whose own message is empty.
+  if (error instanceof Error && error.cause instanceof AggregateError) {
+    return error.cause.errors.map((failure: unknown) => fetchFailureReason(failure)).join("; ");
+  }
   if (error instanceof Error && error.cause instanceof Error) {
     return error.cause.message;
   }

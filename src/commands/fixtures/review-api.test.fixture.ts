@@ -28,6 +28,16 @@ globalThis.fetch = async (input): Promise<Response> => {
         cause: new Error("getaddrinfo ENOTFOUND review.example.test"),
       });
     }
+    if (process.env.REVIEW_FIXTURE_MODE === "unreachable-addresses") {
+      throw new TypeError("fetch failed", {
+        // Node's connection attempt to several addresses rejects with an AggregateError without a message.
+        // oxlint-disable-next-line unicorn/error-message
+        cause: new AggregateError([
+          new Error("connect ECONNREFUSED ::1:443"),
+          new Error("connect ECONNREFUSED 127.0.0.1:443"),
+        ]),
+      });
+    }
     if (url.pathname === `/v1/reviews/${reviewId}/passes`) {
       return Response.json({
         passes: [

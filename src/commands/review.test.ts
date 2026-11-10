@@ -105,6 +105,14 @@ describe("review CLI failures", () => {
     );
   });
 
+  it("names every address's network error when a host with several addresses is unreachable", () => {
+    const result = run("unreachable-addresses");
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "Review service GET /v1/reviews/01M71ZA6QAKR3HA7G41W0553BN/passes at https://review.example.test failed: connect ECONNREFUSED ::1:443; connect ECONNREFUSED 127.0.0.1:443",
+    );
+  });
+
   it("names a malformed credential file without quoting it", () => {
     const home = path.join(directory, "home");
     for (const config of [path.join(home, "Library/Preferences"), path.join(home, "config")]) {
