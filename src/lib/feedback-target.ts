@@ -1,8 +1,6 @@
 import { Option } from "@commander-js/extra-typings";
-import { findCurrentBranchPullNumber } from "./forgejo-environment.js";
+import { selectCurrentBranchPull } from "./forgejo-environment.js";
 import { verifyPrerequisites } from "./feedback-environment.js";
-import { git } from "./git-helpers.js";
-import { detectProvider } from "./provider.js";
 
 export interface FeedbackTarget {
   slug: string;
@@ -56,10 +54,22 @@ export async function resolveFeedbackTarget(options: TargetOptions): Promise<Fee
   if (parsed.kind === "explicit") {
     return { slug: parsed.slug, prNumber: parsed.prNumber };
   }
-  verifyPrerequisites();
-  const slug = detectProvider(git("remote", "get-url", "origin"))?.slug;
-  if (!slug) {
-    throw new Error("Error: Could not determine the repository from origin.");
-  }
+  const slug = verifyPrerequisites();
   return { slug, prNumber: parsed.prNumber ?? (await findCurrentBranchPullNumber(slug)) };
+}
+
+async function findCurrentBranchPullNumber(slug: string): Promise<number> {
+  const { branch, selection } = await selectCurrentBranchPull(slug);
+  if (selection.kind === "one") {
+    return selection.number;
+  }
+  if (selection.kind === "none") {
+    throw new Error(
+      `Error: No open pull request has branch '${branch}' as its head in ${slug}. Pass --pr <number> to select one.`,
+    );
+  }
+  const numbers = selection.numbers.map((number) => `#${number}`).join(", ");
+  throw new Error(
+    `Error: ${selection.numbers.length} open pull requests have branch '${branch}' as their head in ${slug} (${numbers}). Pass --pr <number> to select one.`,
+  );
 }

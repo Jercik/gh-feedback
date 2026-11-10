@@ -1,7 +1,7 @@
 import { git, exitWithMessage } from "./git-helpers.js";
 import { detectProvider } from "./provider.js";
 
-export function verifyPrerequisites(): void {
+export function verifyPrerequisites(): string {
   try {
     git("--version");
   } catch (error) {
@@ -18,7 +18,8 @@ export function verifyPrerequisites(): void {
   } catch {
     return exitWithMessage("Error: Remote 'origin' not configured.");
   }
-  if (!detectProvider(origin)) {
+  const provider = detectProvider(origin);
+  if (!provider) {
     return exitWithMessage(
       `Error: Unsupported git host for origin '${origin}'. Supported: code.j4k.dev, code.tail.j4k.dev.`,
     );
@@ -30,6 +31,7 @@ export function verifyPrerequisites(): void {
   } catch {
     return exitWithMessage("Error: Git user.name and user.email must be configured.");
   }
+  return provider.slug;
 }
 
 export function isIgnoredAuthor(login: string): boolean {

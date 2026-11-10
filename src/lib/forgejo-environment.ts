@@ -10,6 +10,7 @@ import { git } from "./git-helpers.js";
 import { forgejoFetch, forgejoFetchAll } from "./forgejo-cli.js";
 import { ForgejoPull } from "./forgejo-schemas.js";
 import { selectForgejoPull } from "./select-forgejo-pull.js";
+import type { PullSelection } from "./select-forgejo-pull.js";
 
 const ForgejoAuthenticatedUser = z.object({ login: z.string() });
 
@@ -29,14 +30,16 @@ function getCurrentBranch(): string {
 }
 
 /**
- * Find the number of the open PR whose head is the current branch. The
- * client-side selection (head.ref + state + head-repo) is the authoritative
- * filter, and the pagination it walks is required: the `state`/`head` query
- * params are best-effort hints, so the match is re-verified client-side to avoid
- * returning a closed PR or a same-named branch from a different fork. See
+ * Select the open PR whose head is the current branch. The client-side
+ * selection (head.ref + state + head-repo) is the authoritative filter, and the
+ * pagination it walks is required: the `state`/`head` query params are
+ * best-effort hints, so the match is re-verified client-side to avoid returning
+ * a closed PR or a same-named branch from a different fork. See
  * selectForgejoPull for the disambiguation rationale.
  */
-export async function findCurrentBranchPullNumber(slug: string): Promise<number> {
+export async function selectCurrentBranchPull(
+  slug: string,
+): Promise<{ branch: string; selection: PullSelection }> {
   const branch = getCurrentBranch();
 
   const raw = await forgejoFetchAll<unknown>(`repos/${slug}/pulls`, {
@@ -48,16 +51,5 @@ export async function findCurrentBranchPullNumber(slug: string): Promise<number>
     branch,
     slug,
   );
-  if (selection.kind === "one") {
-    return selection.number;
-  }
-  if (selection.kind === "none") {
-    throw new Error(
-      `Error: No open pull request has branch '${branch}' as its head in ${slug}. Pass --pr <number> to select one.`,
-    );
-  }
-  const numbers = selection.numbers.map((number) => `#${number}`).join(", ");
-  throw new Error(
-    `Error: ${selection.numbers.length} open pull requests have branch '${branch}' as their head in ${slug} (${numbers}). Pass --pr <number> to select one.`,
-  );
+  return { branch, selection };
 }
