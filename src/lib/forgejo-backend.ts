@@ -32,9 +32,11 @@ import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
+import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
+import { listForgejoOwnReplies, readForgejoServiceFinding } from "./forgejo-service-finding.js";
 import { completeForgejoItem, reopenForgejoItem } from "./forgejo-completion.js";
 
 export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
@@ -110,6 +112,21 @@ export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
     async getItemStatus(item: FeedbackItemRef): Promise<ItemStatus> {
       const meta = await metaFor(item);
       return getForgejoItemStatus(slug, meta, item.id);
+    },
+
+    async readServiceFinding(item: FeedbackItemRef) {
+      const meta = await metaFor(item);
+      return readForgejoServiceFinding(slug, item, meta.reviewComment);
+    },
+
+    async listOwnReplies(item: FeedbackItemRef) {
+      const meta = await metaFor(item);
+      return listForgejoOwnReplies(
+        slug,
+        item,
+        meta.reviewComment,
+        meta.reviewComments ?? (await fetchPullReviewComments(slug, item.prNumber)),
+      );
     },
 
     async reply(item: FeedbackItemRef, message: string): Promise<ReplyResult> {

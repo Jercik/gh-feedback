@@ -20,11 +20,11 @@ const comment = (overrides: Record<string, unknown> = {}) =>
   });
 
 describe("isForgejoSiblingSettledForResolution", () => {
-  it.each([["+1"], ["rocket"]])("accepts one settled reaction: %s", (...reactions) => {
+  it.each([["+1"], ["rocket"], ["hooray"]])("accepts one settled reaction: %s", (...reactions) => {
     expect(isForgejoSiblingSettledForResolution(reactions)).toBe(true);
   });
 
-  it.each([[], ["eyes"], ["confused"], ["-1"], ["+1", "rocket"]])(
+  it.each([[], ["eyes"], ["confused"], ["-1"], ["+1", "rocket"], ["hooray", "+1"]])(
     "rejects unsettled or conflicting reactions: %s",
     (...reactions) => {
       expect(isForgejoSiblingSettledForResolution(reactions)).toBe(false);

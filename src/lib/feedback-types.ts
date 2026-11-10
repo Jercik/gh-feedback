@@ -4,7 +4,10 @@ export type FindingStatus =
   | "awaiting-reply" // Asked a question - blocked on reviewer
   | "agreed" // Fixed
   | "disagreed" // Won't fix
-  | "acknowledged"; // Noted, no action
+  | "acknowledged" // Noted, no action
+  | "dismissed"; // Rejected for good and recorded with the review service
+
+export type DoneStatus = "agreed" | "disagreed" | "acknowledged" | "dismissed";
 
 export type Side = "new" | "old" | "zero";
 

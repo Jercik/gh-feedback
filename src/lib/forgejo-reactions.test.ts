@@ -33,6 +33,8 @@ describe("native reaction status", () => {
     { reactions: ["-1"], status: "disagreed", conflict: false },
     { reactions: ["rocket", "rocket"], status: "acknowledged", conflict: false },
     { reactions: ["+1", "rocket"], status: "in-progress", conflict: true },
+    { reactions: ["hooray"], status: "dismissed", conflict: false },
+    { reactions: ["hooray", "-1"], status: "in-progress", conflict: true },
   ])("projects $reactions as $status", ({ reactions, status, conflict }) => {
     expect(deriveStatus(reactions)).toStrictEqual({
       viewerReactions: reactions,

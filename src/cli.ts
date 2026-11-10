@@ -13,6 +13,8 @@ import { registerReviewCommand } from "./commands/review.js";
 import { registerStartCommand } from "./commands/start.js";
 import { registerAgreeCommand } from "./commands/agree.js";
 import { registerDisagreeCommand } from "./commands/disagree.js";
+import { registerDismissCommand } from "./commands/dismiss.js";
+import { registerReopenCommand } from "./commands/reopen.js";
 import { registerAskCommand } from "./commands/ask.js";
 import { registerAckCommand } from "./commands/ack.js";
 import { registerReplyCommand } from "./commands/reply.js";
@@ -43,6 +45,8 @@ Example workflow:
   $ pr-feedback start 456            # Mark #456 as in-progress
   $ pr-feedback agree 456 -m 'Fixed in abc123'
   $ pr-feedback disagree 456 -m 'Intentional, see docs'
+  $ pr-feedback dismiss 456 -m 'Not a defect: see docs'  # Review-service finding, for good
+  $ pr-feedback reopen 456 -m 'New evidence'  # Reconsider a dismissal
   $ pr-feedback ask 456 -m 'Could you clarify?'
   $ pr-feedback ack 789              # Acknowledge bot noise
   $ pr-feedback reply 456 -m 'Tracked in #12'  # Reply without changing status
@@ -101,6 +105,8 @@ registerDetailCommand(program);
 registerStartCommand(program);
 registerAgreeCommand(program);
 registerDisagreeCommand(program);
+registerDismissCommand(program);
+registerReopenCommand(program);
 registerAskCommand(program);
 registerAckCommand(program);
 registerReplyCommand(program);

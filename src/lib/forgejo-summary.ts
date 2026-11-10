@@ -26,7 +26,9 @@ export async function buildSummary(
       options.hideResolved &&
       (resolved ||
         (inline
-          ? item.status === "agreed" || item.status === "acknowledged"
+          ? item.status === "agreed" ||
+            item.status === "acknowledged" ||
+            item.status === "dismissed"
           : isStatusDone(item.status)))
     ) {
       return;

@@ -12,6 +12,8 @@ import { setStatus } from "./set-status.js";
 import { SUCCESS } from "./tty-output.js";
 import type { ReactionContent } from "./types.js";
 import { verboseLog } from "./verbose-mode.js";
+import { errorMessage } from "./error-message.js";
+import { capitalize, previewReply } from "./preview-reply.js";
 
 type MessageStatus = Extract<FindingStatus, "agreed" | "disagreed" | "awaiting-reply">;
 
@@ -33,28 +35,6 @@ interface MessageCommand {
   // Setting a status refuses an item that is already done, so a reply-only command (undefined) is
   // the one way to comment on a settled item.
   status: MessageStatus | undefined;
-}
-
-function capitalize(word: string): string {
-  return `${word.charAt(0).toUpperCase()}${word.slice(1)}`;
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function previewReply(item: FeedbackItemRef, command: MessageCommand, message: string): void {
-  verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
-  if (item.path) {
-    verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
-  }
-  verboseLog("");
-  verboseLog(`${capitalize(command.messageNoun)}:`);
-  verboseLog("---");
-  verboseLog(message);
-  verboseLog("---");
-  verboseLog("");
-  verboseLog(`Actions: ${command.actions}`);
 }
 
 // Resolves false after warning that the posted reply left the item's status unfinished.

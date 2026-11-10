@@ -19,5 +19,8 @@ the service that runs the automated review of a PR and answers read requests abo
 **Summary report**:
 the PR comment the review wrapper posts from the Actions identity, starting with `<!-- review:summary -->`. The lowest-id such comment counts.
 
+**Dismissal**:
+the permanent rejection of a review-service finding, made by `dismiss`. It is recorded twice, as a hooray reaction on the forge and as a `dismissed` disposition with the review service. `reopen` records a `reopened` disposition and takes the finding back to in-progress.
+
 **Stamp**:
 the second line of a summary report, naming the review ID and the head commit the review covers. A report without one, such as a skipped fork PR, has no stamp.

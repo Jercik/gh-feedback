@@ -28,7 +28,14 @@ export function registerStartCommand(program: Command): void {
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);
-        const { viewerReactions, isResolved, viewerMayReopen } = await backend.getItemStatus(item);
+        const { doneStatus, viewerReactions, isResolved, viewerMayReopen } =
+          await backend.getItemStatus(item);
+
+        if (doneStatus === "dismissed" && (await backend.readServiceFinding(item)) !== undefined) {
+          throw new Error(
+            `Error: Item #${item.id} is dismissed with the review service. Use 'reopen ${item.id} -m <why>' to reconsider it.`,
+          );
+        }
 
         const needsReopen = viewerMayReopen;
 

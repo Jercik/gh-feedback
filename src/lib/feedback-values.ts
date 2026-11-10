@@ -13,10 +13,11 @@ export const statusReactions: Record<ReactedStatus, ReactionContent> = {
   agreed: "+1",
   disagreed: "-1",
   acknowledged: "rocket",
+  dismissed: "hooray",
   "awaiting-reply": "confused",
 };
 
-const finalStatuses = ["agreed", "disagreed", "acknowledged"] as const;
+const finalStatuses = ["agreed", "disagreed", "acknowledged", "dismissed"] as const;
 
 export function integerOrZero(value: unknown): number {
   return typeof value === "number" && Number.isInteger(value) ? value : 0;

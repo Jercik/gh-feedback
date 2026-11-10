@@ -1,4 +1,7 @@
 import type { ItemDetail } from "./fetch-item-detail.js";
+import type { DoneStatus } from "./feedback-types.js";
+import type { ServiceFinding } from "./review-service-finding.js";
+import type { OwnReply } from "./select-reusable-reply.js";
 import type { FeedbackSummary } from "./summary-types.js";
 import type { ReactionContent } from "./types.js";
 
@@ -16,7 +19,7 @@ export interface SummaryOptions {
 }
 
 export interface ItemStatus {
-  doneStatus: "agreed" | "disagreed" | "acknowledged" | undefined;
+  doneStatus: DoneStatus | undefined;
   viewerReactions: ReactionContent[];
   isResolved: boolean;
   viewerMayReopen: boolean;
@@ -32,9 +35,13 @@ export type CapabilityResult =
   | { supported: true; applied: false; reason: string }
   | { supported: false; reason: string };
 
-export type FeedbackOutcome = "agreed" | "disagreed" | "acknowledged";
+export type FeedbackOutcome = DoneStatus;
 
 export interface FeedbackBackend {
+  // Resolves undefined for anything that is not an inline comment posted by the review service.
+  readServiceFinding: (item: FeedbackItemRef) => Promise<ServiceFinding | undefined>;
+  listOwnReplies: (item: FeedbackItemRef) => Promise<OwnReply[]>;
+
   fetchSummary: (options: SummaryOptions) => Promise<FeedbackSummary>;
   fetchItemDetail: (itemId: number) => Promise<ItemDetail>;
   detectItem: (itemId: number) => Promise<FeedbackItemRef>;

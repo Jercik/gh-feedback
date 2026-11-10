@@ -5,7 +5,7 @@
  * to a single FeedbackItem type with semantic status.
  */
 
-import type { FindingStatus } from "./feedback-types.js";
+import type { DoneStatus, FindingStatus } from "./feedback-types.js";
 
 /**
  * A response/reply to a feedback item.
@@ -51,8 +51,13 @@ export interface FeedbackSummary {
 /**
  * Check if a status represents a "done" state.
  */
-export function isStatusDone(status: FindingStatus): boolean {
-  return status === "agreed" || status === "disagreed" || status === "acknowledged";
+export function isStatusDone(status: FindingStatus): status is DoneStatus {
+  return (
+    status === "agreed" ||
+    status === "disagreed" ||
+    status === "acknowledged" ||
+    status === "dismissed"
+  );
 }
 
 /**

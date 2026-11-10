@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { CLAIMS_PAGE_LIMIT, createServiceRequest } from "./review-service-request.js";
 
 const UNIT_STATUSES = [
   "claims-emitted",
@@ -70,27 +71,14 @@ const ClaimsPage = z.object({
   next_after: z.string().nullable(),
 });
 
-const CLAIMS_PAGE_LIMIT = 500;
-
 export function createReviewServiceClient(options: {
   serviceUrl: string;
   token: string;
 }): ReviewServiceClient {
+  const request = createServiceRequest(options);
+
   async function get(route: string, query: Record<string, string> = {}): Promise<unknown> {
-    const url = new URL(route, options.serviceUrl);
-    for (const [key, value] of Object.entries(query)) {
-      url.searchParams.set(key, value);
-    }
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${options.token}`, Accept: "application/json" },
-      redirect: "error",
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!response.ok) {
-      throw new Error(`Review service GET ${route} failed (${response.status})`);
-    }
-    return response.json();
+    return request("GET", route, query);
   }
 
   return {

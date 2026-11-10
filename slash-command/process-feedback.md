@@ -25,6 +25,7 @@ User-provided free-form instruction (may be empty): `$ARGUMENTS`
 | `agreed`         | Fixed and done                    | None                             |
 | `disagreed`      | Won't fix (with explanation)      | None                             |
 | `acknowledged`   | Bot noise, noted                  | None                             |
+| `dismissed`      | Review-service finding rejected   | None; `reopen` to reconsider     |
 
 ## Review types
 
@@ -126,6 +127,7 @@ When uncertain, ask: "Would a thorough developer include this in the same PR?" I
 ## Workflow rules
 
 - To re-resolve a done item (`agreed`/`disagreed`/`acknowledged`), first run `pr-feedback start <id>` to reopen it
+- To reject a review-service finding for good, run `pr-feedback dismiss <id> -m "<evidence>"` instead of `disagree`; to reconsider a `dismissed` item, run `pr-feedback reopen <id> -m "<why>"`
 - Never mark an item `agreed` until the fix is pushed—the commit SHA proves the work is done
 - When marking an item `disagreed`, cite evidence: command output, doc links, or test results
 
@@ -296,7 +298,7 @@ Run `pr-feedback summary --json` and confirm:
 
 - No actionable `pending` items remain
 - No actionable `in-progress` items remain (except active bot processes)
-- All actionable items are `agreed`, `disagreed`, `acknowledged`, or `awaiting-reply`
+- All actionable items are `agreed`, `disagreed`, `acknowledged`, `dismissed`, or `awaiting-reply`
 - Every nonactionable body has been investigated and its outcome reported; its untrackable CLI status is not evidence of unfinished mutation work or successful settlement
 - No unresolved nonactionable claim is counted complete; report its blocker
 

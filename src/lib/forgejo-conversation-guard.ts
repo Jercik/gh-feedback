@@ -13,11 +13,11 @@ import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
 
 export const RESOLVES_CONVERSATION_WHEN_SETTLED =
-  "resolves its inline conversation, if any, once every item in it is agreed or acknowledged";
+  "resolves its inline conversation, if any, once every item in it is agreed, acknowledged or dismissed";
 
 export function isForgejoSiblingSettledForResolution(reactions: readonly string[]): boolean {
   const { status } = deriveStatus([...reactions]);
-  return status === "agreed" || status === "acknowledged";
+  return status === "agreed" || status === "acknowledged" || status === "dismissed";
 }
 
 export function sameForgejoNativeConversation(

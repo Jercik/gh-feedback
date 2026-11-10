@@ -9,6 +9,7 @@
 import * as z from "zod";
 
 const ForgejoUser = z.object({
+  id: z.number().nullish(),
   login: z.string(),
 });
 
@@ -112,7 +113,7 @@ export type ForgejoReaction = z.infer<typeof ForgejoReaction>;
 
 // Snapshot schemas retain evidence for completeness and stability checks that
 // command projections may normalize or omit.
-const ForgejoSnapshotUser = ForgejoUser.extend({ id: z.number().nullish() });
+const ForgejoSnapshotUser = ForgejoUser;
 
 export const ForgejoSnapshotReview = ForgejoReview.extend({
   user: ForgejoSnapshotUser.nullish(),

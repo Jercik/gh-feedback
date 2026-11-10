@@ -16,9 +16,7 @@ export async function getForgejoItemStatus(
   const reactions = await fetchReactions(slug, itemId);
   const viewerReactions = viewerReactionStrings(reactions, viewer);
   const { status } = deriveStatus(viewerReactions);
-  const doneStatus = isStatusDone(status)
-    ? (status as "agreed" | "disagreed" | "acknowledged")
-    : undefined;
+  const doneStatus = isStatusDone(status) ? status : undefined;
 
   const resolver = forgejoNativeConversationAnchor(
     meta.reviewComments ?? [],
