@@ -1,5 +1,5 @@
 /**
- * Dismiss command - reject a review-service finding for good
+ * Dismiss command - reject a review-service finding until it is reopened
  */
 
 import type { Command } from "@commander-js/extra-typings";
@@ -14,7 +14,7 @@ const actions =
 export function registerDismissCommand(program: Command): void {
   registerDispositionCommand(program, {
     name: "dismiss",
-    description: `Reject a review-service finding for good (${actions})`,
+    description: `Reject a review-service finding until it is reopened (${actions})`,
     actions,
     kind: "dismissed",
     notFindingMessage: (itemId) =>

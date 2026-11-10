@@ -45,7 +45,7 @@ Example workflow:
   $ pr-feedback start 456            # Mark #456 as in-progress
   $ pr-feedback agree 456 -m 'Fixed in abc123'
   $ pr-feedback disagree 456 -m 'Intentional, see docs'
-  $ pr-feedback dismiss 456 -m 'Not a defect: see docs'  # Review-service finding, for good
+  $ pr-feedback dismiss 456 -m 'Not a defect: see docs'  # Review-service finding, until reopened
   $ pr-feedback reopen 456 -m 'New evidence'  # Reconsider a dismissal
   $ pr-feedback ask 456 -m 'Could you clarify?'
   $ pr-feedback ack 789              # Acknowledge bot noise

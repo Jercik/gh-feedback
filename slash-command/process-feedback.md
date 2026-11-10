@@ -5,7 +5,7 @@ argument-hint: optional focus area or specific instructions
 
 # Goal
 
-Process every review comment on the current PR using `pr-feedback` CLI so nothing is dropped or left ambiguous: each item ends with a recorded outcome, every rejection backed by evidence, or waits for clarification. Report bodies that have no action target separately; their CLI status cannot be settled.
+Process every review comment on the current PR using `pr-feedback` CLI so nothing is dropped or left ambiguous: each item either ends with a recorded outcome, with evidence behind every rejection, or waits for clarification. Report bodies that have no action target separately; their CLI status cannot be settled.
 
 # Inputs
 

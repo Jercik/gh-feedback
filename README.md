@@ -139,7 +139,7 @@ EOF
 # Mark as disagreed/won't fix
 pr-feedback disagree 123456 -m 'Intentional, see docs'
 
-# Reject a review-service finding for good (see "Dismissing review-service findings")
+# Reject a review-service finding until it is reopened (see "Dismissing review-service findings")
 pr-feedback dismiss 123456 -m 'Not a defect: the caller validates the input first'
 
 # Reconsider a dismissal
@@ -160,20 +160,20 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 ## Commands
 
-| Command                                    | Description                                                                                                                                                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `summary`                                  | Get all PR feedback with semantic status                                                                                                                                                                           |
-| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                                                                                                                       |
-| [`review`](#review-service-facts)          | Read the review service's facts for the PR's automated review                                                                                                                                                      |
-| `detail <id>`                              | Fetch full untruncated content                                                                                                                                                                                     |
-| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                                                                                                                      |
-| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is settled)                                                                                                              |
-| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to resolve, reopening it only if you resolved it)                                                                         |
-| `dismiss <id> -m "..."`                    | Reject a [review-service finding](#dismissing-review-service-findings) for good (reply + hooray; records the dismissal with the review service; resolves its inline conversation once every item in it is settled) |
-| `reopen <id> -m "..."`                     | Reconsider a dismissal (reply; records the reopening with the review service, then works like `start`)                                                                                                             |
-| `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                                                                                                                              |
-| `ack <id>`                                 | Acknowledge noise (rocket; resolves its inline conversation, if any, once every item in it is settled)                                                                                                             |
-| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                                                                                                                          |
+| Command                                    | Description                                                                                                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `summary`                                  | Get all PR feedback with semantic status                                                                                                                                                                                       |
+| [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                                                                                                                                   |
+| [`review`](#review-service-facts)          | Read the review service's facts for the PR's automated review                                                                                                                                                                  |
+| `detail <id>`                              | Fetch full untruncated content                                                                                                                                                                                                 |
+| `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                                                                                                                                  |
+| `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is settled)                                                                                                                          |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to resolve, reopening it only if you resolved it)                                                                                     |
+| `dismiss <id> -m "..."`                    | Reject a [review-service finding](#dismissing-review-service-findings) until it is reopened (reply + hooray; records the dismissal with the review service; resolves its inline conversation once every item in it is settled) |
+| `reopen <id> -m "..."`                     | Reconsider a dismissal (reply; records the reopening with the review service, then works like `start`)                                                                                                                         |
+| `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                                                                                                                                          |
+| `ack <id>`                                 | Acknowledge noise (rocket; resolves its inline conversation, if any, once every item in it is settled)                                                                                                                         |
+| `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                                                                                                                                      |
 
 An item is settled once it is agreed, acknowledged or dismissed; a disagreed item leaves its conversation for the reviewer.
 
@@ -219,7 +219,7 @@ The service address and capability token come from `REVIEW_SERVICE_URL` and `REV
 
 ### Dismissing review-service findings
 
-The review service posts its findings as inline review comments from the Actions identity. `dismiss` rejects one of them for good in a single command: it replies, adds the hooray reaction (🎉), and records a `dismissed` disposition with the review service, so the finding stays closed in later reviews. It then resolves the finding's conversation once every other item in it is settled. On an item that is not a review-service finding, `dismiss` fails with `Error: #<id> is not a review-service finding; use 'disagree'.`
+The review service posts its findings as inline review comments from the Actions identity. `dismiss` rejects one of them in a single command: it replies, adds the hooray reaction (🎉), and records a `dismissed` disposition with the review service, so the finding stays closed in later reviews until `reopen` reconsiders it. It then resolves the finding's conversation once every other item in it is settled. On an item that is not a review-service finding, `dismiss` fails with `Error: #<id> is not a review-service finding; use 'disagree'.`
 
 The command needs the same [service credentials](#review-service-facts) as `review`. It makes every check before its first write except those that confirm the recorded disposition, and `--dry-run` stops before that write. Only `reopen` changes a dismissed finding's status (`reply` still comments on it), so the forge and the service keep agreeing about the finding.
 
@@ -239,7 +239,7 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `agreed`         | Fixed (👍; the conversation may stay open, see [Prerequisites](#prerequisites))                                        |
 | `disagreed`      | Won't fix (👎; `disagree` never resolves the conversation)                                                             |
 | `acknowledged`   | Noted, no action (🚀; the conversation may stay open)                                                                  |
-| `dismissed`      | Review-service finding rejected for good (🎉; resolves the conversation once every item in it is settled)              |
+| `dismissed`      | Review-service finding rejected until reopened (🎉; resolves the conversation once every item in it is settled)        |
 
 `summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review
 bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`

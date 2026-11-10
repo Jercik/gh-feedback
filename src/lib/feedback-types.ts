@@ -5,7 +5,7 @@ export type FindingStatus =
   | "agreed" // Fixed
   | "disagreed" // Won't fix
   | "acknowledged" // Noted, no action
-  | "dismissed"; // Rejected for good and recorded with the review service
+  | "dismissed"; // Rejected until reopened and recorded with the review service
 
 export const doneStatuses = [
   "agreed",
