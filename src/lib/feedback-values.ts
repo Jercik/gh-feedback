@@ -36,8 +36,12 @@ export const unfetchedFindingState: NullableFindingState = {
   conflictingFinalReactions: false,
 };
 
-export function deriveStatus(viewerReactions: string[]): FindingState {
-  const finals = doneStatuses.filter((status) => viewerReactions.includes(statusReactions[status]));
+// Only a review-service finding can be dismissed, so a viewer hooray on anything else carries no status.
+export function deriveStatus(viewerReactions: string[], dismissible: boolean): FindingState {
+  const finals = doneStatuses.filter(
+    (status) =>
+      (dismissible || status !== "dismissed") && viewerReactions.includes(statusReactions[status]),
+  );
   if (finals.length > 1) {
     return { viewerReactions, status: "in-progress", conflictingFinalReactions: true };
   }

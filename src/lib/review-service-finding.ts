@@ -18,16 +18,21 @@ interface AuthoredByUser {
   user?: { id?: number | null | undefined } | null | undefined;
 }
 
+type FindingComment = AuthoredByUser & { body: string; path?: string | null | undefined };
+
 export function parseReviewServiceFinding(
-  comment: AuthoredByUser & { body: string; path?: string | null | undefined },
+  comment: FindingComment,
   review: AuthoredByUser & { state: string },
 ): ServiceFinding | undefined {
-  if (
-    !isForgejoActionsUser(comment.user) ||
-    !isForgejoActionsUser(review.user) ||
-    review.state === "PENDING" ||
-    !comment.path
-  ) {
+  if (!isForgejoActionsUser(review.user) || review.state === "PENDING") {
+    return undefined;
+  }
+  return parseServiceFindingComment(comment);
+}
+
+// Reads the claim from the comment alone; the review's author and state are not checked.
+export function parseServiceFindingComment(comment: FindingComment): ServiceFinding | undefined {
+  if (!isForgejoActionsUser(comment.user) || !comment.path) {
     return undefined;
   }
   const claimId = claimMarker.exec(comment.body)?.groups?.claim;

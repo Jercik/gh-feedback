@@ -10,6 +10,7 @@ import type { NormalizedInlineComment } from "./feedback-model.js";
 import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
 import type { CommentRecord, PassSnapshot, ReviewRecord } from "./feedback-types.js";
+import { parseServiceFindingComment } from "./review-service-finding.js";
 
 function reportCountGap(totalCount: number, distinctCount: number, diagnostics: string[]): void {
   const countGap = totalCount - distinctCount;
@@ -34,7 +35,8 @@ async function applyFindingStatuses(
     if (comment.kind !== "finding") {
       continue;
     }
-    Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id));
+    const dismissible = parseServiceFindingComment(comment) !== undefined;
+    Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id, dismissible));
   }
 }
 
@@ -87,7 +89,7 @@ async function normalizeReview(
         `review ${reviewId}: html_url carries no #issuecomment anchor, so its status is underivable`,
       );
     } else {
-      reactionStatus = await fetchFindingStatus(slug, viewer, backingCommentId);
+      reactionStatus = await fetchFindingStatus(slug, viewer, backingCommentId, false);
     }
   }
   return {
