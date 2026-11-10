@@ -27,17 +27,26 @@ describe("selectForgejoPull", () => {
       pull({ number: 10, state: "open", ref: "feature/foo", headRepo: "fork-a/cluster" }),
       pull({ number: 11, state: "open", ref: "feature/foo", headRepo: "j4k/cluster" }),
     ];
-    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")?.number).toBe(11);
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "one",
+      number: 11,
+    });
   });
 
   it("matches head repo case-insensitively", () => {
     const pulls = [pull({ number: 5, state: "open", ref: "feature/foo", headRepo: "J4K/Cluster" })];
-    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")?.number).toBe(5);
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "one",
+      number: 5,
+    });
   });
 
   it("returns the sole branch match when head-repo info is absent", () => {
     const pulls = [pull({ number: 7, state: "open", ref: "feature/foo" })];
-    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")?.number).toBe(7);
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "one",
+      number: 7,
+    });
   });
 
   it("refuses to guess when the branch is ambiguous and no head repo matches origin", () => {
@@ -45,13 +54,30 @@ describe("selectForgejoPull", () => {
       pull({ number: 10, state: "open", ref: "feature/foo", headRepo: "fork-a/cluster" }),
       pull({ number: 11, state: "open", ref: "feature/foo", headRepo: "fork-b/cluster" }),
     ];
-    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toBeUndefined();
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "many",
+      numbers: [10, 11],
+    });
+  });
+
+  it("reports every origin PR when one branch heads several", () => {
+    const pulls = [
+      pull({ number: 10, state: "open", ref: "feature/foo", headRepo: "fork-a/cluster" }),
+      pull({ number: 11, state: "open", ref: "feature/foo", headRepo: "j4k/cluster" }),
+      pull({ number: 12, state: "open", ref: "feature/foo", headRepo: "j4k/cluster" }),
+    ];
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "many",
+      numbers: [11, 12],
+    });
   });
 
   it("ignores a closed PR that reused the branch name", () => {
     const pulls = [
       pull({ number: 9, state: "closed", ref: "feature/foo", headRepo: "j4k/cluster" }),
     ];
-    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toBeUndefined();
+    expect(selectForgejoPull(pulls, "feature/foo", "j4k/cluster")).toStrictEqual({
+      kind: "none",
+    });
   });
 });

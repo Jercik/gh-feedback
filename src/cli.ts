@@ -6,6 +6,7 @@ import { registerSnapshotCommand } from "./commands/snapshot.js";
 
 import { createProgram } from "./lib/create-program.js";
 import { exitWithMessage } from "./lib/git-helpers.js";
+import { prOption, repoOption } from "./lib/feedback-target.js";
 import { resolveBackend } from "./lib/resolve-backend.js";
 import { formatSummary } from "./lib/format-summary.js";
 import { registerStartCommand } from "./commands/start.js";
@@ -45,6 +46,7 @@ Example workflow:
   $ pr-feedback ack 789              # Acknowledge bot noise
   $ pr-feedback reply 456 -m 'Tracked in #12'  # Reply without changing status
   $ pr-feedback detail 456           # Get full untruncated content
+  $ pr-feedback summary --repo j4k/cluster --pr 12  # Any PR, without a checkout
 
 Unix pipeline examples:
   $ pr-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
@@ -64,13 +66,14 @@ program
   .option("--hide-resolved", "Exclude resolved items")
   .option("-p, --porcelain", "Output as TSV (auto-detected when stdout is not a TTY)")
   .option("-j, --json", "Output as JSON")
-  .action(async (options: { hideResolved?: boolean; porcelain?: boolean; json?: boolean }) => {
+  .addOption(repoOption())
+  .addOption(prOption())
+  .action(async (options) => {
     try {
-      const { backend, currentPrNumber } = resolveBackend();
-      const prNumber = await currentPrNumber();
+      const { backend, target } = await resolveBackend(options);
 
-      verboseLog(`Fetching feedback for PR #${prNumber}...`);
-      const summary = await backend.fetchSummary(prNumber, {
+      verboseLog(`Fetching feedback for PR #${target.prNumber}...`);
+      const summary = await backend.fetchSummary({
         hideResolved: options.hideResolved,
       });
 

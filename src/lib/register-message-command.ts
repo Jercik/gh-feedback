@@ -6,6 +6,7 @@ import { exitWithMessage } from "./git-helpers.js";
 import { resolveMessage } from "./message-input.js";
 import { parseItemId } from "./parse-item-id.js";
 import { reportCompletionResult } from "./report-completion-result.js";
+import { prOption, repoOption } from "./feedback-target.js";
 import { resolveBackend } from "./resolve-backend.js";
 import { setStatus } from "./set-status.js";
 import { SUCCESS } from "./tty-output.js";
@@ -103,10 +104,12 @@ export function registerMessageCommand(program: Command, command: MessageCommand
     .option("-f, --body-file <path>", "Read message from file (use - for stdin)")
     .option("-n, --dry-run", "Preview without executing")
     .option("-i, --interactive", "Type the message on stdin (Ctrl+D to finish)")
+    .addOption(repoOption())
+    .addOption(prOption())
     .action(async (itemId, options) => {
       try {
         const message = await resolveMessage(options, command.messageNoun);
-        const { backend } = resolveBackend();
+        const { backend } = await resolveBackend(options);
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);

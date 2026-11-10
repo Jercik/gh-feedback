@@ -223,4 +223,18 @@ describe("standalone explicit repository snapshot", () => {
     });
     expect(result.stderr).not.toContain("Required dependency 'git'");
   });
+
+  it("reads a summary with an explicit target and no git", () => {
+    const result = run("stable", ["summary", "--repo", "owner/repo", "--pr", "7", "--json"], true);
+    expect(result.status).toBe(0);
+    const summary: unknown = JSON.parse(result.stdout);
+    expect(summary).toHaveProperty("items");
+    expect(result.stderr).not.toContain("Required dependency 'git'");
+  });
+
+  it("rejects --repo without --pr", () => {
+    const result = run("stable", ["ack", "401", "--repo", "owner/repo", "--dry-run"], true);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("--repo requires --pr");
+  });
 });

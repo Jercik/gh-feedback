@@ -7,6 +7,7 @@
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { parseItemId } from "../lib/parse-item-id.js";
+import { prOption, repoOption } from "../lib/feedback-target.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { formatItemDetail } from "../lib/format-item-detail.js";
 
@@ -16,9 +17,11 @@ export function registerDetailCommand(program: Command): void {
     .description("Fetch full content of a feedback item")
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-j, --json", "Output as JSON")
-    .action(async (itemId: number, options: { json?: boolean }) => {
+    .addOption(repoOption())
+    .addOption(prOption())
+    .action(async (itemId, options) => {
       try {
-        const { backend } = resolveBackend();
+        const { backend } = await resolveBackend(options);
 
         const item = await backend.fetchItemDetail(itemId);
 

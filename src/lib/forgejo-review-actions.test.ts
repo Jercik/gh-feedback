@@ -10,7 +10,6 @@ vi.mock("./forgejo-cli.js", () => ({
 }));
 vi.mock("./forgejo-environment.js", () => ({
   getForgejoViewer: vi.fn().mockResolvedValue("codex"),
-  findForgejoPullByBranch: vi.fn().mockResolvedValue({ number: 3 }),
 }));
 vi.mock("./forgejo-pull-review-comments.js", () => ({ fetchPullReviewComments: mocks.comments }));
 
@@ -29,7 +28,7 @@ beforeEach(() => {
 });
 
 test("mutates the backing comment and replies using its action identity", async () => {
-  const backend = createForgejoBackend("o/r");
+  const backend = createForgejoBackend({ slug: "o/r", prNumber: 3 });
   const item = await backend.detectItem(91);
   expect(item).toStrictEqual({
     type: "review",
@@ -60,7 +59,7 @@ test("mutates the backing comment and replies using its action identity", async 
 
 test("returns published review state and reactions in detail under the backing ID", async () => {
   mocks.fetch.mockResolvedValue([{ content: "+1", user: { login: "codex" } }]);
-  const detail = await createForgejoBackend("o/r").fetchItemDetail(91);
+  const detail = await createForgejoBackend({ slug: "o/r", prNumber: 3 }).fetchItemDetail(91);
   expect(detail).toStrictEqual({
     type: "review",
     id: 91,

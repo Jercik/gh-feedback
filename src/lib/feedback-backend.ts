@@ -35,7 +35,7 @@ export type CapabilityResult =
 export type FeedbackOutcome = "agreed" | "disagreed" | "acknowledged";
 
 export interface FeedbackBackend {
-  fetchSummary: (prNumber: number, options: SummaryOptions) => Promise<FeedbackSummary>;
+  fetchSummary: (options: SummaryOptions) => Promise<FeedbackSummary>;
   fetchItemDetail: (itemId: number) => Promise<ItemDetail>;
   detectItem: (itemId: number) => Promise<FeedbackItemRef>;
   getItemStatus: (item: FeedbackItemRef) => Promise<ItemStatus>;

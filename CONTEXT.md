@@ -1,6 +1,6 @@
 # Feedback workflow
 
-A CLI for reading and settling pull request feedback on the current branch.
+A CLI for reading and settling pull request feedback on a chosen pull request, by default the current branch's.
 
 ## Language
 

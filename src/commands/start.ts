@@ -8,6 +8,7 @@
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { parseItemId } from "../lib/parse-item-id.js";
+import { prOption, repoOption } from "../lib/feedback-target.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { startItem } from "../lib/start-item.js";
 import { SUCCESS } from "../lib/tty-output.js";
@@ -19,9 +20,11 @@ export function registerStartCommand(program: Command): void {
     .description("Mark a feedback item as work-in-progress (adds eyes reaction)")
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
-    .action(async (itemId: number, options: { dryRun?: boolean }) => {
+    .addOption(repoOption())
+    .addOption(prOption())
+    .action(async (itemId, options) => {
       try {
-        const { backend } = resolveBackend();
+        const { backend } = await resolveBackend(options);
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);

@@ -11,6 +11,7 @@ import { getOpenItemReactions } from "../lib/get-open-item-reactions.js";
 import { RESOLVES_CONVERSATION_WHEN_SETTLED } from "../lib/forgejo-conversation-guard.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
 import { parseItemId } from "../lib/parse-item-id.js";
+import { prOption, repoOption } from "../lib/feedback-target.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
 import { SUCCESS } from "../lib/tty-output.js";
 import { verboseLog } from "../lib/verbose-mode.js";
@@ -23,9 +24,11 @@ export function registerAckCommand(program: Command): void {
     .description(`Acknowledge informational item (${actions})`)
     .argument("<id>", "The feedback item ID", parseItemId)
     .option("-n, --dry-run", "Preview without executing")
-    .action(async (itemId: number, options: { dryRun?: boolean }) => {
+    .addOption(repoOption())
+    .addOption(prOption())
+    .action(async (itemId, options) => {
       try {
-        const { backend } = resolveBackend();
+        const { backend } = await resolveBackend(options);
 
         verboseLog(`Detecting item type for #${itemId}...`);
         const item = await backend.detectItem(itemId);

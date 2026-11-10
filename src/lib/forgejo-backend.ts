@@ -22,6 +22,7 @@ import type {
   ReplyResult,
   SummaryOptions,
 } from "./feedback-backend.js";
+import type { FeedbackTarget } from "./feedback-target.js";
 import { forgejoFetch } from "./forgejo-cli.js";
 import { reactionsPath } from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
@@ -31,30 +32,20 @@ import { buildSummary } from "./forgejo-summary.js";
 import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
-import { getForgejoViewer, findForgejoPullByBranch } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./forgejo-environment.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
 import { completeForgejoItem, reopenForgejoItem } from "./forgejo-completion.js";
 
-export function createForgejoBackend(slug: string): FeedbackBackend {
+export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
+  const { slug, prNumber } = target;
   /** Cache the detected meta so reply/react reuse it without re-probing. */
   const metaCache = new Map<number, ForgejoItemMeta>();
 
-  async function currentPrNumber(): Promise<number> {
-    const pull = await findForgejoPullByBranch(slug);
-    if (!pull) {
-      return exitWithMessage("Error: No open Forgejo pull request found for the current branch.");
-    }
-    return pull.number;
-  }
-
   async function detect(itemId: number): Promise<FeedbackItemRef> {
-    const prNumber = await currentPrNumber();
     const resolved = await resolveItemMeta(slug, prNumber, itemId);
     if (!resolved) {
-      return exitWithMessage(
-        `Error: Could not find item #${itemId} in the current Forgejo PR #${prNumber}.`,
-      );
+      return exitWithMessage(`Error: Could not find item #${itemId} in Forgejo PR #${prNumber}.`);
     }
     // Canonicalize a review comment to its conversation root, so a reply id the
     // user may have targeted resolves to the finding — every later reaction read
@@ -104,12 +95,11 @@ export function createForgejoBackend(slug: string): FeedbackBackend {
   }
 
   return {
-    fetchSummary(prNumber: number, options: SummaryOptions): Promise<FeedbackSummary> {
+    fetchSummary(options: SummaryOptions): Promise<FeedbackSummary> {
       return buildSummary(slug, prNumber, options);
     },
 
     async fetchItemDetail(itemId: number): Promise<ItemDetail> {
-      const prNumber = await currentPrNumber();
       return buildItemDetail(slug, prNumber, itemId);
     },
 

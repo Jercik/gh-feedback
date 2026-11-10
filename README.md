@@ -2,7 +2,7 @@
 
 Source: https://code.j4k.dev/j4k-oss/pr-feedback. Open issues and pull requests on the Forge.
 
-Semantic CLI for pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on the current branch's PR. Operates on Forgejo pull requests on `code.j4k.dev`, using `fgj` and REST.
+Semantic CLI for pull request feedback workflow. Provides workflow-oriented commands for handling reviews, threads, and comments on a pull request: the current branch's by default, or any PR you name. Operates on Forgejo pull requests on `code.j4k.dev`, using `fgj` and REST.
 
 ## Installation
 
@@ -46,8 +46,7 @@ All of these provide the same `pr-feedback` command.
 ## Prerequisites
 
 - Node.js 26.0.0+
-- Git repository with `origin` remote
-- Git installed (`git`), with `user.name` and `user.email` configured
+- Git installed (`git`), with `user.name` and `user.email` configured, and a repository with an `origin` remote. Both are unnecessary when you pass `--repo` and `--pr`.
 - the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
 
 The j4k Forgejo fork resolves inline review conversations through the local
@@ -101,7 +100,18 @@ This overrides only the API hostname. `pr-feedback` treats an origin as Forgejo 
 
 ## Usage
 
+Every command acts on one pull request. `--pr <number>` selects it and defaults to the open
+PR whose head is the current branch. `--repo <owner/repo>` selects the repository and defaults
+to `origin`. `--repo` requires `--pr`, because a branch's PR is looked up only in origin's
+repository. With both given, no Git executable or checkout is needed.
+
 ```bash
+# Read another PR without a checkout
+pr-feedback summary --repo owner/repo --pr 12 --json
+
+# Act on another PR of the origin repository
+pr-feedback ack 123456 --pr 12
+
 # Get all PR feedback with status
 pr-feedback summary
 
@@ -160,8 +170,7 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 `pr-feedback snapshot --repo owner/repo --pr 123` reads all review bodies, inline
 comments, issue comments, viewer reactions, and native conversation resolution
-metadata twice. With explicit `--repo`, no Git executable or checkout is required. The repository
-defaults to `origin`; API host selection and
+metadata twice. It takes the same `--repo` and `--pr` as every command; with both, no Git executable or checkout is required. API host selection and
 viewer identity use the existing authenticated Forgejo context, not command-line
 overrides.
 
@@ -246,7 +255,7 @@ Add to your `CLAUDE.md` or `AGENTS.md`:
 ```markdown
 # Rule: pr-feedback CLI Usage
 
-`pr-feedback` is a globally available CLI. Prefer it over raw `fgj` commands for PR feedback operations: reading a PR's feedback, and replying to and settling each item. Every command except `snapshot` operates on the current branch's PR.
+`pr-feedback` is a globally available CLI. Prefer it over raw `fgj` commands for PR feedback operations: reading a PR's feedback, and replying to and settling each item. Every command operates on the current branch's PR unless you pass `--pr <number>` (and `--repo <owner/repo>` outside origin's repository).
 
 Before first use in a session, run `pr-feedback --help` and subcommand help (e.g., `pr-feedback agree --help`) to learn available commands and options.
 ```
