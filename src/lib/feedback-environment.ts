@@ -1,7 +1,7 @@
 import { git, exitWithMessage } from "./git-helpers.js";
 import { detectProvider } from "./provider.js";
 
-export function verifyPrerequisites(): string {
+export function verifyPrerequisites(): { originSlug: string } {
   try {
     git("--version");
   } catch (error) {
@@ -31,7 +31,7 @@ export function verifyPrerequisites(): string {
   } catch {
     return exitWithMessage("Error: Git user.name and user.email must be configured.");
   }
-  return provider.slug;
+  return { originSlug: provider.slug };
 }
 
 export function isIgnoredAuthor(login: string): boolean {

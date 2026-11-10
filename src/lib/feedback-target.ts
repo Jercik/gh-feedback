@@ -54,8 +54,11 @@ export async function resolveFeedbackTarget(options: TargetOptions): Promise<Fee
   if (parsed.kind === "explicit") {
     return { slug: parsed.slug, prNumber: parsed.prNumber };
   }
-  const slug = verifyPrerequisites();
-  return { slug, prNumber: parsed.prNumber ?? (await findCurrentBranchPullNumber(slug)) };
+  const { originSlug } = verifyPrerequisites();
+  return {
+    slug: originSlug,
+    prNumber: parsed.prNumber ?? (await findCurrentBranchPullNumber(originSlug)),
+  };
 }
 
 async function findCurrentBranchPullNumber(slug: string): Promise<number> {
