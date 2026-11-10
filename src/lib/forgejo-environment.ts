@@ -31,11 +31,10 @@ function getCurrentBranch(): string {
 
 /**
  * Select the open PR whose head is the current branch. The client-side
- * selection (head.ref + state + head-repo) is the authoritative filter, and the
- * pagination it walks is required: the `state`/`head` query params are
- * best-effort hints, so the match is re-verified client-side to avoid returning
- * a closed PR or a same-named branch from a different fork. See
- * selectForgejoPull for the disambiguation rationale.
+ * selection is the authoritative filter, and the pagination it walks is
+ * required: the `state`/`head` query params are best-effort hints, so the match
+ * is re-verified client-side. See selectForgejoPull for the matching and
+ * disambiguation rules.
  */
 export async function selectCurrentBranchPull(
   slug: string,
