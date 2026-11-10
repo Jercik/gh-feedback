@@ -106,7 +106,17 @@ describe("dismiss", () => {
     ]);
   });
 
-  it("--dry-run reads the service but writes nothing", () => {
+  it("--dry-run refuses a finding whose claim path differs in the service", () => {
+    const result = run(["dismiss", "305", "-m", "Not a defect", "--dry-run"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "Error: The finding's claim and path do not belong to its review.",
+    );
+    expect(result.mutations).toStrictEqual([]);
+  });
+
+  it("--dry-run writes nothing", () => {
     const result = run(["dismiss", "301", "-m", "Not a defect", "--dry-run"]);
 
     expect(result.status).toBe(0);

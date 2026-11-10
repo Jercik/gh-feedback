@@ -28,7 +28,11 @@ const reviews = [
   { id: 11, state: "COMMENT", user: { id: 2, login: "reviewer" } },
 ];
 const reviewComments: Record<string, object[]> = {
-  "10": [comment(301, 10, "file.ts", claimBody, -2), comment(303, 10, "other.ts", claimBody, -2)],
+  "10": [
+    comment(301, 10, "file.ts", claimBody, -2),
+    comment(303, 10, "other.ts", claimBody, -2),
+    comment(305, 10, "other.ts", claimBody, -2),
+  ],
   "11": [comment(302, 11, "file.ts", claimBody, 2), comment(304, 11, "file.ts", "Looks good", 2)],
 };
 const viewerReactions: Record<string, string[]> = {
@@ -36,6 +40,7 @@ const viewerReactions: Record<string, string[]> = {
   "302": [],
   "303": ["hooray"],
   "304": ["hooray"],
+  "305": [],
 };
 
 let currentDisposition: object | null = null;
