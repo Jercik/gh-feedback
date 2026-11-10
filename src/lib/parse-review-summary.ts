@@ -1,20 +1,14 @@
-import * as z from "zod";
-
 const ACTIONS_IDENTITY_ID = -2;
 const SUMMARY_MARKER = "<!-- review:summary -->";
 const STAMP_LINE =
   /^\*\*Review\*\* `(?<reviewId>[0-9A-HJKMNP-TV-Z]{26})` — head `(?<head>[0-9a-f]{40})`$/u;
 
-export const SummaryCandidate = z.object({
-  id: z.number(),
-  user: z.object({ id: z.number() }).nullish(),
-  body: z
-    .string()
-    .nullish()
-    .transform((v) => v ?? ""),
-  updated_at: z.string().nullish(),
-});
-export type SummaryCandidate = z.infer<typeof SummaryCandidate>;
+interface SummaryCandidate {
+  id: number;
+  user?: { id?: number | null | undefined } | null | undefined;
+  body: string;
+  updated_at?: string | null | undefined;
+}
 
 export interface ReviewStamp {
   reviewId: string;
