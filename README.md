@@ -170,9 +170,9 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 
 `pr-feedback snapshot --repo owner/repo --pr 123` reads all review bodies, inline
 comments, issue comments, viewer reactions, and native conversation resolution
-metadata twice. It takes the same `--repo` and `--pr` as every command; with both, no Git executable or checkout is required. API host selection and
-viewer identity use the existing authenticated Forgejo context, not command-line
-overrides.
+metadata twice. It takes the same `--repo` and `--pr` as every command. API host
+selection and viewer identity use the existing authenticated Forgejo context, not
+command-line overrides.
 
 Stdout is one JSON document identified by `schema: "pr-feedback.snapshot"` and
 `version: 1`, with actual `host`, `slug`, `pr`, `viewer`, API `limit`, `stable`,
