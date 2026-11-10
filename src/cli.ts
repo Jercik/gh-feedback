@@ -9,6 +9,7 @@ import { exitWithMessage } from "./lib/git-helpers.js";
 import { prOption, repoOption } from "./lib/feedback-target.js";
 import { resolveBackend } from "./lib/resolve-backend.js";
 import { formatSummary } from "./lib/format-summary.js";
+import { registerReviewCommand } from "./commands/review.js";
 import { registerStartCommand } from "./commands/start.js";
 import { registerAgreeCommand } from "./commands/agree.js";
 import { registerDisagreeCommand } from "./commands/disagree.js";
@@ -47,6 +48,7 @@ Example workflow:
   $ pr-feedback reply 456 -m 'Tracked in #12'  # Reply without changing status
   $ pr-feedback detail 456           # Get full untruncated content
   $ pr-feedback summary --repo j4k/cluster --pr 12  # Any PR, without a checkout
+  $ pr-feedback review --repo j4k/cluster --pr 12   # Review-service facts as JSON
 
 Unix pipeline examples:
   $ pr-feedback summary | awk -F'\t' '$3 == "pending"'  # Filter by status
@@ -94,6 +96,7 @@ program
 // -----------------------------------------------------------------------------
 
 registerSnapshotCommand(program);
+registerReviewCommand(program);
 registerDetailCommand(program);
 registerStartCommand(program);
 registerAgreeCommand(program);

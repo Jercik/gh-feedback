@@ -158,6 +158,7 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `summary`                                  | Get all PR feedback with semantic status                                                                                                  |
 | [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                                              |
+| [`review`](#review-service-facts)          | Read the review service's facts for the PR's automated review                                                                             |
 | `detail <id>`                              | Fetch full untruncated content                                                                                                            |
 | `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                                             |
 | `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is agreed or acknowledged)                      |
@@ -191,6 +192,20 @@ Inline findings remain independent even when they share a native conversation;
 only authenticated reply markers attach responses.
 
 Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.
+
+### Review-service facts
+
+`pr-feedback review --repo owner/repo --pr 123` reads the review service's account of the automated review that the PR's summary report names. It takes the same `--repo` and `--pr` as every command and changes nothing.
+
+Stdout is one JSON document identified by `schema: "pr-feedback.review"` and `version: 1`, with `host`, `slug`, `pr`, `summary`, and `review`:
+
+- `summary` is the PR's summary report comment (`commentId`, `updatedAt`, and its `stamp`), or `null` when the PR has none. `stamp` (`reviewId` and `head`) is `null` when the report names no commit, as in a skipped fork PR.
+- `review` is `null` when `summary` or its `stamp` is `null`; the service is not contacted then. Otherwise it holds the review `id`, the newest dispatch `pass`, and the `claims` that post no thread on the PR (`unadjudicated`, `ungrounded`, `groundingPending`), each complete.
+- `pass.state` is `none` (no pass was asked), `pending` (asked, not yet planned), or `sealed`. A sealed pass adds `sealedAt`, `complete`, and one entry per `slots` item with `lens`, `part`, `arm`, `unitStatus`, and `completedWithLoss`.
+
+Exit 0 means a document was printed, including one with `summary: null`. A fetch, credential, or schema failure exits nonzero with no document. Progress and errors go to stderr, and the capability token is never printed.
+
+The service address and capability token come from `REVIEW_SERVICE_URL` and `REVIEW_CAPABILITY_TOKEN`, which must be set together. Without them, the command reads `repos/<host>/<owner>/<repo>.json` under the `j4k-review` configuration directory (for example `~/Library/Preferences/j4k-review/` on macOS). The file holds `{ "serviceUrl": "...", "capabilityToken": "..." }` and must be a regular file that only its owner can access (`chmod 600`). The service URL must be a credential-free `https:` origin. Requests have a 20-second timeout.
 
 ### Summary Output
 
