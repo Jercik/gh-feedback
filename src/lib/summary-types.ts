@@ -6,6 +6,7 @@
  */
 
 import type { DoneStatus, FindingStatus } from "./feedback-types.js";
+import { doneStatuses } from "./feedback-types.js";
 
 /**
  * A response/reply to a feedback item.
@@ -48,16 +49,19 @@ export interface FeedbackSummary {
   readonly items: readonly FeedbackItem[];
 }
 
-/**
- * Check if a status represents a "done" state.
- */
+// A settled finding lets its inline conversation resolve; a disagreement leaves that call to the reviewer.
+export const settledStatuses = [
+  "agreed",
+  "acknowledged",
+  "dismissed",
+] as const satisfies readonly DoneStatus[];
+
+export function isStatusSettled(status: FindingStatus): status is (typeof settledStatuses)[number] {
+  return settledStatuses.some((settled) => settled === status);
+}
+
 export function isStatusDone(status: FindingStatus): status is DoneStatus {
-  return (
-    status === "agreed" ||
-    status === "disagreed" ||
-    status === "acknowledged" ||
-    status === "dismissed"
-  );
+  return doneStatuses.some((done) => done === status);
 }
 
 /**

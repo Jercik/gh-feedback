@@ -11,13 +11,12 @@ import {
 } from "./forgejo-review-comment-line.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
+import { isStatusSettled, settledStatuses } from "./summary-types.js";
 
-export const RESOLVES_CONVERSATION_WHEN_SETTLED =
-  "resolves its inline conversation, if any, once every item in it is agreed, acknowledged or dismissed";
+export const RESOLVES_CONVERSATION_WHEN_SETTLED = `resolves its inline conversation, if any, once every item in it is ${new Intl.ListFormat("en", { type: "disjunction" }).format(settledStatuses)}`;
 
 export function isForgejoSiblingSettledForResolution(reactions: readonly string[]): boolean {
-  const { status } = deriveStatus([...reactions]);
-  return status === "agreed" || status === "acknowledged" || status === "dismissed";
+  return isStatusSettled(deriveStatus([...reactions]).status);
 }
 
 export function sameForgejoNativeConversation(

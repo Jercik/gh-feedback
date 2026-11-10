@@ -1,7 +1,7 @@
 import type { FeedbackItem, FeedbackSummary } from "./summary-types.js";
 import type { SummaryOptions } from "./feedback-backend.js";
 import { fetchFeedbackSnapshot } from "./feedback-snapshot.js";
-import { isStatusDone } from "./summary-types.js";
+import { isStatusDone, isStatusSettled } from "./summary-types.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
@@ -24,12 +24,7 @@ export async function buildSummary(
     }
     if (
       options.hideResolved &&
-      (resolved ||
-        (inline
-          ? item.status === "agreed" ||
-            item.status === "acknowledged" ||
-            item.status === "dismissed"
-          : isStatusDone(item.status)))
+      (resolved || (inline ? isStatusSettled(item.status) : isStatusDone(item.status)))
     ) {
       return;
     }

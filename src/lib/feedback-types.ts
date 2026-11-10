@@ -7,7 +7,14 @@ export type FindingStatus =
   | "acknowledged" // Noted, no action
   | "dismissed"; // Rejected for good and recorded with the review service
 
-export type DoneStatus = "agreed" | "disagreed" | "acknowledged" | "dismissed";
+export const doneStatuses = [
+  "agreed",
+  "disagreed",
+  "acknowledged",
+  "dismissed",
+] as const satisfies readonly FindingStatus[];
+
+export type DoneStatus = (typeof doneStatuses)[number];
 
 export type Side = "new" | "old" | "zero";
 

@@ -4,6 +4,7 @@ import type {
   NullableFindingState,
   UserRef,
 } from "./feedback-types.js";
+import { doneStatuses } from "./feedback-types.js";
 import type { ReactionContent } from "./types.js";
 
 export type ReactedStatus = Exclude<FindingStatus, "pending">;
@@ -16,8 +17,6 @@ export const statusReactions: Record<ReactedStatus, ReactionContent> = {
   dismissed: "hooray",
   "awaiting-reply": "confused",
 };
-
-const finalStatuses = ["agreed", "disagreed", "acknowledged", "dismissed"] as const;
 
 export function integerOrZero(value: unknown): number {
   return typeof value === "number" && Number.isInteger(value) ? value : 0;
@@ -38,9 +37,7 @@ export const unfetchedFindingState: NullableFindingState = {
 };
 
 export function deriveStatus(viewerReactions: string[]): FindingState {
-  const finals = finalStatuses.filter((status) =>
-    viewerReactions.includes(statusReactions[status]),
-  );
+  const finals = doneStatuses.filter((status) => viewerReactions.includes(statusReactions[status]));
   if (finals.length > 1) {
     return { viewerReactions, status: "in-progress", conflictingFinalReactions: true };
   }
