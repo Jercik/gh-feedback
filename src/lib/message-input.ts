@@ -1,5 +1,6 @@
 /**
- * Parse the reply message's source (-m, -f, or an explicit --interactive request), then read it.
+ * Parsing the reply message's source is separate from reading it, so a command can reject
+ * invalid options before it reads a file or stdin.
  * Stdin is never read implicitly: an agent's stdin can stay open without sending EOF.
  */
 
