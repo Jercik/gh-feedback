@@ -33,7 +33,7 @@ interface MessageCommand {
   actions: string;
   done: (itemId: number) => string;
   // Setting a status refuses an item that is already done, so a reply-only command (undefined) is
-  // the one way to comment on a settled item.
+  // the one way to comment on a done item.
   status: MessageStatus | undefined;
 }
 

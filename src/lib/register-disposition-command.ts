@@ -48,7 +48,7 @@ interface DispositionOptions {
   pr?: string | undefined;
 }
 
-// Every check and service read precedes the first write; a rerun with the same message completes whatever is missing.
+// Every check precedes the first write except those confirming the recorded disposition; a rerun with the same message completes whatever is missing.
 async function runDisposition(
   verb: DispositionVerb,
   itemId: number,

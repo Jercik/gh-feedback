@@ -65,8 +65,8 @@ the reply. Inspect the native anchor and retry only `fgj pr review resolve` or
 `fgj pr review unresolve` when the expected transition did not land.
 
 When one native Forgejo conversation contains several feedback items, each
-item's reaction is recorded independently, so any item that is not yet settled
-(agreed, acknowledged or dismissed) defers the shared conversation's resolution.
+item's reaction is recorded independently, so any item that is not yet
+[settled](#commands) defers the shared conversation's resolution.
 Because native resolution belongs to the whole conversation, `start` or a
 viewer-owned `disagree` on any finding reopens that shared conversation.
 Siblings keep their final reactions, and the conversation resolves
@@ -168,12 +168,14 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 | `detail <id>`                              | Fetch full untruncated content                                                                                                                                                                                     |
 | `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                                                                                                                      |
 | `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is settled)                                                                                                              |
-| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to settle, reopening it only if you resolved it)                                                                          |
+| `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to resolve, reopening it only if you resolved it)                                                                         |
 | `dismiss <id> -m "..."`                    | Reject a [review-service finding](#dismissing-review-service-findings) for good (reply + hooray; records the dismissal with the review service; resolves its inline conversation once every item in it is settled) |
 | `reopen <id> -m "..."`                     | Reconsider a dismissal (reply; records the reopening with the review service, then works like `start`)                                                                                                             |
 | `ask <id> -m "..."`                        | Need clarification (reply + confused)                                                                                                                                                                              |
 | `ack <id>`                                 | Acknowledge noise (rocket; resolves its inline conversation, if any, once every item in it is settled)                                                                                                             |
 | `reply <id> -m "..."`                      | Reply only (status, reactions and conversation unchanged)                                                                                                                                                          |
+
+An item is settled once it is agreed, acknowledged or dismissed; a disagreed item leaves its conversation for the reviewer.
 
 ### Complete feedback snapshots
 
@@ -219,7 +221,7 @@ The service address and capability token come from `REVIEW_SERVICE_URL` and `REV
 
 The review service posts its findings as inline review comments from the Actions identity. `dismiss` rejects one of them for good in a single command: it replies, adds the hooray reaction (🎉), and records a `dismissed` disposition with the review service, so the finding stays closed in later reviews. It then resolves the finding's conversation once every other item in it is settled. On an item that is not a review-service finding, `dismiss` fails with `Error: #<id> is not a review-service finding; use 'disagree'.`
 
-The command needs the same [service credentials](#review-service-facts) as `review`. It makes every check and service read before its first write, and `--dry-run` stops after them. Only `reopen` changes a dismissed finding's status (`reply` still comments on it), so the forge and the service keep agreeing about the finding.
+The command needs the same [service credentials](#review-service-facts) as `review`. It makes every check before its first write except those that confirm the recorded disposition, and `--dry-run` stops before that write. Only `reopen` changes a dismissed finding's status (`reply` still comments on it), so the forge and the service keep agreeing about the finding.
 
 If a later step fails after the reply landed, the command exits 1 and says what landed. Unless it reports that a later or different decision is recorded on the claim, rerun it with the same message: it reuses the reply, skips a disposition that is already recorded, and finishes the rest.
 
@@ -237,7 +239,7 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `agreed`         | Fixed (👍; the conversation may stay open, see [Prerequisites](#prerequisites))                                        |
 | `disagreed`      | Won't fix (👎; `disagree` never resolves the conversation)                                                             |
 | `acknowledged`   | Noted, no action (🚀; the conversation may stay open)                                                                  |
-| `dismissed`      | Review-service finding rejected for good (🎉; resolves the conversation once its other items settle)                   |
+| `dismissed`      | Review-service finding rejected for good (🎉; resolves the conversation once every item in it is settled)              |
 
 `summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review
 bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
@@ -298,7 +300,7 @@ Before first use in a session, run `pr-feedback --help` and subcommand help (e.g
 
 A ready-made slash command is available in the repository at [`slash-command/process-feedback.md`](https://code.j4k.dev/j4k-oss/pr-feedback/src/branch/main/slash-command/process-feedback.md). The prompt works with Claude Code, Cursor, and other agents that support markdown-based commands.
 
-To install for Claude Code, download the file to your project's `.claude/commands/` directory. Then invoke with `/process-feedback`. The command works through every PR feedback item so none is dropped or left ambiguous. Dismissing a review-service finding also records the dismissal with the review service.
+To install for Claude Code, download the file to your project's `.claude/commands/` directory. Then invoke with `/process-feedback`. The command works through every PR feedback item so none is dropped or left ambiguous. It dismisses an incorrect review-service finding instead of disagreeing with it, which also records the dismissal with the review service.
 
 ## License
 

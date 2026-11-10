@@ -48,16 +48,16 @@ Approach reviews are usually high-level reviews questioning whether the PR uses 
 
 ## Resolution commands
 
-| Scenario                                                                                                           | Command                                                                                  |
-| :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
-| **Valid issue**                                                                                                    | Fix code, push, then: `pr-feedback agree <id> -m "Fixed in SHA"`                         |
-| **Already fixed**                                                                                                  | `pr-feedback agree <id> -m "Already fixed in SHA"`                                       |
-| **Disagree**                                                                                                       | See "Disagreement with proactive improvement" below                                      |
-| **Incorrect review-service finding** (inline comment from the Actions identity starting with `<!-- review:claim:`) | `pr-feedback dismiss <id> -m "<evidence>"`; the service keeps it closed in later reviews |
-| **Need clarification**                                                                                             | `pr-feedback ask <id> -m "<your question>"`                                              |
-| **Bot noise/summary**                                                                                              | `pr-feedback ack <id>`                                                                   |
-| **Duplicate**                                                                                                      | Same action and reply as original item                                                   |
-| **Out of scope**                                                                                                   | See "Scope decisions" below                                                              |
+| Scenario                                                                                                           | Command                                                                                                        |
+| :----------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| **Valid issue**                                                                                                    | Fix code, push, then: `pr-feedback agree <id> -m "Fixed in SHA"`                                               |
+| **Already fixed**                                                                                                  | `pr-feedback agree <id> -m "Already fixed in SHA"`                                                             |
+| **Disagree**                                                                                                       | See "Disagreement with proactive improvement" below                                                            |
+| **Incorrect review-service finding** (inline comment from the Actions identity starting with `<!-- review:claim:`) | `pr-feedback dismiss <id> -m "<evidence>"` instead of `disagree`; the service keeps it closed in later reviews |
+| **Need clarification**                                                                                             | `pr-feedback ask <id> -m "<your question>"`                                                                    |
+| **Bot noise/summary**                                                                                              | `pr-feedback ack <id>`                                                                                         |
+| **Duplicate**                                                                                                      | Same action and reply as original item                                                                         |
+| **Out of scope**                                                                                                   | See "Scope decisions" below                                                                                    |
 
 ## Disagreement with proactive improvement
 

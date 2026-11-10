@@ -1,6 +1,6 @@
 # Feedback workflow
 
-A CLI for reading and settling pull request feedback on a chosen pull request, by default the current branch's.
+A CLI for reading and answering pull request feedback on a chosen pull request, by default the current branch's.
 
 ## Language
 
@@ -20,7 +20,10 @@ the service that runs the automated review of a PR and answers read requests abo
 the PR comment the review wrapper posts from the Actions identity, starting with `<!-- review:summary -->`.
 
 **Dismissal**:
-the permanent rejection of a review-service finding, recorded both on the forge and with the review service.
+the rejection of a review-service finding that keeps it closed in later reviews until it is reopened, recorded both on the forge and with the review service.
+
+**Settled**:
+a finding whose viewer status is agreed, acknowledged or dismissed. A disagreed finding is done but not settled: it leaves its conversation for the reviewer.
 
 **Stamp**:
 the second line of a summary report, naming the review ID and the head commit the review covers. A report without one, such as a skipped fork PR, has no stamp.
