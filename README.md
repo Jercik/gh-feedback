@@ -96,8 +96,6 @@ export PR_FEEDBACK_FORGEJO_API_HOST=code.j4k.dev
 
 This overrides only the API hostname. `pr-feedback` treats an origin as Forgejo only when `@j4k-oss/repoq` resolves it to the [Forge](https://code.j4k.dev/j4k-oss/pr-feedback/src/branch/main/CONTEXT.md#language), so this variable does not, on its own, enable any other instance.
 
-`@j4k-oss/repoq` classifies every parseable non-GitHub host as a candidate Forgejo instance, so the origin check in `src/lib/provider.ts` rejects any origin whose resolved API host is not the Forge's. Keep that check when upgrading `@j4k-oss/repoq`.
-
 ## Usage
 
 Every command acts on one pull request. `--pr <number>` selects it and defaults to the open

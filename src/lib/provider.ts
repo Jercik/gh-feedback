@@ -16,6 +16,7 @@ export function detectProvider(remoteUrl: string): ProviderInfo | undefined {
   const forge = detectForge(remoteUrl);
   if (
     forge.provider !== "forgejo" ||
+    // repoq reports every parseable non-GitHub host as Forgejo; without this comparison any such origin would pass.
     forge.apiHost !== FORGEJO_API_HOST ||
     forge.host === null ||
     forge.owner === null ||
