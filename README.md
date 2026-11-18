@@ -204,8 +204,8 @@ Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existi
 
 ### Reading as another account
 
-`snapshot` and `summary` take `--viewer <login>` to report the pull request as that
-account settled it, rather than as the account `fgj auth user` names:
+`--viewer <login>` reports the pull request as that account settled it, rather than
+as the account `fgj auth user` names:
 
 - The snapshot's `viewer` field is that login.
 - Every item's status counts only the reactions that login added, and the replies
@@ -214,9 +214,9 @@ account settled it, rather than as the account `fgj auth user` names:
 - Unpublished drafts are still the token owner's, because Forgejo returns no one
   else's.
 
-`--viewer` only reads. Commands that write do not take it and always act as the
-token owner; passing it to one fails as an unknown option. A value that is not a
-valid Forgejo login is a usage error.
+Commands that write do not take `--viewer` and always act as the token owner;
+passing it to one fails as an unknown option. A value that is not a valid Forgejo
+login is a usage error. `pr-feedback <command> --help` shows which commands take it.
 
 ```bash
 pr-feedback summary --repo owner/repo --pr 12 --viewer reviewer-bot --json

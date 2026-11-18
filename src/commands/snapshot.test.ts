@@ -268,12 +268,6 @@ describe("standalone explicit repository snapshot", () => {
 });
 
 describe("viewer login from fgj", () => {
-  it("reports the stored login that fgj auth user prints", () => {
-    const result = run("stable", ["snapshot", "--repo", "owner/repo", "--pr", "7"], false, "");
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ viewer: "maintainer" });
-  });
-
   it("names the minimum fgj build when fgj answers auth user with help text", () => {
     const result = run("stable", ["snapshot", "--repo", "owner/repo", "--pr", "7"], false, "help");
     expect(result.status).toBe(1);

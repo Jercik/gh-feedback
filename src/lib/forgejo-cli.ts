@@ -1,8 +1,6 @@
 import { forgejoFetch } from "./forgejo-http.js";
 import { fetchPaginatedListing } from "./forgejo-review-pages.js";
 
-export { FGJ_PATH_ENV_VAR, getFgjBinaryPath } from "./fgj-auth.js";
-export { FORGEJO_API_HOST_ENV_VAR, forgejoApiHost } from "./forgejo-api-host.js";
 export { isForgejoNotFound, forgejoFetch, forgejoResponse } from "./forgejo-http.js";
 
 /**

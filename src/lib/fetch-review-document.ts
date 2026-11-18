@@ -1,6 +1,7 @@
 import { classifyNewestPass, toReviewClaim, toSealedPassFact } from "./build-review-document.js";
 import type { ReviewDocument, ReviewFacts } from "./build-review-document.js";
-import { forgejoApiHost, forgejoFetchList } from "./forgejo-cli.js";
+import { forgejoApiHost } from "./forgejo-api-host.js";
+import { forgejoFetchList } from "./forgejo-cli.js";
 import { ForgejoSnapshotIssueComment } from "./forgejo-schemas.js";
 import { findSummaryReport } from "./parse-review-summary.js";
 import type { ReviewStamp } from "./parse-review-summary.js";

@@ -2,7 +2,7 @@ import type { Command } from "@commander-js/extra-typings";
 import type { FeedbackBackend, FeedbackItemRef, ItemStatus } from "./feedback-backend.js";
 import type { DoneStatus } from "./feedback-types.js";
 import { errorMessage } from "./error-message.js";
-import { forgejoApiHost } from "./forgejo-cli.js";
+import { forgejoApiHost } from "./forgejo-api-host.js";
 import { prOption, repoOption } from "./feedback-target.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { parseMessageSource, readMessage } from "./message-input.js";

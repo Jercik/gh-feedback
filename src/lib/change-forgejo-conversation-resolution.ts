@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import type { CapabilityResult } from "./feedback-backend.js";
-import { forgejoApiHost, getFgjBinaryPath } from "./forgejo-cli.js";
+import { getFgjBinaryPath } from "./fgj-auth.js";
+import { forgejoApiHost } from "./forgejo-api-host.js";
 import {
   forgejoResolutionArgs,
   forgejoResolutionUnsupportedReason,
