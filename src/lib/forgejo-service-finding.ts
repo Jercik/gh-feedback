@@ -1,5 +1,6 @@
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
+import { forgejoFetchList } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-http.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./fgj-auth.js";
 import { forgejoReplyRoute, stripForgejoReplyPrefix } from "./forgejo-reply.js";

@@ -23,7 +23,7 @@ import type {
   SummaryOptions,
 } from "./feedback-backend.js";
 import type { FeedbackTarget } from "./feedback-target.js";
-import { forgejoFetch } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-http.js";
 import { reactionsPath } from "./forgejo-reactions.js";
 import { resolveItemMeta, metaKindToItemType } from "./forgejo-item.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";

@@ -9,7 +9,8 @@
  */
 
 import type { FeedbackItemRef } from "./feedback-backend.js";
-import { forgejoFetch, forgejoFetchAll, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetchAll } from "./forgejo-cli.js";
+import { forgejoFetch, isForgejoNotFound } from "./forgejo-http.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { parseBackingCommentId } from "./feedback-values.js";

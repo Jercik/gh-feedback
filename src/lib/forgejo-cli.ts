@@ -1,8 +1,6 @@
 import { forgejoFetch } from "./forgejo-http.js";
 import { fetchPaginatedListing } from "./forgejo-review-pages.js";
 
-export { isForgejoNotFound, forgejoFetch, forgejoResponse } from "./forgejo-http.js";
-
 /**
  * Fetch a Forgejo collection endpoint that returns its whole set in one
  * response and ignores page/limit (e.g. issues/{index}/comments and

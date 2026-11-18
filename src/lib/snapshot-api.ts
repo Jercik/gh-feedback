@@ -10,7 +10,7 @@ import { verboseLog } from "./verbose-mode.js";
 import { reactionsPath } from "./forgejo-reactions.js";
 import { deriveStatus, userRef } from "./feedback-values.js";
 import type { FindingComment } from "./review-service-finding.js";
-import { forgejoResponse } from "./forgejo-cli.js";
+import { forgejoResponse } from "./forgejo-http.js";
 import { fetchPaginatedListing, requireTotalCount } from "./forgejo-review-pages.js";
 
 export async function fetchFindingStatus(

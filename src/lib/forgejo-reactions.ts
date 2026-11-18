@@ -1,6 +1,6 @@
 import { REACTION_CONTENTS, type ReactionContent, type Reaction } from "./types.js";
 import { ForgejoReaction } from "./forgejo-schemas.js";
-import { forgejoFetch, isForgejoNotFound } from "./forgejo-cli.js";
+import { forgejoFetch, isForgejoNotFound } from "./forgejo-http.js";
 
 const reactionContents = new Set<string>(REACTION_CONTENTS);
 

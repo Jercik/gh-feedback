@@ -1,7 +1,7 @@
 import { runPass } from "./feedback-sweep.js";
 import { fetchApiLimit } from "./forgejo-review-pages.js";
 import { forgejoApiHost } from "./forgejo-api-host.js";
-import { forgejoFetch } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-http.js";
 import { getForgejoViewer } from "./fgj-auth.js";
 import type { ForgejoLogin } from "./forgejo-login.js";
 import { ForgejoPull } from "./forgejo-schemas.js";

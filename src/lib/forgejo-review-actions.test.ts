@@ -2,11 +2,13 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { createForgejoBackend } from "./forgejo-backend.js";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), reviews: vi.fn(), comments: vi.fn() }));
-vi.mock("./forgejo-cli.js", () => ({
+vi.mock("./forgejo-http.js", () => ({
   forgejoFetch: mocks.fetch,
+  isForgejoNotFound: () => false,
+}));
+vi.mock("./forgejo-cli.js", () => ({
   forgejoFetchAll: mocks.reviews,
   forgejoFetchList: vi.fn().mockResolvedValue([]),
-  isForgejoNotFound: () => false,
 }));
 vi.mock("./fgj-auth.js", () => ({
   getForgejoViewer: vi.fn().mockReturnValue("codex"),

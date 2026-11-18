@@ -14,7 +14,7 @@
 
 import type { FeedbackItemRef, ReplyResult } from "./feedback-backend.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
-import { forgejoFetch } from "./forgejo-cli.js";
+import { forgejoFetch } from "./forgejo-http.js";
 import { forgejoThreadReplyBody, hasThreadablePosition } from "./forgejo-thread-reply.js";
 
 export const FORGEJO_REPLY_MARKER = "> Replying to ";

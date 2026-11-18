@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveItemMeta } from "./forgejo-item.js";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), reviews: vi.fn(), comments: vi.fn() }));
-vi.mock("./forgejo-cli.js", () => ({
+vi.mock("./forgejo-http.js", () => ({
   forgejoFetch: mocks.fetch,
-  forgejoFetchAll: mocks.reviews,
   isForgejoNotFound: () => false,
 }));
+vi.mock("./forgejo-cli.js", () => ({ forgejoFetchAll: mocks.reviews }));
 vi.mock("./forgejo-pull-review-comments.js", () => ({
   fetchPullReviewComments: mocks.comments,
 }));
