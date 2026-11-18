@@ -49,6 +49,16 @@ globalThis.fetch = async (input, options): Promise<Response> => {
     if (method === "POST" && route === "repos/owner/repo/issues/comments/403/reactions") {
       return Response.json({ message: "reaction rejected" }, { status: 500 });
     }
+    if (
+      method === "POST" &&
+      process.env.FIXTURE_ACTING_LOGIN !== undefined &&
+      /^repos\/owner\/repo\/issues\/comments\/40[1-3]\/reactions$/u.test(route)
+    ) {
+      return Response.json(
+        { content: "eyes", user: { login: process.env.FIXTURE_ACTING_LOGIN } },
+        { status: 201 },
+      );
+    }
     if (/^repos\/owner\/repo\/issues\/comments\/40[1-3]\/reactions$/u.test(route)) {
       return new Response(null, { status: 204 });
     }

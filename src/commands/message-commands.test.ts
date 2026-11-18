@@ -164,6 +164,22 @@ describe("a write that lands as another account", () => {
       "Error: Forgejo POST repos/owner/repo/issues/7/comments landed as 'other-account', but fgj auth user names 'maintainer'; make fgj store the token's own login before acting again",
     );
   });
+
+  it("removes no reaction when the new status reaction lands as another account", () => {
+    const result = run(["start", "402"], { FIXTURE_ACTING_LOGIN: "other-account" });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "Error: Forgejo POST repos/owner/repo/issues/comments/402/reactions landed as 'other-account', but fgj auth user names 'maintainer'",
+    );
+    expect(result.mutations).toStrictEqual([
+      {
+        method: "POST",
+        route: "repos/owner/repo/issues/comments/402/reactions",
+        body: { content: "eyes" },
+      },
+    ]);
+  });
 });
 
 describe("message commands whose status reaction fails", () => {

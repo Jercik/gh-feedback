@@ -34,7 +34,6 @@ import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { getForgejoViewer } from "./fgj-auth.js";
-import { verifyActingViewer } from "./verify-acting-viewer.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
 import { listForgejoOwnReplies, readForgejoServiceFinding } from "./forgejo-service-finding.js";
@@ -144,10 +143,7 @@ export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
       // Keep the PR-membership guard; cache hits reuse metadata verified on insertion.
       await metaFor(item);
       const path = reactionsPath(slug, item.id);
-      verifyActingViewer(
-        await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } }),
-        `Forgejo POST ${path}`,
-      );
+      await forgejoFetch({ method: "POST", path, body: { content: reaction } });
     },
 
     async removeReactions(item: FeedbackItemRef, reactions: ReactionContent[]): Promise<void> {

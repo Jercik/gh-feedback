@@ -157,14 +157,14 @@ describe("start", () => {
     expect(result.status).toBe(0);
     expect(result.mutations).toStrictEqual([
       {
-        method: "DELETE",
-        route: "repos/owner/repo/issues/comments/304/reactions",
-        body: { content: "hooray" },
-      },
-      {
         method: "POST",
         route: "repos/owner/repo/issues/comments/304/reactions",
         body: { content: "eyes" },
+      },
+      {
+        method: "DELETE",
+        route: "repos/owner/repo/issues/comments/304/reactions",
+        body: { content: "hooray" },
       },
     ]);
   });

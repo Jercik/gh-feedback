@@ -9,6 +9,7 @@
 
 import { fgjToken } from "./fgj-auth.js";
 import { forgejoApiHost } from "./forgejo-api-host.js";
+import { verifyActingViewer } from "./verify-acting-viewer.js";
 
 interface ForgejoRequest {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -98,5 +99,9 @@ export async function forgejoFetch<T>(request: ForgejoRequest): Promise<T | unde
   if (!text) {
     return undefined;
   }
-  return JSON.parse(text) as T;
+  const parsed: unknown = JSON.parse(text);
+  if (request.method === "POST") {
+    verifyActingViewer(parsed, `Forgejo POST ${request.path}`);
+  }
+  return parsed as T;
 }

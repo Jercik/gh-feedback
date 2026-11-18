@@ -18,8 +18,8 @@ export async function setStatus(
   viewerReactions: ReactionContent[],
   status: ReactedStatus,
 ): Promise<void> {
-  await backend.removeReactions(item, replacedReactions(viewerReactions, status));
   await backend.addReaction(item, statusReactions[status]);
+  await backend.removeReactions(item, replacedReactions(viewerReactions, status));
 }
 
 // Undoes setStatus called with the same arguments, including one that failed partway.

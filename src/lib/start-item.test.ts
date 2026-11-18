@@ -66,7 +66,7 @@ describe("startItem", () => {
     } as unknown as FeedbackBackend;
 
     await startItem(backend, item, ["+1"], true);
-    expect(events).toStrictEqual(["unresolve", "remove", "add:eyes"]);
+    expect(events).toStrictEqual(["unresolve", "add:eyes", "remove"]);
   });
 
   it("preserves reactions when reopening throws", async () => {
