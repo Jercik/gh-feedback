@@ -1,5 +1,5 @@
 import type { ItemStatus } from "./feedback-backend.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
 import type { ForgejoItemMeta } from "./forgejo-item.js";
 import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
 import { deriveStatus } from "./feedback-values.js";
@@ -12,7 +12,7 @@ export async function getForgejoItemStatus(
   meta: ForgejoItemMeta,
   itemId: number,
 ): Promise<ItemStatus> {
-  const viewer = await getForgejoViewer();
+  const viewer = getForgejoViewer();
   const reactions = await fetchReactions(slug, itemId);
   const viewerReactions = viewerReactionStrings(reactions, viewer);
   const { status } = deriveStatus(viewerReactions, meta.reviewComment);

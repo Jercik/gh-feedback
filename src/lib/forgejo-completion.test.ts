@@ -16,7 +16,7 @@ vi.mock("./change-forgejo-conversation-resolution.js", () => ({
 vi.mock("./forgejo-pull-review-comments.js", () => ({
   fetchPullReviewComments: mocks.fetchComments,
 }));
-vi.mock("./forgejo-environment.js", () => ({ getForgejoViewer: mocks.getViewer }));
+vi.mock("./fgj-auth.js", () => ({ getForgejoViewer: mocks.getViewer }));
 vi.mock("./forgejo-reactions.js", async (importOriginal) => ({
   ...(await importOriginal<typeof ForgejoReactionsModule>()),
   fetchReactions: mocks.fetchReactions,
@@ -45,7 +45,7 @@ const comment = (overrides: Record<string, unknown> = {}) =>
 describe("forgejo transition state refresh", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getViewer.mockResolvedValue("codex");
+    mocks.getViewer.mockReturnValue("codex");
     mocks.fetchReactions.mockResolvedValue([]);
     mocks.changeResolution.mockReturnValue({ supported: true, applied: true });
   });

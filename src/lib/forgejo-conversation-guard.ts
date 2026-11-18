@@ -2,7 +2,7 @@ import { compareForgejoCommentOrder } from "./compare-forgejo-comment-order.js";
 import { deriveStatus } from "./feedback-values.js";
 import type { FeedbackItemRef } from "./feedback-backend.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
 import { fetchReactions, viewerReactionStrings } from "./forgejo-reactions.js";
 import {
@@ -123,7 +123,7 @@ export async function getForgejoConversationResolutionReadiness(
     return { ready: true };
   }
 
-  const viewer = await getForgejoViewer();
+  const viewer = getForgejoViewer();
   const reviewComments = availableComments ?? (await fetchPullReviewComments(slug, item.prNumber));
   const siblings = forgejoNativeConversationSiblingRoots(reviewComments, viewer, item.id);
   if (!siblings) {

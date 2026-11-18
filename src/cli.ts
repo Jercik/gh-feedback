@@ -8,6 +8,7 @@ import { createProgram } from "./lib/create-program.js";
 import { exitWithMessage } from "./lib/git-helpers.js";
 import { prOption, repoOption } from "./lib/feedback-target.js";
 import { resolveBackend } from "./lib/resolve-backend.js";
+import { VIEWER_OPTION_HELP, viewerOption } from "./lib/viewer-option.js";
 import { formatSummary } from "./lib/format-summary.js";
 import { registerReviewCommand } from "./commands/review.js";
 import { registerStartCommand } from "./commands/start.js";
@@ -74,6 +75,8 @@ program
   .option("-j, --json", "Output as JSON")
   .addOption(repoOption())
   .addOption(prOption())
+  .addOption(viewerOption())
+  .addHelpText("after", VIEWER_OPTION_HELP)
   .action(async (options) => {
     try {
       const { backend, target } = await resolveBackend(options);
@@ -81,6 +84,7 @@ program
       verboseLog(`Fetching feedback for PR #${target.prNumber}...`);
       const summary = await backend.fetchSummary({
         hideResolved: options.hideResolved,
+        viewer: options.viewer,
       });
 
       if (options.json) {

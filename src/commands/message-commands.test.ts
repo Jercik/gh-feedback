@@ -10,7 +10,19 @@ let fgj: string;
 beforeAll(() => {
   checkout = fs.mkdtempSync(path.join(os.tmpdir(), "message-commands-"));
   fgj = path.join(checkout, "fgj");
-  fs.writeFileSync(fgj, "#!/bin/sh\nprintf '%s\\n' fixture-token\n", { mode: 0o755 });
+  fs.writeFileSync(
+    fgj,
+    [
+      "#!/bin/sh",
+      'case "$1 $2" in',
+      String.raw`  "auth token") printf '%s\n' fixture-token;;`,
+      String.raw`  "auth user") printf '%s\n' maintainer;;`,
+      "  *) exit 1;;",
+      "esac",
+      "",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
   execFileSync("git", ["init", "--quiet", "--initial-branch=fixture"], { cwd: checkout });
   execFileSync("git", ["config", "user.name", "Fixture"], { cwd: checkout });
   execFileSync("git", ["config", "user.email", "fixture@example.com"], { cwd: checkout });
@@ -27,7 +39,7 @@ afterAll(() => {
   fs.rmSync(checkout, { recursive: true, force: true });
 });
 
-function run(args: string[]) {
+function run(args: string[], fixtureEnv: Record<string, string> = {}) {
   const mutationLog = path.join(checkout, `mutations-${args.join("-")}.jsonl`);
   const result = spawnSync(process.execPath, [path.join(repoRoot, "dist/cli.js"), ...args], {
     cwd: checkout,
@@ -39,6 +51,7 @@ function run(args: string[]) {
       PR_FEEDBACK_FGJ_PATH: fgj,
       PR_FEEDBACK_FORGEJO_API_HOST: "code.j4k.dev",
       NODE_OPTIONS: `--import=${new URL("fixtures/message-commands-api.test.fixture.ts", import.meta.url).href}`,
+      ...fixtureEnv,
     },
   });
   const mutations = fs.existsSync(mutationLog)
@@ -138,6 +151,18 @@ describe("message commands on an agreed issue comment", () => {
         body: { body: "> Replying to comment #402\n\nNoted" },
       },
     ]);
+  });
+});
+
+describe("a write that lands as another account", () => {
+  it("fails naming the acting login and the fgj login", () => {
+    const result = run(["reply", "401", "-m", "Noted"], { FIXTURE_ACTING_LOGIN: "other-account" });
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(
+      "Error: Forgejo POST repos/owner/repo/issues/7/comments landed as 'other-account', but fgj auth user names 'maintainer'; make fgj store the token's own login before acting again",
+    );
   });
 });
 

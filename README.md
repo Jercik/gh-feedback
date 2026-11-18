@@ -47,7 +47,7 @@ All of these provide the same `pr-feedback` command.
 
 - Node.js 26.0.0+
 - Git installed (`git`), with `user.name` and `user.email` configured, and a repository with an `origin` remote. Both are unnecessary when you pass `--repo` and `--pr`.
-- the j4k `fgj` build with `pr review resolve`/`unresolve` (v0.5.0-j4k.4 or newer), authenticated
+- the j4k `fgj` build v0.6.1-j4k.4 or newer, logged in to the API host. `pr-feedback` takes the API token from `fgj auth token` and the viewer's login from `fgj auth user`, so a token limited to repository and issue scopes is enough. A reply or reaction that Forgejo reports as written by a different account fails, naming both logins.
 
 The j4k Forgejo fork resolves inline review conversations through the local
 `fgj` CLI; the [Commands](#commands) table says when each command resolves one. Plain PR
@@ -179,9 +179,10 @@ An item is settled once it is agreed, acknowledged or dismissed; a disagreed ite
 
 `pr-feedback snapshot --repo owner/repo --pr 123` reads all review bodies, inline
 comments, issue comments, viewer reactions, and native conversation resolution
-metadata twice. It takes the same `--repo` and `--pr` as every command. API host
-selection and viewer identity use the existing authenticated Forgejo context, not
-command-line overrides.
+metadata twice. It takes the same `--repo` and `--pr` as every command. The API
+host comes from the environment, not a command-line option. The viewer is the
+login `fgj auth user` stores for that host unless
+[`--viewer`](#reading-as-another-account) names another account.
 
 Stdout is one JSON document identified by `schema: "pr-feedback.snapshot"` and
 `version: 1`, with actual `host`, `slug`, `pr`, `viewer`, API `limit`, `stable`,
@@ -200,6 +201,26 @@ Inline findings remain independent even when they share a native conversation;
 only authenticated reply markers attach responses.
 
 Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.
+
+### Reading as another account
+
+`snapshot` and `summary` take `--viewer <login>` to report the pull request as that
+account settled it, rather than as the account `fgj auth user` names:
+
+- The snapshot's `viewer` field is that login.
+- Every item's status counts only the reactions that login added, and the replies
+  attached to items are only the ones that login wrote. Another account's marked
+  replies appear as comments in their own right.
+- Unpublished drafts are still the token owner's, because Forgejo returns no one
+  else's.
+
+`--viewer` only reads. Commands that write do not take it and always act as the
+token owner; passing it to one fails as an unknown option. A value that is not a
+valid Forgejo login is a usage error.
+
+```bash
+pr-feedback summary --repo owner/repo --pr 12 --viewer reviewer-bot --json
+```
 
 ### Review-service facts
 

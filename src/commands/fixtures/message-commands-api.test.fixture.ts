@@ -38,7 +38,11 @@ globalThis.fetch = async (input, options): Promise<Response> => {
     );
     if (method === "POST" && route === "repos/owner/repo/issues/7/comments") {
       return Response.json(
-        { id: 501, html_url: "https://code.j4k.dev/owner/repo/pulls/7#issuecomment-501" },
+        {
+          id: 501,
+          html_url: "https://code.j4k.dev/owner/repo/pulls/7#issuecomment-501",
+          user: { login: process.env.FIXTURE_ACTING_LOGIN ?? "maintainer" },
+        },
         { status: 201 },
       );
     }
@@ -52,9 +56,6 @@ globalThis.fetch = async (input, options): Promise<Response> => {
   }
   if (route === "settings/api") {
     return Response.json({ max_response_items: 50 });
-  }
-  if (route === "user") {
-    return Response.json({ login: "maintainer" });
   }
   if (route === "repos/owner/repo/pulls") {
     return Response.json([pull], { headers: { "X-Total-Count": "1" } });

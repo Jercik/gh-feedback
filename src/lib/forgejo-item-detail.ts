@@ -12,7 +12,7 @@ import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
 
@@ -32,7 +32,7 @@ export async function buildItemDetail(
     // id) so detail returns every comment in the conversation — matching summary's
     // grouping — rather than just the root. The id may
     // be a reply, so match it on either side.
-    const viewer = await getForgejoViewer();
+    const viewer = getForgejoViewer();
     const conversations = groupReviewCommentConversations(resolved.reviewComments ?? [], viewer);
     const conversation = findConversationFor(conversations, target.id);
     const members = conversation ? [conversation.root, ...conversation.replies] : [target];

@@ -74,9 +74,6 @@ globalThis.fetch = async (input, options): Promise<Response> => {
   const url = new URL(address);
   const route = url.pathname.replace("/api/v1/", "");
   const mode = process.env.SNAPSHOT_FIXTURE_MODE;
-  if (route === "user") {
-    return response(viewer);
-  }
   if (route === "settings/api") {
     return response({ max_response_items: 2 });
   }

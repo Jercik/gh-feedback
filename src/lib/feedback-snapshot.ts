@@ -1,12 +1,17 @@
 import { runPass } from "./feedback-sweep.js";
 import { fetchApiLimit } from "./forgejo-review-pages.js";
 import { forgejoApiHost, forgejoFetch } from "./forgejo-cli.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
+import type { ForgejoLogin } from "./forgejo-login.js";
 import { ForgejoPull } from "./forgejo-schemas.js";
 
-export async function fetchFeedbackSnapshot(slug: string, pr: number) {
+export async function fetchFeedbackSnapshot(
+  slug: string,
+  pr: number,
+  requestedViewer: ForgejoLogin | undefined,
+) {
   const host = forgejoApiHost();
-  const viewer = await getForgejoViewer();
+  const viewer = requestedViewer ?? getForgejoViewer();
   const limit = await fetchApiLimit();
   async function pass(number: number) {
     const pull = ForgejoPull.parse(

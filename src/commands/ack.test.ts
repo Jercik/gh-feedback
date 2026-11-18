@@ -12,7 +12,15 @@ beforeAll(() => {
   fgj = path.join(checkout, "fgj");
   fs.writeFileSync(
     fgj,
-    "#!/bin/sh\nif [ \"$1\" = auth ]; then printf '%s\\n' fixture-token; else printf '%s\\n' 'unknown command \"resolve\"' >&2; exit 1; fi\n",
+    [
+      "#!/bin/sh",
+      'case "$1 $2" in',
+      String.raw`  "auth token") printf '%s\n' fixture-token;;`,
+      String.raw`  "auth user") printf '%s\n' maintainer;;`,
+      String.raw`  *) printf '%s\n' 'unknown command "resolve"' >&2; exit 1;;`,
+      "esac",
+      "",
+    ].join("\n"),
     { mode: 0o755 },
   );
   execFileSync("git", ["init", "--quiet", "--initial-branch=fixture"], { cwd: checkout });

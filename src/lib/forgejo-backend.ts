@@ -33,7 +33,8 @@ import { buildItemDetail } from "./forgejo-item-detail.js";
 import { reviewCommentLine } from "./forgejo-review-comment-line.js";
 import { postForgejoReply } from "./forgejo-reply.js";
 import { fetchPullReviewComments } from "./forgejo-pull-review-comments.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
+import { verifyActingViewer } from "./verify-acting-viewer.js";
 import { exitWithMessage } from "./git-helpers.js";
 import { getForgejoItemStatus } from "./forgejo-item-status.js";
 import { listForgejoOwnReplies, readForgejoServiceFinding } from "./forgejo-service-finding.js";
@@ -53,7 +54,7 @@ export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
     // user may have targeted resolves to the finding — every later reaction read
     // and write then lands on the same comment summary reports.
     if (resolved.meta.kind === "review-comment" && resolved.reviewComment) {
-      const viewer = await getForgejoViewer();
+      const viewer = getForgejoViewer();
       const root =
         conversationRootOf(resolved.reviewComments ?? [], itemId, viewer) ?? resolved.reviewComment;
       metaCache.set(root.id, {
@@ -143,7 +144,10 @@ export function createForgejoBackend(target: FeedbackTarget): FeedbackBackend {
       // Keep the PR-membership guard; cache hits reuse metadata verified on insertion.
       await metaFor(item);
       const path = reactionsPath(slug, item.id);
-      await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } });
+      verifyActingViewer(
+        await forgejoFetch<unknown>({ method: "POST", path, body: { content: reaction } }),
+        `Forgejo POST ${path}`,
+      );
     },
 
     async removeReactions(item: FeedbackItemRef, reactions: ReactionContent[]): Promise<void> {

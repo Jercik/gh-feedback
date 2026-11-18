@@ -11,7 +11,22 @@ let fgj: string;
 beforeAll(() => {
   checkout = fs.mkdtempSync(path.join(os.tmpdir(), "snapshot-cli-"));
   fgj = path.join(checkout, "fgj");
-  fs.writeFileSync(fgj, "#!/bin/sh\nprintf '%s\\n' fixture-token\n", { mode: 0o755 });
+  fs.writeFileSync(
+    fgj,
+    [
+      "#!/bin/sh",
+      'case "$1 $2 $FGJ_FIXTURE_USER" in',
+      String.raw`  "auth token "*) printf '%s\n' fixture-token;;`,
+      // An fgj without `auth user` answers with the auth group's help and exit 0.
+      String.raw`  "auth user help") printf '%s\n' 'Manage authentication with Forgejo instances' '' 'Usage:' '  fgj auth [command]' '' 'Available Commands:' '  login       Log in to a Forgejo instance' '  token       Print the auth token';;`,
+      String.raw`  "auth user unconfigured") printf '%s\n' 'no user stored for code.j4k.dev; run fgj auth login' >&2; exit 1;;`,
+      String.raw`  "auth user "*) printf '%s\n' maintainer;;`,
+      "  *) exit 1;;",
+      "esac",
+      "",
+    ].join("\n"),
+    { mode: 0o755 },
+  );
   execFileSync("git", ["init", "--quiet", "--initial-branch=fixture"], { cwd: checkout });
   execFileSync("git", ["config", "user.name", "Fixture"], { cwd: checkout });
   execFileSync("git", ["config", "user.email", "fixture@example.com"], { cwd: checkout });
@@ -32,6 +47,7 @@ function run(
   mode = "stable",
   command = ["snapshot", "--repo", "owner/repo", "--pr", "7"],
   standalone = false,
+  fgjUser = "",
 ): SpawnSyncReturns<string> {
   return spawnSync(process.execPath, [path.join(repoRoot, "dist/cli.js"), ...command], {
     cwd: standalone ? os.tmpdir() : checkout,
@@ -41,6 +57,7 @@ function run(
       ...process.env,
       ...(standalone ? { PATH: "", PR_FEEDBACK_GIT_PATH: "/no-git-for-explicit-snapshot" } : {}),
       PR_FEEDBACK_FGJ_PATH: fgj,
+      FGJ_FIXTURE_USER: fgjUser,
       PR_FEEDBACK_FORGEJO_API_HOST: "code.j4k.dev",
       SNAPSHOT_FIXTURE_MODE: mode,
       NODE_OPTIONS: `--import=${new URL("fixtures/snapshot-api.test.fixture.ts", import.meta.url).href}`,
@@ -247,5 +264,34 @@ describe("standalone explicit repository snapshot", () => {
     const result = run("stable", ["ack", "401", "--repo", "owner/repo", "--dry-run"], true);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("--repo requires --pr");
+  });
+});
+
+describe("viewer login from fgj", () => {
+  it("reports the stored login that fgj auth user prints", () => {
+    const result = run("stable", ["snapshot", "--repo", "owner/repo", "--pr", "7"], false, "");
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ viewer: "maintainer" });
+  });
+
+  it("names the minimum fgj build when fgj answers auth user with help text", () => {
+    const result = run("stable", ["snapshot", "--repo", "owner/repo", "--pr", "7"], false, "help");
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(
+      "Error: installed fgj does not print the stored login with 'fgj auth user'; install the j4k build v0.6.1-j4k.4 or newer",
+    );
+  });
+
+  it("fails with fgj's message when fgj auth user exits nonzero", () => {
+    const result = run(
+      "stable",
+      ["snapshot", "--repo", "owner/repo", "--pr", "7"],
+      false,
+      "unconfigured",
+    );
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("no user stored for code.j4k.dev; run fgj auth login");
   });
 });

@@ -16,6 +16,7 @@ beforeAll(() => {
       "#!/bin/sh",
       'case "$*" in',
       String.raw`  *"pr review"*) printf '{"fgj":"%s"}\n' "$*" >> "$FIXTURE_MUTATION_LOG"; exit 0;;`,
+      String.raw`  "auth user "*) printf '%s\n' maintainer; exit 0;;`,
       "esac",
       String.raw`printf '%s\n' fixture-token`,
       "",

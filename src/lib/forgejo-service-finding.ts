@@ -1,7 +1,7 @@
 import type { FeedbackItemRef } from "./feedback-backend.js";
 import { forgejoFetch, forgejoFetchList } from "./forgejo-cli.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
 import { forgejoReplyRoute, stripForgejoReplyPrefix } from "./forgejo-reply.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
@@ -36,7 +36,7 @@ export async function listForgejoOwnReplies(
   if (item.type !== "thread" || root === undefined) {
     return [];
   }
-  const viewer = await getForgejoViewer();
+  const viewer = getForgejoViewer();
   if (forgejoReplyRoute(item, root).kind === "thread") {
     const conversation = groupReviewCommentConversations(reviewComments, viewer).find(
       (candidate) => candidate.root.id === root.id,

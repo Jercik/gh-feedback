@@ -1,5 +1,6 @@
 import type { ItemDetail } from "./fetch-item-detail.js";
 import type { DoneStatus } from "./feedback-types.js";
+import type { ForgejoLogin } from "./forgejo-login.js";
 import type { ServiceFinding } from "./review-service-finding.js";
 import type { OwnReply } from "./select-reusable-reply.js";
 import type { FeedbackSummary } from "./summary-types.js";
@@ -16,6 +17,7 @@ export interface FeedbackItemRef {
 
 export interface SummaryOptions {
   hideResolved?: boolean;
+  viewer: ForgejoLogin | undefined;
 }
 
 export interface ItemStatus {

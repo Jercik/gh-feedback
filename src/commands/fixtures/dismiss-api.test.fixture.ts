@@ -121,9 +121,6 @@ globalThis.fetch = async (input, options): Promise<Response> => {
   if (route === "settings/api") {
     return Response.json({ max_response_items: 50 });
   }
-  if (route === "user") {
-    return Response.json({ login: "maintainer" });
-  }
   if (route === "repos/owner/repo/pulls/7/reviews") {
     return Response.json(reviews, { headers: { "X-Total-Count": String(reviews.length) } });
   }

@@ -3,7 +3,7 @@ import {
   forgejoNativeConversationResolver,
   getForgejoConversationResolutionReadiness,
 } from "./forgejo-conversation-guard.js";
-import { getForgejoViewer } from "./forgejo-environment.js";
+import { getForgejoViewer } from "./fgj-auth.js";
 import {
   decideForgejoReopen,
   decideForgejoCompletion,
@@ -29,10 +29,8 @@ export async function completeForgejoItem(
   if (item.type !== "thread") {
     return { supported: true, applied: true };
   }
-  const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
-    fetchForgejoTransitionState(slug, item),
-    getForgejoViewer(),
-  ]);
+  const viewer = getForgejoViewer();
+  const { reviewComments, reviewComment } = await fetchForgejoTransitionState(slug, item);
   const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const readiness = forgejoCompletionNeedsReadiness(outcome, Boolean(resolver))
     ? await getForgejoConversationResolutionReadiness(slug, item, reviewComments)
@@ -56,10 +54,8 @@ export async function reopenForgejoItem(
   if (item.type !== "thread") {
     return { supported: true, applied: true };
   }
-  const [{ reviewComments, reviewComment }, viewer] = await Promise.all([
-    fetchForgejoTransitionState(slug, item),
-    getForgejoViewer(),
-  ]);
+  const viewer = getForgejoViewer();
+  const { reviewComments, reviewComment } = await fetchForgejoTransitionState(slug, item);
   const resolver = forgejoNativeConversationResolver(reviewComments, reviewComment);
   const decision = decideForgejoReopen(
     isForgejoConversationResolvedBy(resolver, viewer),

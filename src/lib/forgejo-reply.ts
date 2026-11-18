@@ -16,6 +16,7 @@ import type { FeedbackItemRef, ReplyResult } from "./feedback-backend.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { forgejoFetch } from "./forgejo-cli.js";
 import { forgejoThreadReplyBody, hasThreadablePosition } from "./forgejo-thread-reply.js";
+import { verifyActingViewer } from "./verify-acting-viewer.js";
 
 export const FORGEJO_REPLY_MARKER = "> Replying to ";
 
@@ -84,5 +85,6 @@ export async function postForgejoReply(
       `Forgejo POST ${path}: missing JSON reply response; the reply may already exist`,
     );
   }
+  verifyActingViewer(reply, `Forgejo POST ${path}`);
   return { id: reply.id, url: reply.html_url };
 }

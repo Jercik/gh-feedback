@@ -8,8 +8,8 @@ vi.mock("./forgejo-cli.js", () => ({
   forgejoFetchList: vi.fn().mockResolvedValue([]),
   isForgejoNotFound: () => false,
 }));
-vi.mock("./forgejo-environment.js", () => ({
-  getForgejoViewer: vi.fn().mockResolvedValue("codex"),
+vi.mock("./fgj-auth.js", () => ({
+  getForgejoViewer: vi.fn().mockReturnValue("codex"),
 }));
 vi.mock("./forgejo-pull-review-comments.js", () => ({ fetchPullReviewComments: mocks.comments }));
 

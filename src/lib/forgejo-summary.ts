@@ -9,9 +9,9 @@ import { FORGEJO_REPLY_MARKER } from "./forgejo-reply.js";
 export async function buildSummary(
   slug: string,
   prNumber: number,
-  options: SummaryOptions = {},
+  options: SummaryOptions,
 ): Promise<FeedbackSummary> {
-  const snapshot = await fetchFeedbackSnapshot(slug, prNumber);
+  const snapshot = await fetchFeedbackSnapshot(slug, prNumber, options.viewer);
   if (!snapshot.stable) {
     throw new Error(
       "Feedback changed between complete passes; rerun summary or inspect snapshot (exit 3).",
