@@ -16,16 +16,12 @@ export function changeForgejoConversationResolution(
   // fgj owns capability detection and anchor derivation; a raw REST fallback would create two clients.
   const result = runFgj(forgejoResolutionArgs(action, forgejoApiHost(), slug, prNumber, commentId));
 
-  if (result.status !== 0) {
-    const fallback = result.signal
-      ? `fgj exited on signal ${result.signal}`
-      : `fgj exited ${result.status}`;
-    const message = result.stderr.trim() || result.stdout.trim() || fallback;
-    const unsupportedReason = forgejoResolutionUnsupportedReason(message);
+  if (!result.ok) {
+    const unsupportedReason = forgejoResolutionUnsupportedReason(result.message);
     if (unsupportedReason) {
       return { supported: false, reason: unsupportedReason };
     }
-    throw new Error(message);
+    throw new Error(result.message);
   }
 
   return { supported: true, applied: true };

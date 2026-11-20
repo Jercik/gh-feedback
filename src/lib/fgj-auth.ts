@@ -6,8 +6,8 @@ const FGJ_AUTH_USER_MINIMUM_BUILD = "v0.6.1-j4k.4";
 
 function runFgjAuth(subcommand: "token" | "user"): string {
   const result = runFgj(["auth", subcommand, "--hostname", forgejoApiHost()]);
-  if (result.status !== 0) {
-    throw new Error(result.stderr.trim() || `fgj auth ${subcommand} failed`);
+  if (!result.ok) {
+    throw new Error(result.message);
   }
   return result.stdout;
 }
