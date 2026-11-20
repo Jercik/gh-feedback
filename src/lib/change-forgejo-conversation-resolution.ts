@@ -8,6 +8,8 @@ import {
   type ForgejoResolutionAction,
 } from "./forgejo-resolution.js";
 
+const FGJ_RESOLUTION_TIMEOUT_MS = 15_000;
+
 export function changeForgejoConversationResolution(
   slug: string,
   prNumber: number,
@@ -19,13 +21,18 @@ export function changeForgejoConversationResolution(
   const result = spawnSync(
     binary,
     forgejoResolutionArgs(action, forgejoApiHost(), slug, prNumber, commentId),
-    { encoding: "utf8" },
+    { encoding: "utf8", timeout: FGJ_RESOLUTION_TIMEOUT_MS },
   );
 
   if (result.error) {
     const error = result.error as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
       throw new Error(`Error: Required dependency 'fgj' not found at ${binary}.`);
+    }
+    if (error.code === "ETIMEDOUT") {
+      throw new Error(
+        `fgj pr review ${action} did not finish within ${FGJ_RESOLUTION_TIMEOUT_MS / 1000} seconds`,
+      );
     }
     throw result.error;
   }
