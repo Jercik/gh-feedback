@@ -10,6 +10,7 @@ beforeAll(() => {
   const fgj = path.join(fixtureDirectory, "fgj");
   fs.writeFileSync(fgj, "#!/bin/sh\nexec sleep 60\n", { mode: 0o755 });
   vi.stubEnv("PR_FEEDBACK_FGJ_PATH", fgj);
+  vi.stubEnv("PR_FEEDBACK_FORGEJO_API_HOST", "code.j4k.dev");
 });
 afterAll(() => {
   vi.unstubAllEnvs();
@@ -19,7 +20,9 @@ afterAll(() => {
 describe("changeForgejoConversationResolution", () => {
   it("fails naming the transition when fgj does not exit", () => {
     expect(() => changeForgejoConversationResolution("owner/repo", 7, 301, "resolve")).toThrow(
-      new Error("fgj pr review resolve did not finish within 15 seconds"),
+      new Error(
+        "fgj --hostname code.j4k.dev pr review resolve 7 301 -R owner/repo --json did not finish within 15 seconds",
+      ),
     );
   });
 });

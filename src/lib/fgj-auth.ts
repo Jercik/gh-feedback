@@ -1,40 +1,11 @@
-import { spawnSync } from "node:child_process";
 import { forgejoApiHost } from "./forgejo-api-host.js";
-import { resolveDependencyPath } from "./resolve-dependency-path.js";
 import { ForgejoLogin } from "./forgejo-login.js";
-
-export const FGJ_PATH_ENV_VAR = "PR_FEEDBACK_FGJ_PATH";
-
-export function getFgjBinaryPath(): string {
-  return resolveDependencyPath({
-    defaultPath: "fgj",
-    envOverride: process.env[FGJ_PATH_ENV_VAR],
-  });
-}
+import { runFgj } from "./run-fgj.js";
 
 const FGJ_AUTH_USER_MINIMUM_BUILD = "v0.6.1-j4k.4";
 
 function runFgjAuth(subcommand: "token" | "user"): string {
-  const fgjPath = getFgjBinaryPath();
-  const result = spawnSync(fgjPath, ["auth", subcommand, "--hostname", forgejoApiHost()], {
-    encoding: "utf8",
-    timeout: 15_000,
-  });
-
-  if (result.error) {
-    const error = result.error as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      throw new Error(
-        `Error: Required dependency 'fgj' not found.\n` +
-          `Looked for: ${fgjPath}\n` +
-          `To fix, either:\n` +
-          `  1. Install the Forgejo CLI (fgj)\n` +
-          `  2. Set ${FGJ_PATH_ENV_VAR}=/path/to/fgj`,
-      );
-    }
-    throw result.error;
-  }
-
+  const result = runFgj(["auth", subcommand, "--hostname", forgejoApiHost()]);
   if (result.status !== 0) {
     throw new Error(result.stderr.trim() || `fgj auth ${subcommand} failed`);
   }

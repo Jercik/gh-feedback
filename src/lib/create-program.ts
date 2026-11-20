@@ -2,7 +2,7 @@ import { Command } from "@commander-js/extra-typings";
 import packageJson from "../../package.json" with { type: "json" };
 import { enableVerboseMode } from "./verbose-mode.js";
 import { GIT_PATH_ENV_VAR } from "./git-helpers.js";
-import { FGJ_PATH_ENV_VAR } from "./fgj-auth.js";
+import { FGJ_PATH_ENV_VAR } from "./run-fgj.js";
 import { FORGEJO_API_HOST_ENV_VAR } from "./forgejo-api-host.js";
 
 export function createProgram(): Command {
