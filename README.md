@@ -260,6 +260,13 @@ The `summary` command outputs all PR feedback with semantic status. Status combi
 | `acknowledged`   | Noted, no action (🚀; the conversation may stay open)                                                                  |
 | `dismissed`      | Review-service finding rejected until reopened (🎉; resolves the conversation once every item in it is settled)        |
 
+When a reply cannot thread under its item, `reply` and the outcome commands post a PR
+comment that starts with `> Replying to comment #<id>` (or `review #<id>`,
+`review comment #<id>`). When the viewer wrote it, `summary` lists such a
+comment among the responses of the item with that ID, like a threaded reply. It stays an
+item of its own when another account wrote it or no item in the pull request has
+that ID.
+
 `summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review
 bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`
 provenance in JSON. Pretty output labels these bodies as nonactionable reviews;

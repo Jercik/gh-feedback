@@ -464,7 +464,7 @@ const maintainerSummary = {
       author: "reviewer",
       location: "",
       body: "Issue finding",
-      responses: [],
+      responses: [{ author: "maintainer", timestamp: "2026-01-01T00:00:05Z", body: "Which case?" }],
     },
     {
       id: 403,
@@ -521,7 +521,9 @@ const colleagueSummary = {
       author: "reviewer",
       location: "",
       body: "Issue finding",
-      responses: [],
+      responses: [
+        { author: "colleague", timestamp: "2026-01-01T00:00:06Z", body: "The empty one" },
+      ],
     },
     {
       id: 402,

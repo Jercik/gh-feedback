@@ -6,10 +6,7 @@
  * carrying an invisible parent-id marker (see forgejo-thread-reply) so the
  * summary re-attaches it to the exact comment it answered. Top-level PR comments,
  * review bodies, and inline comments with no diff position (the create endpoint
- * blames a line and rejects a zero position) have no line to thread under, so
- * replies to those post as PR issue comments prefixed with FORGEJO_REPLY_MARKER,
- * which the summary filters so a user's own reply never reappears as fresh
- * feedback.
+ * blames a line and rejects a zero position) have no line to thread under.
  */
 
 import type { FeedbackItemRef, ReplyResult } from "./feedback-backend.js";
@@ -17,24 +14,47 @@ import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { forgejoFetch } from "./forgejo-http.js";
 import { forgejoThreadReplyBody, hasThreadablePosition } from "./forgejo-thread-reply.js";
 
-export const FORGEJO_REPLY_MARKER = "> Replying to ";
+const FORGEJO_REPLY_MARKER = "> Replying to ";
 
-function forgejoReplyPrefix(itemType: FeedbackItemRef["type"], itemId: number): string {
-  if (itemType === "thread") {
-    return `${FORGEJO_REPLY_MARKER}review comment #${itemId}\n\n`;
+const markerNouns = {
+  thread: "review comment",
+  comment: "comment",
+  review: "review",
+} as const satisfies Record<FeedbackItemRef["type"], string>;
+
+type ReplyTarget = Pick<FeedbackItemRef, "type" | "id">;
+
+function forgejoReplyPrefix(item: ReplyTarget): string {
+  return `${FORGEJO_REPLY_MARKER}${markerNouns[item.type]} #${item.id}\n\n`;
+}
+
+// Forgejo issue and review comment IDs share one sequence, so the ID alone names the item.
+export function parseForgejoIssueCommentReply(
+  body: string,
+): { targetId: number; text: string } | undefined {
+  if (!body.startsWith(FORGEJO_REPLY_MARKER)) {
+    return undefined;
   }
-  if (itemType === "comment") {
-    return `${FORGEJO_REPLY_MARKER}comment #${itemId}\n\n`;
+  const rest = body.slice(FORGEJO_REPLY_MARKER.length);
+  for (const noun of Object.values(markerNouns)) {
+    const match = new RegExp(`^${noun} #(?<id>\\d+)(?:\\r?\\n|$)`, "u").exec(rest);
+    const id = match?.groups?.id;
+    if (match !== null && id !== undefined) {
+      return {
+        targetId: Number(id),
+        text: rest.slice(match[0].length).replace(/^(?:\r?\n)+/u, ""),
+      };
+    }
   }
-  return `${FORGEJO_REPLY_MARKER}review #${itemId}\n\n`;
+  return undefined;
 }
 
 export function stripForgejoReplyPrefix(
   body: string,
-  item: Pick<FeedbackItemRef, "type" | "id">,
+  item: Pick<FeedbackItemRef, "id">,
 ): string | undefined {
-  const prefix = forgejoReplyPrefix(item.type, item.id);
-  return body.startsWith(prefix) ? body.slice(prefix.length) : undefined;
+  const reply = parseForgejoIssueCommentReply(body);
+  return reply?.targetId === item.id ? reply.text : undefined;
 }
 
 type ForgejoReplyRoute =
@@ -71,7 +91,7 @@ export async function postForgejoReply(
     body = forgejoThreadReplyBody(route.reviewComment, message);
   } else {
     path = `repos/${slug}/issues/${item.prNumber}/comments`;
-    body = { body: forgejoReplyPrefix(item.type, item.id) + message };
+    body = { body: forgejoReplyPrefix(item) + message };
   }
 
   const reply = await forgejoFetch<{ id: number; html_url: string }>({
