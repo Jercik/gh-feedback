@@ -91,7 +91,7 @@ test("groups PR comment replies under the item their chain of replies answers", 
         issueReply(24, 22, "> Replying to comment #22\n\nAlso updated the help text"),
         issueReply(25, 23, "> Replying to comment #23\n\nAdded"),
       ]),
-    ),
+    ).repliesByItem,
   ]).toStrictEqual([
     [
       21,
@@ -135,7 +135,7 @@ test("groups a threaded reply and a PR comment reply that names it under the fin
           inlineComment(31, "reply", 30, "<!-- gh-feedback:reply-to:30 -->\nWhich input?"),
         ],
       ),
-    ),
+    ).repliesByItem,
   ]).toStrictEqual([
     [
       30,

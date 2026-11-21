@@ -1,4 +1,8 @@
-import type { ClassifiedIssueComment, CommentRecord, ReviewRecord } from "./feedback-types.js";
+import type {
+  ClassifiedIssueComment,
+  InlineCommentFields,
+  ReviewFields,
+} from "./feedback-types.js";
 import { stripForgejoReplyMarker } from "./forgejo-reply.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { mapCommentsToItems } from "./map-comments-to-items.js";
@@ -16,10 +20,10 @@ interface ItemReplies {
 }
 
 export function collectItemReplies(comments: {
-  reviews: { records: readonly ReviewRecord[] };
-  conversations: readonly { comments: readonly CommentRecord[] }[];
+  reviews: { records: readonly ReviewFields[] };
+  conversations: readonly { comments: readonly InlineCommentFields[] }[];
   issueComments: { records: readonly ClassifiedIssueComment[] };
-}): Map<number, ItemReplies> {
+}): { itemIds: Map<number, number>; repliesByItem: Map<number, ItemReplies> } {
   const inlineComments = comments.conversations
     .flatMap((conversation) => conversation.comments)
     .toSorted((a, b) => a.id - b.id);
@@ -58,5 +62,5 @@ export function collectItemReplies(comments: {
       });
     }
   }
-  return repliesByItem;
+  return { itemIds, repliesByItem };
 }

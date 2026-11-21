@@ -1,6 +1,7 @@
 import { collectItemReplies } from "./collect-item-replies.js";
 import type { SweptComments } from "./feedback-types.js";
 import type { ItemDetail } from "./fetch-item-detail.js";
+import { reviewCommentFileLine } from "./forgejo-review-comment-line.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import type { ReviewState } from "./types.js";
 
@@ -17,7 +18,7 @@ export function projectItemDetail(
   comments: SweptComments,
   itemId: number,
 ): ItemDetailContent | undefined {
-  const replies = collectItemReplies(comments);
+  const { itemIds, repliesByItem: replies } = collectItemReplies(comments);
   const review = comments.reviews.records.find((record) => record.backingCommentId === itemId);
   if (review !== undefined) {
     return {
@@ -50,17 +51,14 @@ export function projectItemDetail(
   if (target === undefined) {
     return undefined;
   }
-  const findingId = [...replies].find(([, { threadReplies }]) =>
-    threadReplies.some((reply) => reply.id === itemId),
-  )?.[0];
   const { comment: root, resolver } =
-    inlineComments.find(({ comment }) => comment.id === findingId) ?? target;
+    inlineComments.find(({ comment }) => comment.id === itemIds.get(itemId)) ?? target;
   const rootReplies = replies.get(root.id);
   return {
     type: "thread",
     id: root.id,
     path: root.path === "" ? null : root.path,
-    line: root.position <= 0 && root.originalPosition <= 0 ? null : root.displayLine,
+    line: reviewCommentFileLine(root.position, root.originalPosition, root.extraLinesCount),
     // Forgejo has no outdated axis.
     isOutdated: false,
     isResolved: resolver !== null,

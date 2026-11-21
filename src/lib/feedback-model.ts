@@ -3,15 +3,15 @@ import {
   reviewCommentConversationIdentity,
   reviewCommentCoordinates,
 } from "./forgejo-review-comment-line.js";
-import type { CommentRecord, ConversationRecord } from "./feedback-types.js";
+import type { Conversation, InlineCommentFields } from "./feedback-types.js";
 
-import { unfetchedFindingState, integerOrZero, userRef } from "./feedback-values.js";
+import { integerOrZero, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReviewComment } from "./forgejo-schemas.js";
 
 import { threadReplyParentId } from "./forgejo-thread-reply.js";
 
 export interface NormalizedInlineComment {
-  comment: CommentRecord;
+  comment: InlineCommentFields;
   nativeIdentity: string | null;
 }
 
@@ -43,7 +43,7 @@ export function normalizeInlineComment(
     }
   }
   const reviewIdField = raw.pull_request_review_id;
-  const comment: CommentRecord = {
+  const comment: InlineCommentFields = {
     id,
     kind: isReply ? "reply" : "finding",
     replyTo,
@@ -59,7 +59,6 @@ export function normalizeInlineComment(
     pullRequestReviewId: reviewIdField ?? listingReviewId,
     htmlUrl: raw.html_url ?? null,
     resolver: userRef(raw.resolver),
-    ...unfetchedFindingState,
   };
   return {
     comment,
@@ -71,8 +70,8 @@ export function normalizeInlineComment(
 // stay isolated; raw coordinate and side fields remain on every serialized comment.
 export function deriveConversations(
   publishedComments: NormalizedInlineComment[],
-): ConversationRecord[] {
-  const groups = new Map<string, CommentRecord[]>();
+): Conversation<InlineCommentFields>[] {
+  const groups = new Map<string, InlineCommentFields[]>();
   for (const { comment, nativeIdentity } of publishedComments) {
     const key = nativeIdentity ?? JSON.stringify(["unknown", comment.id]);
     const bucket = groups.get(key);
@@ -82,7 +81,7 @@ export function deriveConversations(
       bucket.push(comment);
     }
   }
-  const conversations: ConversationRecord[] = [];
+  const conversations: Conversation<InlineCommentFields>[] = [];
   for (const bucket of groups.values()) {
     bucket.sort(compareForgejoCommentOrder);
     const anchor = bucket[0];

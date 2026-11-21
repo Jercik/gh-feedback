@@ -41,7 +41,7 @@ interface NullableFindingState {
   conflictingFinalReactions: boolean;
 }
 
-export interface ReviewRecord extends NullableFindingState {
+export interface ReviewFields {
   id: number;
   state: string;
   unpublished: boolean;
@@ -53,7 +53,9 @@ export interface ReviewRecord extends NullableFindingState {
   backingCommentId: number | null;
 }
 
-export interface CommentRecord extends NullableFindingState {
+export type ReviewRecord = ReviewFields & NullableFindingState;
+
+export interface InlineCommentFields {
   id: number;
   kind: "finding" | "reply";
   replyTo: number | null;
@@ -71,7 +73,9 @@ export interface CommentRecord extends NullableFindingState {
   resolver: UserRef | null;
 }
 
-export interface ConversationRecord {
+export type CommentRecord = InlineCommentFields & NullableFindingState;
+
+export interface Conversation<Comment> {
   reviewId: number;
   path: string;
   side: Side;
@@ -79,8 +83,10 @@ export interface ConversationRecord {
   anchorId: number;
   // Not folded into its comments' status, which reflects their viewerReactions alone.
   resolver: UserRef | null;
-  comments: CommentRecord[];
+  comments: Comment[];
 }
+
+export type ConversationRecord = Conversation<CommentRecord>;
 
 export interface IssueCommentFields {
   id: number;
@@ -100,18 +106,22 @@ export type IssueCommentRecord = IssueCommentFields &
     | ({ kind: "reply"; replyTo: number } & UnfetchedFindingState)
   );
 
-export interface SweptComments {
+interface PullRequestComments<Review, InlineComment, IssueComment> {
   reviews: {
     totalCount: number;
     distinctCount: number;
     countGap: number;
-    records: ReviewRecord[];
+    records: Review[];
   };
-  issueComments: { totalCount: number; records: ClassifiedIssueComment[] };
-  conversations: ConversationRecord[];
-  unpublishedInlineComments: CommentRecord[];
+  issueComments: { totalCount: number; records: IssueComment[] };
+  conversations: Conversation<InlineComment>[];
+  unpublishedInlineComments: InlineComment[];
 }
 
-export type PassSnapshot = Omit<SweptComments, "issueComments"> & {
-  issueComments: { totalCount: number; records: IssueCommentRecord[] };
-};
+export type SweptComments = PullRequestComments<
+  ReviewFields,
+  InlineCommentFields,
+  ClassifiedIssueComment
+>;
+
+export type PassSnapshot = PullRequestComments<ReviewRecord, CommentRecord, IssueCommentRecord>;

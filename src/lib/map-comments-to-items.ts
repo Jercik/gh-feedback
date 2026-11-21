@@ -1,12 +1,16 @@
-import type { ClassifiedIssueComment, CommentRecord, ReviewRecord } from "./feedback-types.js";
+import type {
+  ClassifiedIssueComment,
+  InlineCommentFields,
+  ReviewFields,
+} from "./feedback-types.js";
 
-export function isReviewBodyItem(review: ReviewRecord): boolean {
+export function isReviewBodyItem(review: ReviewFields): boolean {
   return !review.unpublished && review.body.trim() !== "";
 }
 
 export function mapCommentsToItems(
-  reviews: readonly ReviewRecord[],
-  inlineComments: readonly CommentRecord[],
+  reviews: readonly ReviewFields[],
+  inlineComments: readonly InlineCommentFields[],
   issueComments: readonly ClassifiedIssueComment[],
 ): Map<number, number> {
   const itemIds = new Map<number, number>();

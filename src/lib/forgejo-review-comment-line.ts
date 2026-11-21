@@ -12,11 +12,27 @@ import type { Side } from "./feedback-types.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 
 export function reviewCommentLine(comment: ForgejoReviewComment): number | null {
-  if ((comment.position ?? 0) <= 0 && (comment.original_position ?? 0) <= 0) {
+  return reviewCommentFileLine(
+    comment.position ?? 0,
+    comment.original_position ?? 0,
+    comment.extra_lines_count ?? 0,
+  );
+}
+
+export function reviewCommentFileLine(
+  position: number,
+  originalPosition: number,
+  extraLines: number,
+): number | null {
+  if (position <= 0 && originalPosition <= 0) {
     return null;
   }
-  const displayLine = reviewCommentDisplayLine(comment);
-  return displayLine === null || displayLine === 0 ? null : Math.abs(displayLine);
+  const { displayLine } = reviewCommentCoordinates(
+    Math.max(position, 0),
+    Math.max(originalPosition, 0),
+    extraLines,
+  );
+  return displayLine === 0 ? null : Math.abs(displayLine);
 }
 
 /** Signed display line used by Forgejo's native conversation grouping. */

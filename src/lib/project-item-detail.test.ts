@@ -2,13 +2,13 @@ import { expect, test } from "vitest";
 import { projectItemDetail } from "./project-item-detail.js";
 import type {
   ClassifiedIssueComment,
-  CommentRecord,
-  ReviewRecord,
+  InlineCommentFields,
+  ReviewFields,
   SweptComments,
   UserRef,
 } from "./feedback-types.js";
 
-const review: ReviewRecord = {
+const review: ReviewFields = {
   id: 7,
   state: "REQUEST_CHANGES",
   unpublished: false,
@@ -18,9 +18,6 @@ const review: ReviewRecord = {
   commitId: null,
   htmlUrl: "https://forge.example/owner/repo/pulls/7#issuecomment-50",
   backingCommentId: 50,
-  viewerReactions: null,
-  status: null,
-  conflictingFinalReactions: false,
 };
 
 function inlineComment(
@@ -28,7 +25,7 @@ function inlineComment(
   login: string,
   replyTo: number | null,
   body: string,
-): CommentRecord {
+): InlineCommentFields {
   return {
     id,
     kind: replyTo === null ? "finding" : "reply",
@@ -45,9 +42,6 @@ function inlineComment(
     pullRequestReviewId: 7,
     htmlUrl: null,
     resolver: null,
-    viewerReactions: null,
-    status: null,
-    conflictingFinalReactions: false,
   };
 }
 
@@ -122,6 +116,50 @@ test("shows the thread of the finding an inline reply answers, with every reply 
       { id: 72, author: "author", createdAt: "2026-05-02T10:02:00Z", body: "Fixed in abc123" },
     ],
   });
+});
+
+test("shows an inline reply that answers no finding as a thread of its own", () => {
+  const comments = swept();
+  comments.conversations[0]?.comments.push(
+    inlineComment(63, "author", 99, "<!-- gh-feedback:reply-to:99 -->\nDone"),
+  );
+
+  expect(projectItemDetail(comments, 63)).toStrictEqual({
+    type: "thread",
+    id: 63,
+    path: "src/app.ts",
+    line: 14,
+    isOutdated: false,
+    isResolved: false,
+    comments: [{ id: 63, author: "author", body: "Done", createdAt: "2026-05-01T10:03:00Z" }],
+    prCommentReplies: [],
+  });
+});
+
+test.each([
+  [
+    "the old-side line of a comment on a removed line",
+    { position: 0, originalPosition: 9, extraLinesCount: 0, side: "old", displayLine: 9 },
+    9,
+  ],
+  [
+    "no line for a comment on the whole file",
+    { position: 0, originalPosition: 0, extraLinesCount: 0, side: "zero", displayLine: 0 },
+    null,
+  ],
+] as const)("shows %s", (_label, coordinates, line) => {
+  const comments = swept();
+  comments.conversations.push({
+    reviewId: 7,
+    path: "src/app.ts",
+    side: coordinates.side,
+    displayLine: coordinates.displayLine,
+    anchorId: 64,
+    resolver: null,
+    comments: [{ ...inlineComment(64, "reviewer", null, "Why remove this?"), ...coordinates }],
+  });
+
+  expect(projectItemDetail(comments, 64)).toMatchObject({ id: 64, line });
 });
 
 test("shows a finding that shares a conversation as a thread of its own", () => {

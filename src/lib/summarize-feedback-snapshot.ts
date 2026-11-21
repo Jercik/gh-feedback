@@ -76,7 +76,7 @@ export function summarizeFeedbackSnapshot(
     byId.set(comment.id, item);
     candidates.push({ item, resolved: false, inline: false });
   }
-  for (const [itemId, replies] of collectItemReplies(snapshot)) {
+  for (const [itemId, replies] of collectItemReplies(snapshot).repliesByItem) {
     for (const reply of [...replies.threadReplies, ...replies.prCommentReplies]) {
       byId.get(itemId)?.responses.push({
         author: reply.author,

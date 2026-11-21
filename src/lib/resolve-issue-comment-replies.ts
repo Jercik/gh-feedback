@@ -1,11 +1,11 @@
-import type { CommentRecord, IssueCommentFields, ReviewRecord } from "./feedback-types.js";
+import type { InlineCommentFields, IssueCommentFields, ReviewFields } from "./feedback-types.js";
 import { parseViewerIssueCommentReply } from "./forgejo-reply.js";
 import { mapCommentsToItems } from "./map-comments-to-items.js";
 
 export function resolveIssueCommentReplies(
   pass: {
-    reviews: readonly ReviewRecord[];
-    inlineComments: readonly CommentRecord[];
+    reviews: readonly ReviewFields[];
+    inlineComments: readonly InlineCommentFields[];
     issueComments: readonly IssueCommentFields[];
   },
   viewer: string,
