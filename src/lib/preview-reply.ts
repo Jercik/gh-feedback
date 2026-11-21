@@ -1,4 +1,5 @@
 import type { FeedbackItemRef } from "./feedback-backend.js";
+import { logFoundItem } from "./log-found-item.js";
 import { verboseLog } from "./verbose-mode.js";
 
 export function capitalize(word: string): string {
@@ -10,10 +11,7 @@ export function previewReply(
   command: { messageNoun: string; actions: string },
   message: string,
 ): void {
-  verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
-  if (item.path) {
-    verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
-  }
+  logFoundItem(item);
   verboseLog("");
   verboseLog(`${capitalize(command.messageNoun)}:`);
   verboseLog("---");

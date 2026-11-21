@@ -7,6 +7,7 @@
 
 import type { Command } from "@commander-js/extra-typings";
 import { exitWithMessage } from "../lib/git-helpers.js";
+import { logFoundItem } from "../lib/log-found-item.js";
 import { parseItemId } from "../lib/parse-item-id.js";
 import { prOption, repoOption } from "../lib/feedback-target.js";
 import { resolveBackend } from "../lib/resolve-backend.js";
@@ -39,10 +40,7 @@ export function registerStartCommand(program: Command): void {
 
         const needsReopen = viewerMayReopen;
 
-        verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
-        if (item.path) {
-          verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
-        }
+        logFoundItem(item);
         verboseLog("");
         if (needsReopen) {
           verboseLog("Actions: reopen + eyes reaction (in-progress)");

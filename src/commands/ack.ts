@@ -7,6 +7,7 @@
 import { reportCompletionResult } from "../lib/report-completion-result.js";
 import type { Command } from "@commander-js/extra-typings";
 import { acknowledgeItem } from "../lib/acknowledge-item.js";
+import { logFoundItem } from "../lib/log-found-item.js";
 import { getOpenItemReactions } from "../lib/get-open-item-reactions.js";
 import { RESOLVES_CONVERSATION_WHEN_SETTLED } from "../lib/forgejo-conversation-guard.js";
 import { exitWithMessage } from "../lib/git-helpers.js";
@@ -35,10 +36,7 @@ export function registerAckCommand(program: Command): void {
 
         const viewerReactions = await getOpenItemReactions(backend, item);
 
-        verboseLog(`Found ${item.type} #${item.id} by @${item.author}`);
-        if (item.path) {
-          verboseLog(`Location: ${item.path}${item.line ? `:${item.line}` : ""}`);
-        }
+        logFoundItem(item);
 
         verboseLog("");
         verboseLog(`Actions: ${actions}`);

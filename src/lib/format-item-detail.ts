@@ -3,6 +3,7 @@
  */
 
 import type { ItemDetail } from "./fetch-item-detail.js";
+import { formatCommentLocation } from "./format-comment-location.js";
 
 export function formatItemDetail(item: ItemDetail): string {
   const lines: string[] = [];
@@ -26,7 +27,7 @@ export function formatItemDetail(item: ItemDetail): string {
     case "thread": {
       lines.push(`Review comment thread #${item.id}`);
       if (item.path) {
-        lines.push(`Location: ${item.path}${item.line === null ? "" : `:${item.line}`}`);
+        lines.push(`Location: ${formatCommentLocation(item.path, item.line)}`);
       }
       lines.push(`Status: ${item.isResolved ? "resolved" : "unresolved"}`);
       if (item.isOutdated) {
