@@ -229,6 +229,35 @@ describe("compiled snapshot CLI", () => {
   });
 });
 
+describe("detail", () => {
+  it("lists the viewer's PR comment reply on the comment it answers, reading no other comment's reactions", () => {
+    const result = run("detail-401", ["detail", "401", "--json"]);
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+      type: "comment",
+      id: 401,
+      author: "reviewer",
+      url: "https://code.j4k.dev/owner/repo/pulls/7#issuecomment-401",
+      createdAt: "2026-01-01T00:00:04Z",
+      body: "Issue finding",
+      reactions: [
+        { content: "+1", count: 1, viewerHasReacted: false, users: ["maintainer"] },
+        { content: "-1", count: 1, viewerHasReacted: false, users: ["maintainer"] },
+        { content: "rocket", count: 1, viewerHasReacted: false, users: ["reviewer"] },
+      ],
+      prCommentReplies: [
+        {
+          id: 402,
+          author: "maintainer",
+          createdAt: "2026-01-01T00:00:05Z",
+          body: "Which case?",
+        },
+      ],
+    });
+  });
+});
+
 describe("summary native resolution projection", () => {
   it("keeps resolved findings without a final reaction in-progress", () => {
     const result = run("resolved", ["summary", "--json"]);

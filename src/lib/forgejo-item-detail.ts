@@ -1,93 +1,39 @@
-/**
- * Forgejo item detail: full untruncated content for a single feedback item.
- *
- * The j4k Forgejo fork exposes the inline conversation resolver. Forgejo still
- * has no outdated axis. Published review bodies use their native backing comment.
- */
-
-import type { ReviewState } from "./types.js";
 import type { ItemDetail } from "./fetch-item-detail.js";
-import { resolveItemMeta } from "./forgejo-item.js";
+import type { Reaction } from "./types.js";
 import { fetchReactions, toReactionSummary } from "./forgejo-reactions.js";
-import { reviewCommentLine } from "./forgejo-review-comment-line.js";
-import { groupReviewCommentConversations, findConversationFor } from "./forgejo-conversations.js";
-import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
 import { getForgejoViewer } from "./fgj-auth.js";
 import { exitWithMessage } from "./git-helpers.js";
-import { forgejoNativeConversationAnchor } from "./forgejo-conversation-guard.js";
+import { sweepComments } from "./feedback-sweep.js";
+import { fetchApiLimit } from "./forgejo-review-pages.js";
+import { projectItemDetail } from "./project-item-detail.js";
 
 export async function buildItemDetail(
   slug: string,
   prNumber: number,
   itemId: number,
 ): Promise<ItemDetail> {
-  const resolved = await resolveItemMeta(slug, prNumber, itemId);
-  if (!resolved) {
+  const { comments } = await sweepComments(
+    slug,
+    prNumber,
+    getForgejoViewer(),
+    await fetchApiLimit(),
+  );
+  const content = projectItemDetail(comments, itemId);
+  if (content === undefined) {
     return exitWithMessage(`Error: Could not find item #${itemId} in Forgejo PR #${prNumber}.`);
   }
-
-  if (resolved.reviewComment) {
-    const target = resolved.reviewComment;
-    // Group the whole PR's review comments (already fetched while resolving the
-    // id) so detail returns every comment in the conversation — matching summary's
-    // grouping — rather than just the root. The id may
-    // be a reply, so match it on either side.
-    const viewer = getForgejoViewer();
-    const conversations = groupReviewCommentConversations(resolved.reviewComments ?? [], viewer);
-    const conversation = findConversationFor(conversations, target.id);
-    const members = conversation ? [conversation.root, ...conversation.replies] : [target];
-    const root = conversation?.root ?? target;
-
-    const comments = await Promise.all(
-      members.map(async (m) => ({
-        id: m.id,
-        author: m.user?.login ?? "ghost",
-        body: stripThreadReplyMarker(m.body),
-        createdAt: m.created_at,
-        reactions: toReactionSummary(await fetchReactions(slug, m.id)),
-      })),
-    );
-
+  const reactionsOn = async (commentId: number): Promise<Reaction[]> =>
+    toReactionSummary(await fetchReactions(slug, commentId));
+  if (content.type === "thread") {
     return {
-      type: "thread",
-      id: root.id,
-      path: root.path ?? null,
-      line: reviewCommentLine(root),
-      isOutdated: false,
-      isResolved: Boolean(
-        forgejoNativeConversationAnchor(resolved.reviewComments ?? [], root)?.resolver,
+      ...content,
+      comments: await Promise.all(
+        content.comments.map(async (comment) => ({
+          ...comment,
+          reactions: await reactionsOn(comment.id),
+        })),
       ),
-      comments,
     };
   }
-
-  if (resolved.issueComment) {
-    const c = resolved.issueComment;
-    const reactions = await fetchReactions(slug, c.id);
-    return {
-      type: "comment",
-      id: c.id,
-      author: c.user?.login ?? "ghost",
-      url: c.html_url,
-      createdAt: c.created_at,
-      body: c.body,
-      reactions: toReactionSummary(reactions),
-    };
-  }
-
-  const review = resolved.review;
-  if (review) {
-    return {
-      type: "review",
-      id: itemId,
-      author: review.user?.login ?? "ghost",
-      state: review.state as ReviewState,
-      url: review.html_url ?? "",
-      submittedAt: review.submitted_at,
-      body: review.body,
-      reactions: toReactionSummary(await fetchReactions(slug, itemId)),
-    };
-  }
-
-  return exitWithMessage(`Error: Could not resolve detail for item #${itemId}.`);
+  return { ...content, reactions: await reactionsOn(content.id) };
 }

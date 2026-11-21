@@ -91,20 +91,27 @@ export interface IssueCommentFields {
   htmlUrl: string | null;
 }
 
+export type ClassifiedIssueComment = IssueCommentFields &
+  ({ kind: "finding"; replyTo: null } | { kind: "reply"; replyTo: number });
+
 export type IssueCommentRecord = IssueCommentFields &
   (
     | ({ kind: "finding"; replyTo: null } & FindingState)
     | ({ kind: "reply"; replyTo: number } & UnfetchedFindingState)
   );
 
-export interface PassSnapshot {
+export interface SweptComments {
   reviews: {
     totalCount: number;
     distinctCount: number;
     countGap: number;
     records: ReviewRecord[];
   };
-  issueComments: { totalCount: number; records: IssueCommentRecord[] };
+  issueComments: { totalCount: number; records: ClassifiedIssueComment[] };
   conversations: ConversationRecord[];
   unpublishedInlineComments: CommentRecord[];
 }
+
+export type PassSnapshot = Omit<SweptComments, "issueComments"> & {
+  issueComments: { totalCount: number; records: IssueCommentRecord[] };
+};

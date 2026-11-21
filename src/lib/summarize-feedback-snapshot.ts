@@ -1,10 +1,9 @@
 import type { FeedbackItem, FeedbackResponse } from "./summary-types.js";
-import type { CommentRecord, IssueCommentRecord, PassSnapshot } from "./feedback-types.js";
+import type { PassSnapshot } from "./feedback-types.js";
 import { isStatusDone, isStatusSettled } from "./summary-types.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
-import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
-import { stripForgejoReplyMarker } from "./forgejo-reply.js";
-import { isReviewBodyItem, mapCommentsToItems } from "./map-comments-to-items.js";
+import { collectItemReplies } from "./collect-item-replies.js";
+import { isReviewBodyItem } from "./map-comments-to-items.js";
 
 type SummaryItem = FeedbackItem & { responses: FeedbackResponse[] };
 
@@ -42,10 +41,8 @@ export function summarizeFeedbackSnapshot(
       })),
     )
     .toSorted((a, b) => a.comment.id - b.comment.id);
-  const inlineReplies: CommentRecord[] = [];
   for (const { comment, resolved } of published) {
     if (comment.kind === "reply") {
-      inlineReplies.push(comment);
       continue;
     }
     const item: SummaryItem = {
@@ -63,10 +60,8 @@ export function summarizeFeedbackSnapshot(
     byId.set(comment.id, item);
     candidates.push({ item, resolved, inline: true });
   }
-  const replies = new Map<number, IssueCommentRecord & { kind: "reply" }>();
   for (const comment of snapshot.issueComments.records) {
     if (comment.kind === "reply") {
-      replies.set(comment.id, comment);
       continue;
     }
     const item: SummaryItem = {
@@ -81,37 +76,14 @@ export function summarizeFeedbackSnapshot(
     byId.set(comment.id, item);
     candidates.push({ item, resolved: false, inline: false });
   }
-  const itemIds = mapCommentsToItems(
-    snapshot.reviews.records,
-    published.map(({ comment }) => comment),
-  );
-  const itemAt = (commentId: number): SummaryItem | undefined =>
-    byId.get(itemIds.get(commentId) ?? commentId);
-  for (const reply of inlineReplies) {
-    itemAt(reply.id)?.responses.push({
-      author: reply.user.login ?? "ghost",
-      timestamp: reply.createdAt ?? "",
-      body: stripThreadReplyMarker(reply.body),
-    });
-  }
-  const itemAnswering = (id: number, followed: Set<number>): SummaryItem => {
-    const item = itemAt(id);
-    if (item) {
-      return item;
+  for (const [itemId, replies] of collectItemReplies(snapshot)) {
+    for (const reply of [...replies.threadReplies, ...replies.prCommentReplies]) {
+      byId.get(itemId)?.responses.push({
+        author: reply.author,
+        timestamp: reply.createdAt ?? "",
+        body: reply.body,
+      });
     }
-    const reply = replies.get(id);
-    if (reply === undefined || followed.has(id)) {
-      throw new Error(`Snapshot reply chain through comment ${id} reaches no feedback item`);
-    }
-    followed.add(id);
-    return itemAnswering(reply.replyTo, followed);
-  };
-  for (const reply of replies.values()) {
-    itemAnswering(reply.replyTo, new Set([reply.id])).responses.push({
-      author: reply.user.login ?? "ghost",
-      timestamp: reply.createdAt ?? "",
-      body: stripForgejoReplyMarker(reply.body),
-    });
   }
   return candidates
     .filter(

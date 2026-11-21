@@ -14,6 +14,28 @@ vi.mock("./fgj-auth.js", () => ({
   getForgejoViewer: vi.fn().mockReturnValue("codex"),
 }));
 vi.mock("./forgejo-pull-review-comments.js", () => ({ fetchPullReviewComments: mocks.comments }));
+vi.mock("./forgejo-review-pages.js", () => ({ fetchApiLimit: vi.fn().mockResolvedValue(50) }));
+vi.mock("./feedback-sweep.js", () => ({
+  sweepComments: vi.fn().mockResolvedValue({
+    comments: {
+      reviews: {
+        records: [
+          {
+            state: "APPROVED",
+            unpublished: false,
+            user: { id: null, login: "reviewer" },
+            body: "Looks good",
+            submittedAt: null,
+            htmlUrl: "https://code.j4k.dev/o/r/pulls/3#issuecomment-91",
+            backingCommentId: 91,
+          },
+        ],
+      },
+      conversations: [],
+      issueComments: { records: [] },
+    },
+  }),
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,6 +93,7 @@ test("returns published review state and reactions in detail under the backing I
     submittedAt: "",
     url: "https://code.j4k.dev/o/r/pulls/3#issuecomment-91",
     reactions: [{ content: "+1", count: 1, users: ["codex"], viewerHasReacted: false }],
+    prCommentReplies: [],
   });
   expect(mocks.fetch).toHaveBeenCalledWith({ path: "repos/o/r/issues/comments/91/reactions" });
 });

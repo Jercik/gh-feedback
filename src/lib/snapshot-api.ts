@@ -5,7 +5,6 @@ import {
   ForgejoReaction,
 } from "./forgejo-schemas.js";
 import type { FindingState, IssueCommentFields } from "./feedback-types.js";
-import { verboseLog } from "./verbose-mode.js";
 
 import { reactionsPath } from "./forgejo-reactions.js";
 import { deriveStatus, userRef } from "./feedback-values.js";
@@ -44,7 +43,6 @@ export async function fetchRawReviews(
   slug: string,
   pr: number,
   limit: number,
-  pass: number,
 ): Promise<{ totalCount: number; rawById: Map<number, ForgejoSnapshotReview> }> {
   const listing = await fetchPaginatedListing(`repos/${slug}/pulls/${pr}/reviews`, limit);
   const rawById = new Map<number, ForgejoSnapshotReview>();
@@ -52,7 +50,6 @@ export async function fetchRawReviews(
     const review = ForgejoSnapshotReview.parse(item);
     rawById.set(review.id, review);
   }
-  verboseLog(`pass ${pass}: reviews complete (X-Total-Count ${listing.totalCount})`);
   return { totalCount: listing.totalCount, rawById };
 }
 

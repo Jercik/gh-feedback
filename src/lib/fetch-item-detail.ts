@@ -1,3 +1,4 @@
+import type { ItemReply } from "./collect-item-replies.js";
 import type { Reaction, ReviewState } from "./types.js";
 
 interface ReviewDetail {
@@ -9,6 +10,7 @@ interface ReviewDetail {
   submittedAt: string;
   body: string;
   reactions: Reaction[];
+  prCommentReplies: ItemReply[];
 }
 
 interface ThreadDetail {
@@ -25,6 +27,7 @@ interface ThreadDetail {
     createdAt: string;
     reactions: Reaction[];
   }[];
+  prCommentReplies: ItemReply[];
 }
 
 interface CommentDetail {
@@ -35,6 +38,7 @@ interface CommentDetail {
   createdAt: string;
   body: string;
   reactions: Reaction[];
+  prCommentReplies: ItemReply[];
 }
 
 export type ItemDetail = ReviewDetail | ThreadDetail | CommentDetail;

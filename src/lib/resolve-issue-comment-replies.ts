@@ -10,7 +10,7 @@ export function resolveIssueCommentReplies(
   },
   viewer: string,
 ): Map<number, number> {
-  const itemIds = mapCommentsToItems(pass.reviews, pass.inlineComments);
+  const itemIds = mapCommentsToItems(pass.reviews, pass.inlineComments, []);
   const issueComments = new Map(pass.issueComments.map((comment) => [comment.id, comment]));
   const replyTargets = new Map<number, number>();
   const settled = new Set<number>();

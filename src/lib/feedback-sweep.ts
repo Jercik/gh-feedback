@@ -10,10 +10,12 @@ import type { NormalizedInlineComment } from "./feedback-model.js";
 import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
 import type {
+  ClassifiedIssueComment,
   CommentRecord,
   IssueCommentRecord,
   PassSnapshot,
   ReviewRecord,
+  SweptComments,
 } from "./feedback-types.js";
 import { resolveIssueCommentReplies } from "./resolve-issue-comment-replies.js";
 
@@ -31,46 +33,24 @@ function reportCountGap(totalCount: number, distinctCount: number, diagnostics: 
   }
 }
 
-async function applyFindingStatuses(
-  comments: CommentRecord[],
-  slug: string,
-  viewer: string,
-): Promise<void> {
-  for (const comment of comments) {
-    if (comment.kind !== "finding") {
-      continue;
-    }
-    Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id, comment));
-  }
-}
-
-async function fetchIssueCommentRecords(
+async function fetchClassifiedIssueComments(
   slug: string,
   pr: number,
   viewer: string,
   reviews: ReviewRecord[],
   inlineComments: CommentRecord[],
-): Promise<PassSnapshot["issueComments"]> {
+): Promise<SweptComments["issueComments"]> {
   const { totalCount, comments } = await fetchIssueComments(slug, pr);
   const replyTargets = resolveIssueCommentReplies(
     { reviews, inlineComments, issueComments: comments },
     viewer,
   );
-  const records: IssueCommentRecord[] = [];
-  for (const { id, ...fields } of comments) {
+  const records = comments.map(({ id, ...fields }): ClassifiedIssueComment => {
     const replyTo = replyTargets.get(id);
-    records.push(
-      replyTo === undefined
-        ? {
-            id,
-            kind: "finding",
-            replyTo: null,
-            ...fields,
-            ...(await fetchFindingStatus(slug, viewer, id, fields)),
-          }
-        : { id, kind: "reply", replyTo, ...fields, ...unfetchedFindingState },
-    );
-  }
+    return replyTo === undefined
+      ? { id, kind: "finding", replyTo: null, ...fields }
+      : { id, kind: "reply", replyTo, ...fields };
+  });
   return { totalCount, records };
 }
 
@@ -112,18 +92,12 @@ async function normalizeReview(
   }
 
   let backingCommentId: number | null = null;
-  let reactionStatus: Pick<
-    ReviewRecord,
-    "viewerReactions" | "status" | "conflictingFinalReactions"
-  > = unfetchedFindingState;
   if (!unpublished) {
     backingCommentId = parseBackingCommentId(htmlUrl);
     if (backingCommentId === null) {
       diagnostics.push(
         `review ${reviewId}: html_url carries no #issuecomment anchor, so its status is underivable`,
       );
-    } else {
-      reactionStatus = await fetchFindingStatus(slug, viewer, backingCommentId, undefined);
     }
   }
   return {
@@ -136,19 +110,18 @@ async function normalizeReview(
     commitId: raw.commit_id ?? null,
     htmlUrl,
     backingCommentId,
-    ...reactionStatus,
+    ...unfetchedFindingState,
   };
 }
 
-export async function runPass(
+export async function sweepComments(
   slug: string,
   pr: number,
   viewer: string,
   limit: number,
-  pass: number,
-): Promise<{ snapshot: PassSnapshot; diagnostics: string[] }> {
+): Promise<{ comments: SweptComments; diagnostics: string[] }> {
   const diagnostics: string[] = [];
-  const { totalCount, rawById } = await fetchRawReviews(slug, pr, limit, pass);
+  const { totalCount, rawById } = await fetchRawReviews(slug, pr, limit);
   const reviewRecords: ReviewRecord[] = [];
   const publishedComments: NormalizedInlineComment[] = [];
   const unpublishedComments: CommentRecord[] = [];
@@ -172,10 +145,8 @@ export async function runPass(
     );
   }
   const publishedRecords = publishedComments.map(({ comment }) => comment);
-  await applyFindingStatuses(publishedRecords, slug, viewer);
   reportMissingReplies(publishedRecords, diagnostics);
-  const conversations = deriveConversations(publishedComments);
-  const issueComments = await fetchIssueCommentRecords(
+  const issueComments = await fetchClassifiedIssueComments(
     slug,
     pr,
     viewer,
@@ -183,20 +154,65 @@ export async function runPass(
     publishedRecords,
   );
   const distinctCount = reviewRecords.length;
-  const countGap = totalCount - distinctCount;
   reportCountGap(totalCount, distinctCount, diagnostics);
   unpublishedComments.sort((a, b) => a.id - b.id);
+  return {
+    comments: {
+      reviews: {
+        totalCount,
+        distinctCount,
+        countGap: totalCount - distinctCount,
+        records: reviewRecords,
+      },
+      issueComments,
+      conversations: deriveConversations(publishedComments),
+      unpublishedInlineComments: unpublishedComments,
+    },
+    diagnostics,
+  };
+}
+
+export async function runPass(
+  slug: string,
+  pr: number,
+  viewer: string,
+  limit: number,
+  pass: number,
+): Promise<{ snapshot: PassSnapshot; diagnostics: string[] }> {
+  const { comments, diagnostics } = await sweepComments(slug, pr, viewer, limit);
+  const { reviews, conversations } = comments;
+  verboseLog(`pass ${pass}: reviews complete (X-Total-Count ${reviews.totalCount})`);
+  for (const review of reviews.records) {
+    if (review.backingCommentId !== null) {
+      Object.assign(
+        review,
+        await fetchFindingStatus(slug, viewer, review.backingCommentId, undefined),
+      );
+    }
+  }
+  const publishedRecords = conversations.flatMap((conversation) => conversation.comments);
+  for (const comment of publishedRecords) {
+    if (comment.kind === "finding") {
+      Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id, comment));
+    }
+  }
+  const issueRecords: IssueCommentRecord[] = [];
+  for (const comment of comments.issueComments.records) {
+    issueRecords.push(
+      comment.kind === "finding"
+        ? { ...comment, ...(await fetchFindingStatus(slug, viewer, comment.id, comment)) }
+        : { ...comment, ...unfetchedFindingState },
+    );
+  }
   verboseLog(
-    `pass ${pass}: ${distinctCount} reviews (${reviewRecords.filter((r) => r.unpublished).length} unpublished), ` +
-      `${publishedComments.length} inline comments in ${conversations.length} conversations, ` +
-      `${issueComments.records.length} issue comments`,
+    `pass ${pass}: ${reviews.distinctCount} reviews (${reviews.records.filter((r) => r.unpublished).length} unpublished), ` +
+      `${publishedRecords.length} inline comments in ${conversations.length} conversations, ` +
+      `${issueRecords.length} issue comments`,
   );
   return {
     snapshot: {
-      reviews: { totalCount, distinctCount, countGap, records: reviewRecords },
-      issueComments,
-      conversations,
-      unpublishedInlineComments: unpublishedComments,
+      ...comments,
+      issueComments: { totalCount: comments.issueComments.totalCount, records: issueRecords },
     },
     diagnostics,
   };

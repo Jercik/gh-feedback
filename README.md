@@ -163,7 +163,7 @@ pr-feedback agree 123456 -m 'Fixed' --dry-run
 | `summary`                                  | Get all PR feedback with semantic status                                                                                                                                                                                       |
 | [`snapshot`](#complete-feedback-snapshots) | Read a complete, versioned feedback snapshot                                                                                                                                                                                   |
 | [`review`](#review-service-facts)          | Read the review service's facts for the PR's automated review                                                                                                                                                                  |
-| `detail <id>`                              | Fetch full untruncated content                                                                                                                                                                                                 |
+| `detail <id>`                              | Fetch an item's full untruncated content and the PR comment replies attached to it                                                                                                                                             |
 | `start <id>`                               | Mark as work-in-progress (adds eyes reaction)                                                                                                                                                                                  |
 | `agree <id> -m "..."`                      | Fixed (reply + thumbs_up; resolves its inline conversation, if any, once every item in it is settled)                                                                                                                          |
 | `disagree <id> -m "..."`                   | Won't fix (reply + thumbs_down; leaves its inline conversation, if any, for the reviewer to resolve, reopening it only if you resolved it)                                                                                     |
@@ -278,6 +278,15 @@ comment that starts with `> Replying to comment #<id>` (or `review #<id>`,
 comment among the responses of the item with that ID, like a threaded reply. It stays an
 item of its own when another account wrote it or no item in the pull request has
 that ID.
+
+`detail <id>` reads as the account `fgj auth user` names and takes no
+`--viewer`. It prints an item together with every such comment that account
+wrote, each in full and under its own ID; they are the ones `summary` without
+`--viewer` lists among the item's responses. `detail --json` carries
+them in `prCommentReplies`, ordered by ID, each with `id`, `author`, `createdAt`
+and the `body` without its marker line. The array is empty for an item with no
+such reply, and for a comment that is itself one: a reply to a reply belongs to
+the item the first reply answers.
 
 `summary` projects the [complete feedback snapshot](#complete-feedback-snapshots), including review
 bodies; a missing-anchor body has `id: null`, `actionable: false`, and `reviewId`

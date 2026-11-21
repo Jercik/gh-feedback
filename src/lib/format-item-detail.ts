@@ -32,13 +32,13 @@ export function formatItemDetail(item: ItemDetail): string {
       if (item.isOutdated) {
         lines.push("Note: outdated (code has changed)");
       }
-      lines.push(`Comments: ${item.comments.length}`, "");
+      lines.push(`Comments: ${item.comments.length}`);
 
       for (const [index, comment] of item.comments.entries()) {
         if (index === 0) {
-          lines.push(`@${comment.author} (comment #${comment.id}):`);
+          lines.push("", `@${comment.author} (comment #${comment.id}):`);
         } else {
-          lines.push(`Reply from @${comment.author} (#${comment.id}):`);
+          lines.push("", `Reply from @${comment.author} (#${comment.id}):`);
         }
         lines.push(`  Created: ${comment.createdAt}`);
         if (comment.reactions.length > 0) {
@@ -51,7 +51,6 @@ export function formatItemDetail(item: ItemDetail): string {
         for (const line of comment.body.split("\n")) {
           lines.push(`  ${line}`);
         }
-        lines.push("");
       }
       break;
     }
@@ -68,6 +67,17 @@ export function formatItemDetail(item: ItemDetail): string {
       }
       lines.push("", "Body:", "---", item.body, "---");
       break;
+    }
+  }
+
+  for (const reply of item.prCommentReplies) {
+    lines.push("", `PR comment reply from @${reply.author} (#${reply.id}):`);
+    if (reply.createdAt !== null) {
+      lines.push(`  Created: ${reply.createdAt}`);
+    }
+    lines.push("");
+    for (const line of reply.body.split("\n")) {
+      lines.push(`  ${line}`);
     }
   }
 

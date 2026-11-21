@@ -119,6 +119,7 @@ globalThis.fetch = async (input, options): Promise<Response> => {
           id: 401,
           user: reviewer,
           body: "Issue finding",
+          html_url: `${pull.html_url}#issuecomment-401`,
           created_at: "2026-01-01T00:00:04Z",
           updated_at:
             mode === "updated" && pass === 2 ? "2026-01-02T00:00:00Z" : "2026-01-01T00:00:04Z",
@@ -138,6 +139,9 @@ globalThis.fetch = async (input, options): Promise<Response> => {
       ],
       mode === "issue-gap" ? "4" : "3",
     );
+  }
+  if (mode === "detail-401" && /\/(?:100|201|202|403)\/reactions$/u.test(route)) {
+    throw new Error("detail read the reactions of a comment it does not print");
   }
   if (route === "repos/owner/repo/issues/comments/100/reactions") {
     return response([{ user: viewer, content: "+1" }]);
