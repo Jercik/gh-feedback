@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { summarizeFeedbackSnapshot } from "./summarize-feedback-snapshot.js";
 import type { CommentRecord, IssueCommentRecord, ReviewRecord } from "./feedback-types.js";
 
-function issueComment(id: number, login: string, body: string): IssueCommentRecord {
+function issueFields(id: number, login: string, body: string) {
   return {
     id,
     user: { id: null, login },
@@ -10,8 +10,27 @@ function issueComment(id: number, login: string, body: string): IssueCommentReco
     createdAt: `2026-03-0${id % 10}T10:00:00Z`,
     updatedAt: null,
     htmlUrl: null,
+  };
+}
+
+function issueFinding(id: number, login: string, body: string): IssueCommentRecord {
+  return {
+    ...issueFields(id, login, body),
+    kind: "finding",
+    replyTo: null,
     viewerReactions: [],
     status: "pending",
+    conflictingFinalReactions: false,
+  };
+}
+
+function issueReply(id: number, replyTo: number, body: string): IssueCommentRecord {
+  return {
+    ...issueFields(id, "author", body),
+    kind: "reply",
+    replyTo,
+    viewerReactions: null,
+    status: null,
     conflictingFinalReactions: false,
   };
 }
@@ -60,7 +79,6 @@ function snapshot(
   comments: CommentRecord[] = [],
 ) {
   return {
-    viewer: "author",
     reviews: {
       totalCount: reviews.length,
       distinctCount: reviews.length,
@@ -81,11 +99,11 @@ function snapshot(
 }
 
 describe("issue-comment replies", () => {
-  it("attaches the viewer's reply to the comment it names", () => {
+  it("lists a reply among the responses of the comment it answers", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot([
-        issueComment(101, "reviewer", "Please rename the flag"),
-        issueComment(102, "author", "> Replying to comment #101\n\nRenamed in abc123"),
+        issueFinding(101, "reviewer", "Please rename the flag"),
+        issueReply(102, 101, "> Replying to comment #101\n\nRenamed in abc123"),
       ]),
       false,
     );
@@ -104,39 +122,24 @@ describe("issue-comment replies", () => {
     ]);
   });
 
-  it("lists another account's reply as an item of its own", () => {
+  it("lists a marked comment that is a finding as an item with its marker", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot([
-        issueComment(101, "reviewer", "Please rename the flag"),
-        issueComment(102, "maintainer", "> Replying to comment #101\n\nStill broken"),
+        issueFinding(101, "reviewer", "Please rename the flag"),
+        issueFinding(102, "maintainer", "> Replying to comment #101\n\nStill broken"),
       ]),
       false,
     );
-    expect(items.map((item) => [item.id, item.responses])).toStrictEqual([
-      [101, []],
-      [102, []],
+    expect(items.map((item) => [item.id, item.body, item.responses])).toStrictEqual([
+      [101, "Please rename the flag", []],
+      [102, "> Replying to comment #101\n\nStill broken", []],
     ]);
   });
 
-  it("attaches the viewer's reply to another account's reply", () => {
-    const items = summarizeFeedbackSnapshot(
-      snapshot([
-        issueComment(101, "reviewer", "Please rename the flag"),
-        issueComment(102, "maintainer", "> Replying to comment #101\n\nStill broken"),
-        issueComment(103, "author", "> Replying to comment #102\n\nFixed in def456"),
-      ]),
-      false,
-    );
-    expect(items.map((item) => [item.id, item.responses])).toStrictEqual([
-      [101, []],
-      [102, [{ author: "author", timestamp: "2026-03-03T10:00:00Z", body: "Fixed in def456" }]],
-    ]);
-  });
-
-  it("attaches a reply to the review body it names", () => {
+  it("lists a reply to the review body it answers", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot(
-        [issueComment(203, "author", "> Replying to review #201\n\nCovered by the new test")],
+        [issueReply(203, 201, "> Replying to review #201\n\nCovered by the new test")],
         [review(7, 201, "Summary: two findings")],
       ),
       false,
@@ -155,10 +158,10 @@ describe("issue-comment replies", () => {
     ]);
   });
 
-  it("attaches a reply to the inline comment it names", () => {
+  it("lists a reply to the inline comment it answers", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot(
-        [issueComment(305, "author", "> Replying to review comment #301\n\nAdded")],
+        [issueReply(305, 301, "> Replying to review comment #301\n\nAdded")],
         [],
         [unpositionedFinding],
       ),
@@ -169,11 +172,11 @@ describe("issue-comment replies", () => {
     ]);
   });
 
-  it("attaches a reply edited to name a later comment", () => {
+  it("lists a reply to a comment with a later ID", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot([
-        issueComment(106, "author", "> Replying to comment #107\n\nSee the log"),
-        issueComment(107, "reviewer", "The build fails on Windows"),
+        issueReply(106, 107, "> Replying to comment #107\n\nSee the log"),
+        issueFinding(107, "reviewer", "The build fails on Windows"),
       ]),
       false,
     );
@@ -182,12 +185,12 @@ describe("issue-comment replies", () => {
     ]);
   });
 
-  it("lists responses oldest first when a reply names a later reply", () => {
+  it("lists a reply to a reply under the item the first reply answers, oldest first", () => {
     const items = summarizeFeedbackSnapshot(
       snapshot([
-        issueComment(111, "reviewer", "Flaky on retry"),
-        issueComment(112, "author", "> Replying to comment #113\n\nWhich runner?"),
-        issueComment(113, "author", "> Replying to comment #111\n\nSeen it twice"),
+        issueFinding(111, "reviewer", "Flaky on retry"),
+        issueReply(112, 113, "> Replying to comment #113\n\nWhich runner?"),
+        issueReply(113, 111, "> Replying to comment #111\n\nSeen it twice"),
       ]),
       false,
     );
@@ -202,38 +205,18 @@ describe("issue-comment replies", () => {
     ]);
   });
 
-  it("lists one of two replies naming each other, with the other as its response", () => {
-    const items = summarizeFeedbackSnapshot(
-      snapshot([
-        issueComment(108, "author", "> Replying to comment #109\n\nFirst"),
-        issueComment(109, "author", "> Replying to comment #108\n\nSecond"),
-      ]),
-      false,
+  it.each([
+    ["no comment in the snapshot", [issueReply(104, 999, "> Replying to comment #999\n\nLost")]],
+    [
+      "each other",
+      [
+        issueReply(108, 109, "> Replying to comment #109\n\nFirst"),
+        issueReply(109, 108, "> Replying to comment #108\n\nSecond"),
+      ],
+    ],
+  ])("rejects a snapshot whose replies answer %s", (_label, records) => {
+    expect(() => summarizeFeedbackSnapshot(snapshot(records), false)).toThrow(
+      /reaches no feedback item/u,
     );
-    expect(items.map((item) => [item.id, item.responses])).toStrictEqual([
-      [109, [{ author: "author", timestamp: "2026-03-08T10:00:00Z", body: "First" }]],
-    ]);
-  });
-
-  it("attaches a reply whose marker names the item by another kind", () => {
-    const items = summarizeFeedbackSnapshot(
-      snapshot(
-        [issueComment(306, "author", "> Replying to comment #301\n\nAdded")],
-        [],
-        [unpositionedFinding],
-      ),
-      false,
-    );
-    expect(items.map((item) => [item.id, item.responses])).toStrictEqual([
-      [301, [{ author: "author", timestamp: "2026-03-06T10:00:00Z", body: "Added" }]],
-    ]);
-  });
-
-  it("keeps a reply that names no item in the pull request as an item", () => {
-    const items = summarizeFeedbackSnapshot(
-      snapshot([issueComment(104, "author", "> Replying to comment #999\n\nStill relevant?")]),
-      false,
-    );
-    expect(items.map((item) => [item.id, item.responses])).toStrictEqual([[104, []]]);
   });
 });

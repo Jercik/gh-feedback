@@ -123,8 +123,20 @@ globalThis.fetch = async (input, options): Promise<Response> => {
           updated_at:
             mode === "updated" && pass === 2 ? "2026-01-02T00:00:00Z" : "2026-01-01T00:00:04Z",
         },
+        {
+          id: 402,
+          user: viewer,
+          body: "> Replying to comment #401\n\nWhich case?",
+          created_at: "2026-01-01T00:00:05Z",
+        },
+        {
+          id: 403,
+          user: viewer,
+          body: "> Replying to review comment #301\n\nStill a draft",
+          created_at: "2026-01-01T00:00:06Z",
+        },
       ],
-      mode === "issue-gap" ? "2" : "1",
+      mode === "issue-gap" ? "4" : "3",
     );
   }
   if (route === "repos/owner/repo/issues/comments/100/reactions") {
@@ -142,6 +154,9 @@ globalThis.fetch = async (input, options): Promise<Response> => {
       { user: viewer, content: "-1" },
       { user: reviewer, content: "rocket" },
     ]);
+  }
+  if (route === "repos/owner/repo/issues/comments/403/reactions") {
+    return response([{ user: viewer, content: "rocket" }]);
   }
   throw new Error(`Unexpected fixture route: ${url.href}`);
 };

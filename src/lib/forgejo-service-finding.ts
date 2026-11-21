@@ -3,7 +3,7 @@ import { forgejoFetchList } from "./forgejo-cli.js";
 import { forgejoFetch } from "./forgejo-http.js";
 import { groupReviewCommentConversations } from "./forgejo-conversations.js";
 import { getForgejoViewer } from "./fgj-auth.js";
-import { forgejoReplyRoute, stripForgejoReplyPrefix } from "./forgejo-reply.js";
+import { forgejoReplyRoute, parseViewerIssueCommentReply } from "./forgejo-reply.js";
 import { ForgejoIssueComment, ForgejoReview } from "./forgejo-schemas.js";
 import type { ForgejoReviewComment } from "./forgejo-schemas.js";
 import { stripThreadReplyMarker } from "./forgejo-thread-reply.js";
@@ -55,9 +55,19 @@ export async function listForgejoOwnReplies(
   return comments
     .map((raw) => ForgejoIssueComment.parse(raw))
     .flatMap((comment) => {
-      const text = stripForgejoReplyPrefix(comment.body, item);
-      return comment.user?.login === viewer && text !== undefined
-        ? [{ id: comment.id, url: comment.html_url, text, createdAt: comment.created_at }]
+      const reply = parseViewerIssueCommentReply(
+        { author: comment.user?.login, body: comment.body },
+        viewer,
+      );
+      return reply?.targetId === item.id
+        ? [
+            {
+              id: comment.id,
+              url: comment.html_url,
+              text: reply.text,
+              createdAt: comment.created_at,
+            },
+          ]
         : [];
     });
 }

@@ -4,7 +4,7 @@ import {
   ForgejoSnapshotIssueComment,
   ForgejoReaction,
 } from "./forgejo-schemas.js";
-import type { FindingState, IssueCommentRecord } from "./feedback-types.js";
+import type { FindingState, IssueCommentFields } from "./feedback-types.js";
 import { verboseLog } from "./verbose-mode.js";
 
 import { reactionsPath } from "./forgejo-reactions.js";
@@ -74,8 +74,7 @@ export async function fetchReviewComments(
 export async function fetchIssueComments(
   slug: string,
   pr: number,
-  viewer: string,
-): Promise<{ totalCount: number; records: IssueCommentRecord[] }> {
+): Promise<{ totalCount: number; comments: IssueCommentFields[] }> {
   // Unpaged on purpose: Forgejo's issue-comments route takes no page or limit and answers with the
   // whole set, so the count check below is a completeness proof rather than a paging loop.
   const path = `repos/${slug}/issues/${pr}/comments`;
@@ -86,7 +85,7 @@ export async function fetchIssueComments(
   if (!Array.isArray(items)) {
     throw new TypeError(`GET ${path}: expected a JSON array`);
   }
-  const byId = new Map<number, IssueCommentRecord>();
+  const byId = new Map<number, IssueCommentFields>();
   for (const item of items) {
     const record = ForgejoSnapshotIssueComment.parse(item);
     byId.set(record.id, {
@@ -96,7 +95,6 @@ export async function fetchIssueComments(
       createdAt: record.created_at ?? null,
       updatedAt: record.updated_at ?? null,
       htmlUrl: record.html_url ?? null,
-      ...(await fetchFindingStatus(slug, viewer, record.id, record)),
     });
   }
   if (byId.size !== totalCount) {
@@ -104,5 +102,5 @@ export async function fetchIssueComments(
       `GET ${path}: ${byId.size} distinct comment ids vs X-Total-Count ${totalCount} — completeness unproven`,
     );
   }
-  return { totalCount, records: [...byId.values()].toSorted((a, b) => a.id - b.id) };
+  return { totalCount, comments: [...byId.values()].toSorted((a, b) => a.id - b.id) };
 }

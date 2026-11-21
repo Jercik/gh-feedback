@@ -9,7 +9,13 @@ import { deriveConversations, normalizeInlineComment } from "./feedback-model.js
 import type { NormalizedInlineComment } from "./feedback-model.js";
 import { unfetchedFindingState, parseBackingCommentId, userRef } from "./feedback-values.js";
 import type { ForgejoSnapshotReview } from "./forgejo-schemas.js";
-import type { CommentRecord, PassSnapshot, ReviewRecord } from "./feedback-types.js";
+import type {
+  CommentRecord,
+  IssueCommentRecord,
+  PassSnapshot,
+  ReviewRecord,
+} from "./feedback-types.js";
+import { resolveIssueCommentReplies } from "./resolve-issue-comment-replies.js";
 
 function reportCountGap(totalCount: number, distinctCount: number, diagnostics: string[]): void {
   const countGap = totalCount - distinctCount;
@@ -36,6 +42,36 @@ async function applyFindingStatuses(
     }
     Object.assign(comment, await fetchFindingStatus(slug, viewer, comment.id, comment));
   }
+}
+
+async function fetchIssueCommentRecords(
+  slug: string,
+  pr: number,
+  viewer: string,
+  reviews: ReviewRecord[],
+  inlineComments: CommentRecord[],
+): Promise<PassSnapshot["issueComments"]> {
+  const { totalCount, comments } = await fetchIssueComments(slug, pr);
+  const replyTargets = resolveIssueCommentReplies(
+    { reviews, inlineComments, issueComments: comments },
+    viewer,
+  );
+  const records: IssueCommentRecord[] = [];
+  for (const { id, ...fields } of comments) {
+    const replyTo = replyTargets.get(id);
+    records.push(
+      replyTo === undefined
+        ? {
+            id,
+            kind: "finding",
+            replyTo: null,
+            ...fields,
+            ...(await fetchFindingStatus(slug, viewer, id, fields)),
+          }
+        : { id, kind: "reply", replyTo, ...fields, ...unfetchedFindingState },
+    );
+  }
+  return { totalCount, records };
 }
 
 function reportMissingReplies(comments: CommentRecord[], diagnostics: string[]): void {
@@ -139,7 +175,13 @@ export async function runPass(
   await applyFindingStatuses(publishedRecords, slug, viewer);
   reportMissingReplies(publishedRecords, diagnostics);
   const conversations = deriveConversations(publishedComments);
-  const issueComments = await fetchIssueComments(slug, pr, viewer);
+  const issueComments = await fetchIssueCommentRecords(
+    slug,
+    pr,
+    viewer,
+    reviewRecords,
+    publishedRecords,
+  );
   const distinctCount = reviewRecords.length;
   const countGap = totalCount - distinctCount;
   reportCountGap(totalCount, distinctCount, diagnostics);

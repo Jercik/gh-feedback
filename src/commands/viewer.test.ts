@@ -97,6 +97,8 @@ const maintainerSnapshot = {
     records: [
       {
         id: 401,
+        kind: "finding",
+        replyTo: null,
         user: { id: 2, login: "reviewer" },
         body: "Issue finding",
         createdAt: "2026-01-01T00:00:04Z",
@@ -108,17 +110,21 @@ const maintainerSnapshot = {
       },
       {
         id: 402,
+        kind: "reply",
+        replyTo: 401,
         user: { id: 1, login: "maintainer" },
         body: "> Replying to comment #401\n\nWhich case?",
         createdAt: "2026-01-01T00:00:05Z",
         updatedAt: "2026-01-01T00:00:05Z",
         htmlUrl: null,
-        viewerReactions: [],
-        status: "pending",
+        viewerReactions: null,
+        status: null,
         conflictingFinalReactions: false,
       },
       {
         id: 403,
+        kind: "finding",
+        replyTo: null,
         user: { id: 3, login: "colleague" },
         body: "> Replying to comment #401\n\nThe empty one",
         createdAt: "2026-01-01T00:00:06Z",
@@ -284,6 +290,8 @@ const colleagueSnapshot = {
     records: [
       {
         id: 401,
+        kind: "finding",
+        replyTo: null,
         user: { id: 2, login: "reviewer" },
         body: "Issue finding",
         createdAt: "2026-01-01T00:00:04Z",
@@ -295,6 +303,8 @@ const colleagueSnapshot = {
       },
       {
         id: 402,
+        kind: "finding",
+        replyTo: null,
         user: { id: 1, login: "maintainer" },
         body: "> Replying to comment #401\n\nWhich case?",
         createdAt: "2026-01-01T00:00:05Z",
@@ -306,13 +316,15 @@ const colleagueSnapshot = {
       },
       {
         id: 403,
+        kind: "reply",
+        replyTo: 401,
         user: { id: 3, login: "colleague" },
         body: "> Replying to comment #401\n\nThe empty one",
         createdAt: "2026-01-01T00:00:06Z",
         updatedAt: "2026-01-01T00:00:06Z",
         htmlUrl: null,
-        viewerReactions: [],
-        status: "pending",
+        viewerReactions: null,
+        status: null,
         conflictingFinalReactions: false,
       },
     ],

@@ -28,10 +28,13 @@ function forgejoReplyPrefix(item: ReplyTarget): string {
   return `${FORGEJO_REPLY_MARKER}${markerNouns[item.type]} #${item.id}\n\n`;
 }
 
+interface MarkedReply {
+  targetId: number;
+  text: string;
+}
+
 // Forgejo issue and review comment IDs share one sequence, so the ID alone names the item.
-export function parseForgejoIssueCommentReply(
-  body: string,
-): { targetId: number; text: string } | undefined {
+function parseForgejoReplyMarker(body: string): MarkedReply | undefined {
   if (!body.startsWith(FORGEJO_REPLY_MARKER)) {
     return undefined;
   }
@@ -49,12 +52,15 @@ export function parseForgejoIssueCommentReply(
   return undefined;
 }
 
-export function stripForgejoReplyPrefix(
-  body: string,
-  item: Pick<FeedbackItemRef, "id">,
-): string | undefined {
-  const reply = parseForgejoIssueCommentReply(body);
-  return reply?.targetId === item.id ? reply.text : undefined;
+export function parseViewerIssueCommentReply(
+  comment: { author: string | null | undefined; body: string },
+  viewer: string,
+): MarkedReply | undefined {
+  return comment.author === viewer ? parseForgejoReplyMarker(comment.body) : undefined;
+}
+
+export function stripForgejoReplyMarker(body: string): string {
+  return parseForgejoReplyMarker(body)?.text ?? body;
 }
 
 type ForgejoReplyRoute =

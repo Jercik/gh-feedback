@@ -200,6 +200,18 @@ be acted on.
 Inline findings remain independent even when they share a native conversation;
 only authenticated reply markers attach responses.
 
+An `issueComments` record carries `kind` and `replyTo`. A PR comment is
+`kind: "reply"` when the viewer wrote it and its `> Replying to` marker leads,
+directly or through other such replies, to an item in the same document;
+[`summary`](#summary-output) lists it among that item's responses. Its `replyTo`
+is the ID the marker names, which can be another reply, an inline comment or a
+review body's backing comment, and its `viewerReactions` and `status` are
+`null`, because a reply is not tracked. Every other PR comment, including one
+whose marker leads to no item, has `kind: "finding"`, `replyTo: null` and its
+own status. An inline comment record differs: it is `kind: "reply"` whenever it
+carries the viewer's marker, even when `replyTo` names a comment that is not in
+the document.
+
 Replies retain the persisted `<!-- gh-feedback:reply-to:ID -->` marker so existing PR replies continue to attach to their original feedback items. The marker is a stored-data contract, not a command or package alias.
 
 ### Reading as another account

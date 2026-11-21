@@ -106,9 +106,27 @@ describe("compiled snapshot CLI", () => {
         records: [
           {
             id: 401,
+            kind: "finding",
+            replyTo: null,
             viewerReactions: ["+1", "-1"],
             status: "in-progress",
             conflictingFinalReactions: true,
+          },
+          {
+            id: 402,
+            kind: "reply",
+            replyTo: 401,
+            viewerReactions: null,
+            status: null,
+            conflictingFinalReactions: false,
+          },
+          {
+            id: 403,
+            kind: "finding",
+            replyTo: null,
+            viewerReactions: ["rocket"],
+            status: "acknowledged",
+            conflictingFinalReactions: false,
           },
         ],
       },
@@ -151,7 +169,9 @@ describe("compiled snapshot CLI", () => {
     expect(result.status).toBe(3);
     expect(JSON.parse(result.stdout)).toMatchObject({
       stable: false,
-      issueComments: { records: [{ updatedAt: "2026-01-02T00:00:00Z" }] },
+      issueComments: {
+        records: [{ id: 401, updatedAt: "2026-01-02T00:00:00Z" }, { id: 402 }, { id: 403 }],
+      },
     });
   });
 
@@ -160,7 +180,7 @@ describe("compiled snapshot CLI", () => {
     ["bad-count", "GET repos/owner/repo/pulls/7/reviews: missing or invalid X-Total-Count"],
     [
       "issue-gap",
-      "GET repos/owner/repo/issues/7/comments: 1 distinct comment ids vs X-Total-Count 2 — completeness unproven",
+      "GET repos/owner/repo/issues/7/comments: 3 distinct comment ids vs X-Total-Count 4 — completeness unproven",
     ],
   ])("fails closed without snapshot stdout for %s", (mode, diagnostic) => {
     const result = run(mode);
@@ -193,10 +213,19 @@ describe("compiled snapshot CLI", () => {
           responses: [expect.objectContaining({ body: "Fixed first" })],
         }),
         expect.objectContaining({ id: 202, body: "Second independent finding", responses: [] }),
-        expect.objectContaining({ id: 401, status: "in-progress" }),
+        expect.objectContaining({
+          id: 401,
+          status: "in-progress",
+          responses: [expect.objectContaining({ body: "Which case?" })],
+        }),
+        expect.objectContaining({
+          id: 403,
+          status: "acknowledged",
+          body: "> Replying to review comment #301\n\nStill a draft",
+        }),
       ]),
     );
-    expect((JSON.parse(result.stdout) as { items: unknown[] }).items).toHaveLength(5);
+    expect((JSON.parse(result.stdout) as { items: unknown[] }).items).toHaveLength(6);
   });
 });
 

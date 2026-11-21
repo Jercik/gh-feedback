@@ -29,7 +29,13 @@ export interface FindingState {
   conflictingFinalReactions: boolean;
 }
 
-export interface NullableFindingState {
+export interface UnfetchedFindingState {
+  viewerReactions: null;
+  status: null;
+  conflictingFinalReactions: false;
+}
+
+interface NullableFindingState {
   viewerReactions: string[] | null;
   status: FindingStatus | null;
   conflictingFinalReactions: boolean;
@@ -76,7 +82,7 @@ export interface ConversationRecord {
   comments: CommentRecord[];
 }
 
-export interface IssueCommentRecord extends FindingState {
+export interface IssueCommentFields {
   id: number;
   user: UserRef;
   body: string;
@@ -84,6 +90,12 @@ export interface IssueCommentRecord extends FindingState {
   updatedAt: string | null;
   htmlUrl: string | null;
 }
+
+export type IssueCommentRecord = IssueCommentFields &
+  (
+    | ({ kind: "finding"; replyTo: null } & FindingState)
+    | ({ kind: "reply"; replyTo: number } & UnfetchedFindingState)
+  );
 
 export interface PassSnapshot {
   reviews: {

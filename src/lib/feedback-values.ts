@@ -1,7 +1,7 @@
 import type {
   FindingState,
   FindingStatus,
-  NullableFindingState,
+  UnfetchedFindingState,
   UserRef,
 } from "./feedback-types.js";
 import { doneStatuses } from "./feedback-types.js";
@@ -32,7 +32,7 @@ export function userRef(
     : { id: value.id ?? null, login: value.login };
 }
 
-export const unfetchedFindingState: NullableFindingState = {
+export const unfetchedFindingState: UnfetchedFindingState = {
   viewerReactions: null,
   status: null,
   conflictingFinalReactions: false,
