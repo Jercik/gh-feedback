@@ -1,11 +1,21 @@
 import type { FeedbackItem, FeedbackResponse } from "./summary-types.js";
-import type { PassSnapshot } from "./feedback-types.js";
+import type { InlineCommentFields, PassSnapshot } from "./feedback-types.js";
 import { isStatusDone, isStatusSettled } from "./summary-types.js";
 import { isIgnoredAuthor } from "./feedback-environment.js";
 import { collectItemReplies } from "./collect-item-replies.js";
+import { reviewCommentFileLine } from "./forgejo-review-comment-line.js";
 import { isReviewBodyItem } from "./map-comments-to-items.js";
 
 type SummaryItem = FeedbackItem & { responses: FeedbackResponse[] };
+
+function inlineCommentLocation(comment: InlineCommentFields): string {
+  const line = reviewCommentFileLine(
+    comment.position,
+    comment.originalPosition,
+    comment.extraLinesCount,
+  );
+  return comment.path === "" || line === null ? comment.path : `${comment.path}:${line}`;
+}
 
 export function summarizeFeedbackSnapshot(
   snapshot: Pick<PassSnapshot, "reviews" | "conversations" | "issueComments">,
@@ -53,7 +63,7 @@ export function summarizeFeedbackSnapshot(
           ? "in-progress"
           : (comment.status ?? "pending"),
       author: comment.user.login ?? "ghost",
-      location: comment.path ? `${comment.path}:${comment.displayLine}` : "",
+      location: inlineCommentLocation(comment),
       body: comment.body,
       responses: [],
     };

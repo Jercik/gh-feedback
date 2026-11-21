@@ -294,6 +294,10 @@ provenance in JSON. Pretty output labels these bodies as nonactionable reviews;
 TSV retains them with an empty ID field and their pending status. An empty ID cannot
 be passed to mutation commands; filter it out when extracting actionable IDs.
 
+An item's location, the `LOCATION` column and `location` in JSON, is `path:line`
+for an inline comment and the path alone for a comment on a whole file, which
+has no line. A review body and a PR comment have no location.
+
 ### Output Formats
 
 - **TTY (default)**: Human-readable multi-line format

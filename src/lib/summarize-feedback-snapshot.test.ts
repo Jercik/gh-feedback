@@ -98,6 +98,33 @@ function snapshot(
   };
 }
 
+describe("inline comment locations", () => {
+  it.each([
+    [
+      "the path and line of a comment on an added line",
+      { position: 9, originalPosition: 0, extraLinesCount: 0, side: "new", displayLine: 9 },
+      "src/app.ts:9",
+    ],
+    [
+      "the path and last line of a comment on a range of removed lines",
+      { position: 0, originalPosition: 4, extraLinesCount: 2, side: "old", displayLine: 6 },
+      "src/app.ts:6",
+    ],
+    [
+      "the path alone for a comment on the whole file",
+      { position: 0, originalPosition: 0, extraLinesCount: 0, side: "zero", displayLine: 0 },
+      "src/app.ts",
+    ],
+  ] as const)("gives %s", (_label, coordinates, location) => {
+    expect(
+      summarizeFeedbackSnapshot(
+        snapshot([], [], [{ ...unpositionedFinding, ...coordinates }]),
+        false,
+      ),
+    ).toMatchObject([{ id: 301, location }]);
+  });
+});
+
 describe("issue-comment replies", () => {
   it("lists a reply among the responses of the comment it answers", () => {
     const items = summarizeFeedbackSnapshot(
