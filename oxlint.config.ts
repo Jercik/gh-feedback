@@ -1,8 +1,7 @@
-import { compose, node, nodeTest, vitest } from "@j4k/oxlint-config";
+import { defineConfig } from "oxlint";
+import { node, nodeTest, vitest } from "@j4k/oxlint-config";
 
-const config = {
-  ...compose(node, vitest, nodeTest),
+export default defineConfig({
+  extends: [node, vitest, nodeTest],
   ignorePatterns: [".claude/", ".clawpatch/", ".codex/"],
-};
-
-export default config;
+});
